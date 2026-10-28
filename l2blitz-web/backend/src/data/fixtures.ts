@@ -1,11 +1,10 @@
 /**
- * L2BLITZ PVP — Isolated Development Fixtures & Verified High Five Reference Data
+ * L2BLITZ PVP — GameServer-confirmed configuration & isolated test fixtures
  *
  * CRITICAL PRODUCTION SAFETY:
  * - In Production (`NODE_ENV=production` or `USE_DEV_FIXTURES !== 'true'`),
  *   player rankings, online counts, and live boss statuses NEVER return these fixtures.
- * - Unverified L2Blitz-specific rates are explicitly flagged as `verified: false`
- *   and `verificationStatus: 'pending_verification'`.
+ * - Only GameServer-confirmed rates are published. Unverified enchant values are omitted.
  */
 
 import {
@@ -20,7 +19,7 @@ import {
 import { getClassInfoById } from './highFiveClasses.js';
 
 export const HIGH_FIVE_SERVER_RATES: ServerRatesDto = {
-  verificationStatus: 'pending_verification',
+  verificationStatus: 'verified',
   chronicle: 'Lineage II High Five (CT 2.6)',
   serverType: 'L2Blitz Instant PvP',
   rates: [
@@ -33,18 +32,8 @@ export const HIGH_FIVE_SERVER_RATES: ServerRatesDto = {
     { key: 'raid_drop', labelTh: 'จำนวนดรอป Raid', labelEn: 'Raid Drop Amount',
       value: 'x2', noteTh: 'RaidDropAmountMultiplier = 2 ใน Rates.ini',
       noteEn: 'RaidDropAmountMultiplier = 2 in Rates.ini', verified: true },
-    { key: 'pvp_craft', labelTh: 'ระบบ PvP Equipment', labelEn: 'PvP Equipment',
-      value: 'เปิดใช้งาน', noteTh: 'ทำ PvP, ลงธาตุ และแลกเปลี่ยนอุปกรณ์ผ่านระบบในเกม',
-      noteEn: 'PvP crafting, attributes and equipment exchange in-game', verified: true },
   ],
-  enchantLimits: [
-    { categoryTh: 'อาวุธ', categoryEn: 'Weapons', safeEnchant: 'รอตรวจสอบ', maxEnchant: 'รอตรวจสอบ',
-      blessedRate: 'รอตรวจสอบ', attributeMax: 'รอตรวจสอบ', verified: false },
-    { categoryTh: 'ชุดเกราะ', categoryEn: 'Armor', safeEnchant: 'รอตรวจสอบ', maxEnchant: 'รอตรวจสอบ',
-      blessedRate: 'รอตรวจสอบ', attributeMax: 'รอตรวจสอบ', verified: false },
-    { categoryTh: 'เครื่องประดับ', categoryEn: 'Jewelry', safeEnchant: 'รอตรวจสอบ', maxEnchant: 'รอตรวจสอบ',
-      blessedRate: 'รอตรวจสอบ', attributeMax: 'N/A', verified: false },
-  ],
+  enchantLimits: [],
 };
 
 /**
@@ -191,6 +180,17 @@ export const HIGH_FIVE_RAIDBOSS_CATALOG: RaidBossDto[] = [
     respawnRuleEn: 'Daily 20:00 (Asia/Bangkok): randomly selected Queen Ant OR Baium',
     respawnRuleTh: 'สุ่มบอส Queen Ant หรือ Baium เพียง 1 ตัวต่อวัน เวลา 20:00 น.',
     keyDrops: ['Ring of Baium'],
+  },
+  {
+    bossId: 94081, nameEn: 'Zaken', nameTh: 'ซาเคน (Zaken)',
+    level: 85, tier: 'Grand Boss', locationEn: 'Parnassus',
+    locationTh: 'Parnassus',
+    teleportEn: 'Alt+B → Zaken 1 / Zaken 2',
+    teleportTh: 'Alt+B → ZAKEN 1 หรือ ZAKEN 2',
+    status: 'unknown', lastKill: null, nextSpawnWindow: null,
+    respawnRuleEn: 'Daily 20:00 (Asia/Bangkok): randomly selected Queen Ant, Baium or Zaken',
+    respawnRuleTh: 'สุ่มบอส Queen Ant, Baium หรือ Zaken เพียง 1 ตัวต่อวัน เวลา 20:00 น.',
+    keyDrops: ['Earring of Zaken'],
   },
 ];
 

@@ -25,8 +25,9 @@ export function isDatabaseConfigured(): boolean {
   );
 }
 
+// Sample player/clan data is restricted to unit tests. Never serve demo data.
 export function isDevFixtureEnabled(): boolean {
-  return process.env.NODE_ENV !== 'production' && process.env.USE_DEV_FIXTURES === 'true';
+  return false;
 }
 
 export function getActiveDataSourceMode(): DataSourceMode {

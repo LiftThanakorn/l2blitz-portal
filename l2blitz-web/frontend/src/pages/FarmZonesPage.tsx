@@ -89,9 +89,9 @@ export function FarmZonesPage() {
         </div>
         <div className="col-span-12 lg:col-span-7">
           <h1 className="display-title">
-            {t('พื้นที่ฟาร์มอาเดน่า', 'Farm Zones &')}
+            {t('พื้นที่ฟาร์มอาเดน่า', 'Adena Farm Zones')}
             <br />
-            {t('และวัตถุดิบ S84', 'Drop Tables')}
+            {t('ของ L2Blitz', 'of L2Blitz')}
           </h1>
         </div>
       </div>
@@ -206,7 +206,7 @@ export function FarmZonesPage() {
 
             <div className="surface-ink p-6 sm:p-8">
               <h3 className="text-[20px] font-semibold text-[#F7F5F0]">
-                {t('ไอเทมดรอปและรางวัลประจำพื้นที่', 'Adena, Materials & Key Drops')}
+                {t('อาเดน่าและข้อมูลการดรอป', 'Adena & Drop Information')}
               </h3>
               <ul className="mt-4 pl-5 flex flex-col gap-2.5 text-[#E8E3DB]">
                 {(t('th', 'en') === 'th' ? activeZone.dropsTh : activeZone.dropsEn).map((d) => (
