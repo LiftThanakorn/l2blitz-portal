@@ -212,7 +212,7 @@ export function EventsPage() {
           <div className="surface-stone p-8 mt-6 text-center">
             <p className="lead-statement mx-auto text-[#1A1917]">
               {t(
-                'ยังไม่มีบันทึกผลการแข่งขัน TvT จากเซิร์ฟเวอร์จริงในขณะนี้ · ข้อมูลคะแนนทั้งสองฝั่งและผู้เล่นที่สังหารสูงสุดจะแสดงเมื่อเชื่อมต่อฐานข้อมูล GameServer',
+                'ขณะนี้ยังไม่ได้เชื่อมประวัติผลการแข่งขัน TvT ที่ยืนยันจาก GameServer เข้ากับเว็บไซต์',
                 'No verified match-history integration is configured for the website yet.'
               )}
             </p>
