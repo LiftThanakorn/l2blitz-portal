@@ -214,13 +214,13 @@ export const apiClient = {
       minMatchesRequired: 9,
       hasPreviousData: true,
       page: params?.page ?? 1,
-      limit: params?.limit ?? 10,
+      limit: params?.limit ?? 3,
       selectedClassId: params?.classId ?? null,
       classes: buildDemoOlympiadRankings({
         cycleType: params?.cycle ?? 'current',
         selectedClassId: params?.classId ?? null,
         page: params?.page ?? 1,
-        limit: params?.limit ?? 10,
+        limit: params?.limit ?? 3,
       }),
       meta: clientDemoMeta(),
     }));

@@ -85,8 +85,8 @@ export const RankingsPage: React.FC = () => {
         const res = await apiClient.getOlympiadRankings({
           classId: classFilter,
           cycle: olympiadCycle,
-          page: olympiadPage,
-          limit: 10,
+          page: 1,
+          limit: 3,
         });
         setOlympiadRankingsData(res);
       } else if (tab === 'heroes') {
@@ -104,7 +104,7 @@ export const RankingsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [tab, page, limit, classFilter, searchQuery, olympiadCycle, olympiadPage]);
+  }, [tab, page, limit, classFilter, searchQuery, olympiadCycle]);
 
   useEffect(() => {
     loadData();
@@ -127,7 +127,7 @@ export const RankingsPage: React.FC = () => {
     { id: 'pvp', label: t('Top PvP', 'Top PvP'), icon: Swords },
     { id: 'pk', label: t('Top PK', 'Top PK'), icon: Skull },
     { id: 'clans', label: t('อันดับแคลน', 'Clan Rankings'), icon: Users },
-    { id: 'olympiad_rankings', label: t('อันดับโอลิมเพียดตามอาชีพ', 'Olympiad by Class'), icon: Trophy },
+    { id: 'olympiad_rankings', label: t('อันดับโอลิมเพียด Top 3', 'Olympiad Top 3 by Class'), icon: Trophy },
     { id: 'heroes', label: t('ฮีโร่โอลิมเพียด', 'Olympiad Heroes'), icon: Crown },
     { id: 'castles', label: t('การครองปราสาท', 'Castle Ownership'), icon: Castle },
     { id: 'tvt', label: t('สถิติ TvT', 'TvT Rankings'), icon: Flame },
@@ -373,7 +373,7 @@ export const RankingsPage: React.FC = () => {
             {tab === 'pvp' && t('ตารางอันดับสังหาร PvP (Top PvP)', 'Top PvP Leaderboard')}
             {tab === 'pk' && t('ตารางอันดับสังหาร PK (Top PK)', 'Top PK Leaderboard')}
             {tab === 'clans' && t('ตารางอันดับแคลน (Clan Rankings)', 'Top Clans by Level & Reputation')}
-            {tab === 'olympiad_rankings' && t('อันดับผู้เข้าแข่งขันโอลิมเพียดแยกตามอาชีพ (Olympiad by Class)', 'Olympiad Rankings by Class (Current Cycle)')}
+            {tab === 'olympiad_rankings' && t('อันดับผู้เข้าแข่งขันโอลิมเพียด Top 3 แยกตามอาชีพ (Olympiad Top 3)', 'Olympiad Top 3 Rankings by Class')}
             {tab === 'heroes' && t('ทำเนียบฮีโร่โอลิมเพียด (Olympiad Heroes)', 'Current Olympiad Heroes')}
             {tab === 'castles' && t('สถานะการครอบครองปราสาททั้ง 9 แห่ง', 'Castle Ownership & Siege Schedule')}
             {tab === 'tvt' && t('อันดับผู้เล่นกิจกรรม Team vs Team (TvT)', 'TvT Event Leaderboard')}
@@ -381,8 +381,8 @@ export const RankingsPage: React.FC = () => {
           <CardDescription>
             {tab === 'olympiad_rankings'
               ? t(
-                  'เรียงลำดับผู้เข้าแข่งขันตามคะแนนโอลิมเพียดภายในระบบ (อันดับ 1 คือผู้มีคะแนนสูงสุดของแต่ละอาชีพ โดยไม่เปิดเผยตัวเลขคะแนนบนเว็บไซต์)',
-                  'Ranked by internal Olympiad points (Rank 1 represents class leader; exact points remain private).'
+                  'แสดง 3 อันดับแรกของแต่ละอาชีพ เรียงตามคะแนนโอลิมเพียดภายในระบบ (อันดับ 1 คือว่าที่ฮีโร่ โดยไม่เปิดเผยตัวเลขคะแนนบนเว็บไซต์)',
+                  'Displaying Top 3 contenders per class ranked by internal Olympiad points (Scores remain private).'
                 )
               : tab === 'pvp' || tab === 'pk'
                 ? t(
@@ -579,13 +579,13 @@ export const RankingsPage: React.FC = () => {
                       <div className={classFilter !== null ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 gap-4'}>
                         {displayGroups.map((group) => {
                           const isSingleClassMode = classFilter !== null;
-                          const totalClassPages = Math.max(1, Math.ceil(group.totalPlayers / 10));
+                          const top3Players = group.players.slice(0, 3);
 
                           return (
                             <div
                               key={group.classId}
                               className={`rounded-xl border border-slate-800 bg-[#090d18] overflow-hidden ${
-                                isSingleClassMode ? 'max-w-3xl mx-auto shadow-lg' : ''
+                                isSingleClassMode ? 'max-w-xl mx-auto shadow-lg' : ''
                               }`}
                             >
                               <div className="flex items-center justify-between bg-slate-900/80 px-4 py-2.5 border-b border-slate-800">
@@ -613,7 +613,7 @@ export const RankingsPage: React.FC = () => {
                                 </div>
                               </div>
 
-                              {group.players.length > 0 ? (
+                              {top3Players.length > 0 ? (
                                 <div className="overflow-x-auto">
                                   <table className="w-full text-left text-xs">
                                     <thead className="border-b border-slate-800/80 bg-slate-900/40 text-slate-400">
@@ -624,18 +624,26 @@ export const RankingsPage: React.FC = () => {
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-800/60">
-                                      {group.players.map((player) => (
+                                      {top3Players.map((player) => (
                                         <tr key={`${group.classId}-${player.charName}`} className="hover:bg-slate-900/40">
                                           <td className="px-3.5 py-2 font-mono font-bold">
                                             {player.rank === 1 ? (
-                                              <span className="inline-flex items-center gap-1 text-amber-300 font-extrabold">
-                                                <Crown className="h-3 w-3 text-amber-400" />
+                                              <span className="inline-flex items-center gap-1.5 text-amber-300 font-extrabold">
+                                                <Crown className="h-3.5 w-3.5 text-amber-400" />
                                                 1
                                               </span>
                                             ) : player.rank === 2 ? (
-                                              <span className="text-slate-300 font-bold">2</span>
+                                              <span className="inline-flex items-center gap-1.5 text-slate-200 font-bold">
+                                                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-700/80 text-[10px] text-slate-200">
+                                                  2
+                                                </span>
+                                              </span>
                                             ) : player.rank === 3 ? (
-                                              <span className="text-amber-600 font-bold">3</span>
+                                              <span className="inline-flex items-center gap-1.5 text-amber-600 font-bold">
+                                                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-950/60 text-[10px] text-amber-500 border border-amber-700/40">
+                                                  3
+                                                </span>
+                                              </span>
                                             ) : (
                                               <span className="text-slate-400">{player.rank}</span>
                                             )}
@@ -655,55 +663,6 @@ export const RankingsPage: React.FC = () => {
                                 <div className="py-6 px-4 text-center text-xs text-slate-500 italic">
                                   {t('ไม่มีผู้เข้าแข่งขันที่มีสิทธิ์ในอาชีพนี้ (ยังไม่ผ่านเกณฑ์ขั้นต่ำ)', 'No eligible contestants for this class yet.')}
                                 </div>
-                              )}
-
-                              {/* Card Footer: View More / Pagination Controls */}
-                              {isSingleClassMode ? (
-                                totalClassPages > 1 && (
-                                  <div className="flex items-center justify-between border-t border-slate-800/80 bg-slate-900/40 px-4 py-2.5 text-xs text-slate-400">
-                                    <span>
-                                      {t('หน้า', 'Page')} <strong className="text-white">{olympiadPage}</strong> / {totalClassPages}
-                                    </span>
-                                    <div className="flex items-center gap-2">
-                                      <button
-                                        type="button"
-                                        disabled={olympiadPage <= 1 || loading}
-                                        onClick={() => setOlympiadPage((p) => Math.max(1, p - 1))}
-                                        className="inline-flex items-center gap-1 rounded border border-slate-700 bg-slate-900 px-2.5 py-1 text-slate-200 hover:bg-slate-800 disabled:opacity-40 cursor-pointer text-xs"
-                                      >
-                                        <ChevronLeft className="h-3.5 w-3.5" />
-                                        <span>{t('ก่อนหน้า', 'Prev')}</span>
-                                      </button>
-                                      <button
-                                        type="button"
-                                        disabled={olympiadPage >= totalClassPages || loading}
-                                        onClick={() => setOlympiadPage((p) => Math.min(totalClassPages, p + 1))}
-                                        className="inline-flex items-center gap-1 rounded border border-slate-700 bg-slate-900 px-2.5 py-1 text-slate-200 hover:bg-slate-800 disabled:opacity-40 cursor-pointer text-xs"
-                                      >
-                                        <span>{t('ถัดไป', 'Next')}</span>
-                                        <ChevronRight className="h-3.5 w-3.5" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                )
-                              ) : (
-                                group.totalPlayers > 10 && (
-                                  <div className="border-t border-slate-800/60 bg-slate-900/30 px-3.5 py-2 text-right">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setClassFilter(group.classId);
-                                        setOlympiadPage(1);
-                                      }}
-                                      className="inline-flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-medium cursor-pointer"
-                                    >
-                                      <span>
-                                        {t('ดูอันดับเพิ่มเติม', 'View More Ranks')} ({group.totalPlayers} {t('คน', 'players')})
-                                      </span>
-                                      <ChevronRight className="h-3 w-3" />
-                                    </button>
-                                  </div>
-                                )
                               )}
                             </div>
                           );

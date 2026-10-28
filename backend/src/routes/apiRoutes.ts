@@ -160,7 +160,7 @@ apiRouter.get('/olympiad/rankings', async (req, res, next) => {
 
     const cycleType = req.query.cycle === 'previous' ? 'previous' : 'current';
     const page = Math.max(1, Math.min(100, Number(req.query.page) || 1));
-    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 10));
+    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 3));
 
     const data = await getOlympiadRankings({
       cycleType,
