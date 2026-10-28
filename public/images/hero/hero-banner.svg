@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 750" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050811" />
+      <stop offset="45%" stop-color="#0b1224" />
+      <stop offset="100%" stop-color="#04060b" />
+    </linearGradient>
+    <radialGradient id="skyGlow" cx="75%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.32" />
+      <stop offset="50%" stop-color="#0284c7" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="bladeGlow" cx="25%" cy="65%" r="45%">
+      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="bladeGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+    <linearGradient id="bladeGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#bae6fd" />
+      <stop offset="50%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#075985" />
+    </linearGradient>
+    <linearGradient id="goldHilt" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1600" height="750" fill="url(#bgGrad)" />
+  <rect width="1600" height="750" fill="url(#skyGlow)" />
+  <rect width="1600" height="750" fill="url(#bladeGlow)" />
+
+  <!-- Subtle Tactical Grid Overlay -->
+  <g opacity="0.06" stroke="#38bdf8" stroke-width="1">
+    <line x1="0" y1="120" x2="1600" y2="120" />
+    <line x1="0" y1="240" x2="1600" y2="240" />
+    <line x1="0" y1="360" x2="1600" y2="360" />
+    <line x1="0" y1="480" x2="1600" y2="480" />
+    <line x1="0" y1="600" x2="1600" y2="600" />
+    <line x1="200" y1="0" x2="200" y2="750" />
+    <line x1="400" y1="0" x2="400" y2="750" />
+    <line x1="600" y1="0" x2="600" y2="750" />
+    <line x1="800" y1="0" x2="800" y2="750" />
+    <line x1="1000" y1="0" x2="1000" y2="750" />
+    <line x1="1200" y1="0" x2="1200" y2="750" />
+    <line x1="1400" y1="0" x2="1400" y2="750" />
+  </g>
+
+  <!-- High Five Aden Castle Silhouette in Background -->
+  <g opacity="0.22" fill="#0f172a">
+    <path d="M980 750 L980 430 L1020 430 L1020 370 L1060 370 L1060 430 L1100 430 L1100 320 L1140 280 L1180 320 L1180 430 L1220 430 L1220 350 L1270 350 L1270 430 L1320 430 L1320 290 L1350 250 L1380 290 L1380 430 L1440 430 L1440 370 L1490 370 L1490 750 Z" />
+    <!-- Battlements -->
+    <rect x="1090" y="300" width="10" height="20" fill="#38bdf8" opacity="0.4" />
+    <rect x="1340" y="270" width="15" height="25" fill="#38bdf8" opacity="0.4" />
+  </g>
+
+  <!-- Epic Dual Crossed Swords (Symbol of L2 High Five Instant PvP) -->
+  <g transform="translate(1260, 390)">
+    <!-- Right Slash Blade (Duelist / Hero Sword) -->
+    <g transform="rotate(-38)">
+      <!-- Blade Aura -->
+      <polygon points="0,-290 -16,-240 -12,140 12,140 16,-240" fill="url(#bladeGrad1)" filter="url(#glowFilter)" opacity="0.6" />
+      <!-- Sharp Blade Core -->
+      <polygon points="0,-300 -12,-250 -9,140 9,140 12,-250" fill="url(#bladeGrad1)" />
+      <!-- Fuller / Blood Groove -->
+      <line x1="0" y1="-260" x2="0" y2="120" stroke="#f0f9ff" stroke-width="3" opacity="0.8" />
+      <!-- Crossguard -->
+      <path d="M-65,140 L-45,155 L45,155 L65,140 L50,130 L-50,130 Z" fill="url(#goldHilt)" />
+      <circle cx="0" cy="142" r="9" fill="#38bdf8" />
+      <!-- Grip -->
+      <rect x="-8" y="155" width="16" height="85" rx="3" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" />
+      <!-- Pommel -->
+      <circle cx="0" cy="250" r="14" fill="url(#goldHilt)" />
+      <circle cx="0" cy="250" r="6" fill="#38bdf8" />
+    </g>
+
+    <!-- Left Slash Blade (Kamael Rapier / Ancient Sword) -->
+    <g transform="rotate(38)">
+      <!-- Blade Aura -->
+      <polygon points="0,-290 -16,-240 -12,140 12,140 16,-240" fill="url(#bladeGrad2)" filter="url(#glowFilter)" opacity="0.6" />
+      <!-- Sharp Blade Core -->
+      <polygon points="0,-300 -12,-250 -9,140 9,140 12,-250" fill="url(#bladeGrad2)" />
+      <!-- Fuller -->
+      <line x1="0" y1="-260" x2="0" y2="120" stroke="#f0f9ff" stroke-width="3" opacity="0.8" />
+      <!-- Crossguard -->
+      <path d="M-65,140 L-45,155 L45,155 L65,140 L50,130 L-50,130 Z" fill="url(#goldHilt)" />
+      <circle cx="0" cy="142" r="9" fill="#38bdf8" />
+      <!-- Grip -->
+      <rect x="-8" y="155" width="16" height="85" rx="3" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" />
+      <!-- Pommel -->
+      <circle cx="0" cy="250" r="14" fill="url(#goldHilt)" />
+      <circle cx="0" cy="250" r="6" fill="#38bdf8" />
+    </g>
+
+    <!-- Central PvP Energy Burst -->
+    <circle cx="0" cy="-60" r="12" fill="#e0f2fe" filter="url(#glowFilter)" />
+    <circle cx="0" cy="-60" r="6" fill="#ffffff" />
+  </g>
+
+  <!-- Combat Magic & Elemental Sparks -->
+  <g fill="#38bdf8" opacity="0.7">
+    <circle cx="1080" cy="220" r="3.5" filter="url(#glowFilter)" />
+    <circle cx="1140" cy="160" r="2.5" />
+    <circle cx="1220" cy="110" r="4" filter="url(#glowFilter)" />
+    <circle cx="1380" cy="140" r="3" />
+    <circle cx="1450" cy="200" r="4" filter="url(#glowFilter)" />
+    <circle cx="990" cy="310" r="2.5" />
+    <circle cx="1490" cy="380" r="3" />
+  </g>
+
+  <!-- Left Accent Shield Crest Emblem -->
+  <g transform="translate(160, 240)" opacity="0.16">
+    <polygon points="0,-120 120,-60 120,60 0,140 -120,60 -120,-60" fill="none" stroke="#38bdf8" stroke-width="4" />
+    <polygon points="0,-95 95,-45 95,45 0,110 -95,45 -95,-45" fill="none" stroke="#38bdf8" stroke-width="2" />
+    <text x="0" y="20" font-family="sans-serif" font-weight="900" font-size="44" fill="#38bdf8" text-anchor="middle" letter-spacing="4">H5</text>
+  </g>
+
+  <!-- Bottom Gradient Fade for Clean Text Overlays -->
+  <rect x="0" y="600" width="1600" height="150" fill="url(#bgGrad)" opacity="0.8" />
+</svg>

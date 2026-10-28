@@ -1,0 +1,27 @@
+[Unit]
+Description=L2Blitz High Five Read-Only Backend API Service
+After=network.target mysql.service mariadb.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/l2blitz-portal
+EnvironmentFile=/opt/l2blitz-portal/.env
+ExecStart=/usr/bin/node /opt/l2blitz-portal/dist-server/backend/src/index.js
+Restart=on-failure
+RestartSec=5
+
+# Budget VPS Resource Limits (<500 THB/mo shared with GameServer)
+MemoryMax=180M
+CPUQuota=35%
+
+# Hardened Security Directives
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

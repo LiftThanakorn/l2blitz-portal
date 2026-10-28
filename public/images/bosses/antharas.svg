@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="antBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a1208" />
+      <stop offset="50%" stop-color="#142610" />
+      <stop offset="100%" stop-color="#040803" />
+    </linearGradient>
+    <radialGradient id="poisonGlow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.35" />
+      <stop offset="60%" stop-color="#15803d" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+    <filter id="toxicBlur">
+      <feGaussianBlur stdDeviation="8" />
+    </filter>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#antBg)" />
+  <rect width="800" height="500" fill="url(#poisonGlow)" />
+
+  <!-- Antharas' Lair Cave Formations -->
+  <polygon points="0,0 80,140 180,0 320,160 450,0 600,150 720,0 800,120 800,0" fill="#0f1b0c" opacity="0.9" />
+  <polygon points="0,500 120,390 260,500 420,380 580,500 700,410 800,500" fill="#0a1408" />
+
+  <!-- Antharas Earth Dragon Head & Horns -->
+  <g transform="translate(400, 250)">
+    <!-- Colossal Dragon Horns -->
+    <path d="M-60,-50 Q-140,-130 -220,-110 Q-160,-40 -90,0 Z" fill="#142211" stroke="#22c55e" stroke-width="3" />
+    <path d="M60,-50 Q140,-130 220,-110 Q160,-40 90,0 Z" fill="#142211" stroke="#22c55e" stroke-width="3" />
+    <!-- Dragon Skull -->
+    <path d="M-90,-20 L-40,-110 L40,-110 L90,-20 L50,110 L-50,110 Z" fill="#1c3318" stroke="#4ade80" stroke-width="3.5" />
+    <!-- Heavy Brow & Eyes -->
+    <circle cx="-35" cy="-35" r="9" fill="#4ade80" filter="url(#toxicBlur)" />
+    <circle cx="-35" cy="-35" r="4" fill="#f0fdf4" />
+    <circle cx="35" cy="-35" r="9" fill="#4ade80" filter="url(#toxicBlur)" />
+    <circle cx="35" cy="-35" r="4" fill="#f0fdf4" />
+    <!-- Snout & Fangs -->
+    <path d="M-30,50 L-20,95 L-10,55 L0,105 L10,55 L20,95 L30,50" stroke="#f0fdf4" stroke-width="3" fill="#052e16" />
+  </g>
+
+  <!-- Tag & Text Overlay -->
+  <g transform="translate(40, 440)">
+    <rect x="0" y="0" width="130" height="26" rx="4" fill="#22c55e" opacity="0.2" stroke="#22c55e" stroke-width="1.5" />
+    <text x="65" y="17" fill="#4ade80" font-family="sans-serif" font-size="12" font-weight="700" text-anchor="middle">GRAND BOSS</text>
+    <text x="145" y="19" fill="#ffffff" font-family="sans-serif" font-size="22" font-weight="800">Antharas (Lv. 85)</text>
+    <text x="145" y="38" fill="#94a3b8" font-family="sans-serif" font-size="12">Antharas' Lair (Heart of Warding) • High Five 300 Attribute Boss</text>
+  </g>
+</svg>
