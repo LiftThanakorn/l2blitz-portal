@@ -6,7 +6,7 @@ import {
   type RaidBossItem,
   type OlympiadClassGroup,
 } from '../../../shared/schema.js';
-import { getClassName, THIRD_CLASS_LIST } from '../../../shared/l2Classes.js';
+import { getClassName, THIRD_CLASS_LIST, OLYMPIAD_CLASSES } from '../../../shared/l2Classes.js';
 import { L2BLITZ_BOSS_CATALOG } from '../../../shared/staticGameContent.js';
 
 /**
@@ -82,44 +82,82 @@ export const DEMO_HEROES: OlympiadHeroItem[] = [
 
 /**
  * Builds demo Olympiad rankings by class for development mode preview.
- * NOTE: Points are calculated internally for sorting and never exposed!
+ * NOTE:
+ * - Soulhound 132 & 133 are unified under 132.
+ * - Supports pagination (page, limit).
+ * - Points are calculated internally for sorting and NEVER exposed in public payload!
  */
-export function buildDemoOlympiadRankings(selectedClassId: number | null): OlympiadClassGroup[] {
+export function buildDemoOlympiadRankings(options: {
+  cycleType: 'current' | 'previous';
+  selectedClassId: number | null;
+  page: number;
+  limit: number;
+}): OlympiadClassGroup[] {
   const targetClasses =
-    selectedClassId !== null
-      ? THIRD_CLASS_LIST.filter((c) => c.id === selectedClassId)
-      : THIRD_CLASS_LIST;
+    options.selectedClassId !== null
+      ? OLYMPIAD_CLASSES.filter((c) => c.id === options.selectedClassId)
+      : OLYMPIAD_CLASSES;
 
   const mockClanPool = ['SiamVanguard', 'ApexPredators', 'NightStalkers', 'IronBlood', 'RedSkulls', null];
 
   return targetClasses.map((c) => {
-    // Generate realistic 2-4 contestants for active classes, empty for niche ones
-    let players: Array<{ rank: number; charName: string; clanName: string | null }> = [];
+    let allContenders: Array<{ charName: string; clanName: string | null }> = [];
 
-    // Check if one of our known hero players matches this class
-    const hero = DEMO_HEROES.find((h) => h.classId === c.id);
-
-    if (hero) {
-      players = [
-        { rank: 1, charName: hero.charName, clanName: hero.clanName },
-        { rank: 2, charName: `${c.name}Challenger`, clanName: 'ApexPredators' },
-        { rank: 3, charName: `Noble${c.name.replace(/\s+/g, '')}`, clanName: 'NightStalkers' },
+    // Soulhound (132/133) combined demo data
+    if (c.id === 132) {
+      allContenders = [
+        { charName: 'SoulReaperTH', clanName: 'ApexPredators' }, // Male Soulhound (132)
+        { charName: 'ShadowMistress', clanName: 'SiamVanguard' }, // Female Soulhound (133)
+        { charName: 'DarkDuchess', clanName: 'NightStalkers' }, // Female Soulhound (133)
+        { charName: 'KamaelPrince', clanName: 'IronBlood' }, // Male Soulhound (132)
+        { charName: 'RavenSoul', clanName: null },
       ];
-    } else if (c.id === 89 || c.id === 91 || c.id === 92 || c.id === 101 || c.id === 107 || c.id === 113) {
-      players = [
-        { rank: 1, charName: `Top${c.name.replace(/\s+/g, '')}`, clanName: mockClanPool[c.id % mockClanPool.length] },
-        { rank: 2, charName: `Vanguard${c.name.replace(/\s+/g, '').slice(0, 8)}`, clanName: 'SiamVanguard' },
-      ];
-    } else if (c.id % 2 === 0) {
-      players = [
-        { rank: 1, charName: `Contender${c.id}`, clanName: 'IronBlood' },
-      ];
+    } else {
+      const hero = DEMO_HEROES.find((h) => h.classId === c.id);
+      if (hero) {
+        allContenders = [
+          { charName: hero.charName, clanName: hero.clanName },
+          { charName: `${c.name}Challenger`, clanName: 'ApexPredators' },
+          { charName: `Noble${c.name.replace(/\s+/g, '')}`, clanName: 'NightStalkers' },
+          { charName: `Vanguard${c.name.replace(/\s+/g, '').slice(0, 6)}`, clanName: 'SiamVanguard' },
+          { charName: `Contender${c.id}_A`, clanName: 'IronBlood' },
+          { charName: `Contender${c.id}_B`, clanName: null },
+          { charName: `Contender${c.id}_C`, clanName: 'RedSkulls' },
+          { charName: `Contender${c.id}_D`, clanName: 'SiamVanguard' },
+          { charName: `Contender${c.id}_E`, clanName: 'ApexPredators' },
+          { charName: `Contender${c.id}_F`, clanName: null },
+          { charName: `Contender${c.id}_G`, clanName: 'NightStalkers' },
+          { charName: `Contender${c.id}_H`, clanName: 'IronBlood' },
+        ];
+      } else if (c.id === 88 || c.id === 89 || c.id === 92 || c.id === 101 || c.id === 110 || c.id === 113) {
+        allContenders = [
+          { charName: `Top${c.name.replace(/\s+/g, '')}`, clanName: mockClanPool[c.id % mockClanPool.length] },
+          { charName: `Elite${c.name.replace(/\s+/g, '').slice(0, 8)}`, clanName: 'SiamVanguard' },
+          { charName: `Noble${c.name.replace(/\s+/g, '').slice(0, 8)}`, clanName: 'ApexPredators' },
+          { charName: `Blade${c.id}`, clanName: 'IronBlood' },
+        ];
+      } else if (c.id % 2 === 0) {
+        allContenders = [
+          { charName: `Master${c.name.replace(/\s+/g, '').slice(0, 6)}`, clanName: 'IronBlood' },
+        ];
+      }
     }
+
+    const totalPlayers = allContenders.length;
+    const offset = (options.page - 1) * options.limit;
+    const pagedSlice = allContenders.slice(offset, offset + options.limit);
+
+    const players = pagedSlice.map((p, idx) => ({
+      rank: offset + idx + 1,
+      charName: p.charName,
+      clanName: p.clanName,
+    }));
 
     return {
       classId: c.id,
       className: c.name,
       race: c.race,
+      totalPlayers,
       players,
     };
   });

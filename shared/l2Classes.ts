@@ -137,9 +137,74 @@ export const L2_HIGH_FIVE_CLASSES: Record<number, L2ClassInfo> = {
 };
 
 export function getClassName(classId: number): string {
+  if (classId === 132 || classId === 133) {
+    return 'Soulhound';
+  }
   return L2_HIGH_FIVE_CLASSES[classId]?.name ?? `Unknown Class (${classId})`;
 }
 
 export const THIRD_CLASS_LIST: L2ClassInfo[] = Object.values(L2_HIGH_FIVE_CLASSES).filter(
   (c) => c.isThirdClass
 );
+
+/**
+ * Olympiad Eligible Third Classes in High Five:
+ * Groups Male Soulhound (132) and Female Soulhound (133) into a single unified
+ * 'Soulhound' entry (classId 132) according to L2J Mobius Olympiad rules.
+ * Total 33 distinct Olympiad competition classes (88–118, 131, 132, 134, 136).
+ */
+export interface OlympiadClassInfo {
+  id: number; // Primary class ID (132 for Soulhound)
+  name: string;
+  race: 'Human' | 'Elf' | 'Dark Elf' | 'Orc' | 'Dwarf' | 'Kamael';
+  memberClassIds: number[]; // [132, 133] for Soulhound, [id] for others
+}
+
+export const OLYMPIAD_CLASSES: OlympiadClassInfo[] = [
+  // Human 3rd Classes
+  { id: 88, name: 'Duelist', race: 'Human', memberClassIds: [88] },
+  { id: 89, name: 'Dreadnought', race: 'Human', memberClassIds: [89] },
+  { id: 90, name: 'Phoenix Knight', race: 'Human', memberClassIds: [90] },
+  { id: 91, name: 'Hell Knight', race: 'Human', memberClassIds: [91] },
+  { id: 92, name: 'Sagittarius', race: 'Human', memberClassIds: [92] },
+  { id: 93, name: 'Adventurer', race: 'Human', memberClassIds: [93] },
+  { id: 94, name: 'Archmage', race: 'Human', memberClassIds: [94] },
+  { id: 95, name: 'Soultaker', race: 'Human', memberClassIds: [95] },
+  { id: 96, name: 'Arcana Lord', race: 'Human', memberClassIds: [96] },
+  { id: 97, name: 'Cardinal', race: 'Human', memberClassIds: [97] },
+  { id: 98, name: 'Hierophant', race: 'Human', memberClassIds: [98] },
+
+  // Elf 3rd Classes
+  { id: 99, name: 'Eva\'s Templar', race: 'Elf', memberClassIds: [99] },
+  { id: 100, name: 'Sword Muse', race: 'Elf', memberClassIds: [100] },
+  { id: 101, name: 'Wind Rider', race: 'Elf', memberClassIds: [101] },
+  { id: 102, name: 'Moonlight Sentinel', race: 'Elf', memberClassIds: [102] },
+  { id: 103, name: 'Mystic Muse', race: 'Elf', memberClassIds: [103] },
+  { id: 104, name: 'Elemental Master', race: 'Elf', memberClassIds: [104] },
+  { id: 105, name: 'Eva\'s Saint', race: 'Elf', memberClassIds: [105] },
+
+  // Dark Elf 3rd Classes
+  { id: 106, name: 'Shillien Templar', race: 'Dark Elf', memberClassIds: [106] },
+  { id: 107, name: 'Spectral Dancer', race: 'Dark Elf', memberClassIds: [107] },
+  { id: 108, name: 'Ghost Hunter', race: 'Dark Elf', memberClassIds: [108] },
+  { id: 109, name: 'Ghost Sentinel', race: 'Dark Elf', memberClassIds: [109] },
+  { id: 110, name: 'Storm Screamer', race: 'Dark Elf', memberClassIds: [110] },
+  { id: 111, name: 'Spectral Master', race: 'Dark Elf', memberClassIds: [111] },
+  { id: 112, name: 'Shillien Saint', race: 'Dark Elf', memberClassIds: [112] },
+
+  // Orc 3rd Classes
+  { id: 113, name: 'Titan', race: 'Orc', memberClassIds: [113] },
+  { id: 114, name: 'Grand Khavatari', race: 'Orc', memberClassIds: [114] },
+  { id: 115, name: 'Dominator', race: 'Orc', memberClassIds: [115] },
+  { id: 116, name: 'Doomcryer', race: 'Orc', memberClassIds: [116] },
+
+  // Dwarf 3rd Classes
+  { id: 117, name: 'Fortune Seeker', race: 'Dwarf', memberClassIds: [117] },
+  { id: 118, name: 'Maestro', race: 'Dwarf', memberClassIds: [118] },
+
+  // Kamael 3rd Classes (Grouped 132/133 Soulhound)
+  { id: 131, name: 'Doombringer', race: 'Kamael', memberClassIds: [131] },
+  { id: 132, name: 'Soulhound', race: 'Kamael', memberClassIds: [132, 133] },
+  { id: 134, name: 'Trickster', race: 'Kamael', memberClassIds: [134] },
+  { id: 136, name: 'Judicator', race: 'Kamael', memberClassIds: [136] },
+];

@@ -711,18 +711,30 @@ export async function getOlympiadHeroes(): Promise<OlympiadHeroesResponse> {
   };
 }
 
-export async function getOlympiadRankings(
-  selectedClassId: number | null
-): Promise<OlympiadRankingsResponse> {
-  const ttl = 180;
-  const cacheKey = `olympiad:rankings:class:${selectedClassId ?? 'all'}`;
+export async function getOlympiadRankings(params: {
+  cycleType: 'current' | 'previous';
+  selectedClassId: number | null;
+  page: number;
+  limit: number;
+}): Promise<OlympiadRankingsResponse> {
+  const ttl = 180; // 3 minutes cache as specified
+  const cacheKey = `olympiad:rankings:cycle:${params.cycleType}:class:${params.selectedClassId ?? 'all'}:p${params.page}:l${params.limit}`;
   const isDemo = env.DEMO_MODE && env.NODE_ENV !== 'production';
 
   if (!env.ENABLE_OLYMPIAD_HEROES) {
     return {
       enabled: false,
+      cycleType: params.cycleType,
       currentCycle: null,
-      selectedClassId,
+      cycleNumber: null,
+      period: null,
+      periodNameTh: 'ปิดใช้งาน',
+      periodNameEn: 'Disabled',
+      minMatchesRequired: env.OLYMPIAD_MIN_MATCHES,
+      hasPreviousData: false,
+      page: params.page,
+      limit: params.limit,
+      selectedClassId: params.selectedClassId,
       classes: [],
       meta: createMeta({
         mode: isDemo ? 'demo' : 'live',
@@ -751,11 +763,20 @@ export async function getOlympiadRankings(
 
   if (env.DB_ENABLED && infra.database === 'online') {
     try {
-      const result = await queryOlympiadRankings(selectedClassId);
+      const result = await queryOlympiadRankings(params);
       const payload: Omit<OlympiadRankingsResponse, 'meta'> = {
         enabled: true,
+        cycleType: params.cycleType,
         currentCycle: result.currentCycle,
-        selectedClassId,
+        cycleNumber: result.cycleNumber,
+        period: result.period,
+        periodNameTh: result.periodNameTh,
+        periodNameEn: result.periodNameEn,
+        minMatchesRequired: env.OLYMPIAD_MIN_MATCHES,
+        hasPreviousData: result.hasPreviousData,
+        page: params.page,
+        limit: params.limit,
+        selectedClassId: params.selectedClassId,
         classes: result.classes,
       };
       const updatedAt = apiCache.set(cacheKey, payload, ttl);
@@ -766,6 +787,10 @@ export async function getOlympiadRankings(
           updatedAt,
           cached: false,
           cacheTtlSeconds: ttl,
+          warning:
+            params.cycleType === 'previous' && !result.hasPreviousData
+              ? 'Previous cycle snapshot (olympiad_nobles_eom) contains no data yet.'
+              : undefined,
         }),
       };
     } catch (err) {
@@ -788,9 +813,18 @@ export async function getOlympiadRankings(
   if (isDemo) {
     const payload: Omit<OlympiadRankingsResponse, 'meta'> = {
       enabled: true,
+      cycleType: params.cycleType,
       currentCycle: 4,
-      selectedClassId,
-      classes: buildDemoOlympiadRankings(selectedClassId),
+      cycleNumber: params.cycleType === 'previous' ? 3 : 4,
+      period: 0,
+      periodNameTh: 'ช่วงแข่งขันประจำรอบ (Competition Period)',
+      periodNameEn: 'Active Competition Period',
+      minMatchesRequired: env.OLYMPIAD_MIN_MATCHES,
+      hasPreviousData: true,
+      page: params.page,
+      limit: params.limit,
+      selectedClassId: params.selectedClassId,
+      classes: buildDemoOlympiadRankings(params),
     };
     const updatedAt = apiCache.set(cacheKey, payload, ttl);
     return {
@@ -800,15 +834,25 @@ export async function getOlympiadRankings(
         updatedAt,
         cached: false,
         cacheTtlSeconds: ttl,
-        warning: 'DEMO MODE: Showing fixture Olympiad rankings (Scores remain private).',
+        warning: 'DEMO MODE: Showing fixture Olympiad rankings (Scores remain strictly private).',
       }),
     };
   }
 
+  // Production unavailable mode: Zero fake data
   return {
     enabled: true,
+    cycleType: params.cycleType,
     currentCycle: null,
-    selectedClassId,
+    cycleNumber: null,
+    period: null,
+    periodNameTh: 'ไม่สามารถติดต่อฐานข้อมูล',
+    periodNameEn: 'Database Unavailable',
+    minMatchesRequired: env.OLYMPIAD_MIN_MATCHES,
+    hasPreviousData: false,
+    page: params.page,
+    limit: params.limit,
+    selectedClassId: params.selectedClassId,
     classes: [],
     meta: createMeta({
       mode: 'unavailable',

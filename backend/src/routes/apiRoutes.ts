@@ -158,7 +158,16 @@ apiRouter.get('/olympiad/rankings', async (req, res, next) => {
       }
     }
 
-    const data = await getOlympiadRankings(selectedClassId);
+    const cycleType = req.query.cycle === 'previous' ? 'previous' : 'current';
+    const page = Math.max(1, Math.min(100, Number(req.query.page) || 1));
+    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 10));
+
+    const data = await getOlympiadRankings({
+      cycleType,
+      selectedClassId,
+      page,
+      limit,
+    });
     res.json(data);
   } catch (err) {
     next(err);

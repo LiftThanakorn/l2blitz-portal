@@ -140,4 +140,45 @@ describe('L2Blitz Backend API & Data Integrity Suite', () => {
     expect(duelistRes.body.classes[0].classId).toBe(88);
     expect(duelistRes.body.classes[0].className).toBe('Duelist');
   });
+
+  it('unifies Male & Female Soulhound (132/133) into a single Olympiad group under Class ID 132', async () => {
+    const res = await request(app).get('/api/olympiad/rankings?classId=132');
+    expect(res.status).toBe(200);
+    expect(res.body.classes.length).toBe(1);
+
+    const soulhoundGroup = res.body.classes[0];
+    expect(soulhoundGroup.classId).toBe(132);
+    expect(soulhoundGroup.className).toBe('Soulhound');
+    expect(soulhoundGroup.race).toBe('Kamael');
+
+    // Contestants in demo include both male and female soulhound characters
+    expect(soulhoundGroup.players.length).toBeGreaterThan(0);
+    expect(soulhoundGroup.players[0].rank).toBe(1);
+  });
+
+  it('supports cycle selection (current vs previous) and returns cycle metadata', async () => {
+    const currentRes = await request(app).get('/api/olympiad/rankings?cycle=current');
+    expect(currentRes.status).toBe(200);
+    expect(currentRes.body.cycleType).toBe('current');
+    expect(currentRes.body.minMatchesRequired).toBe(9);
+    expect(typeof currentRes.body.hasPreviousData).toBe('boolean');
+
+    const previousRes = await request(app).get('/api/olympiad/rankings?cycle=previous');
+    expect(previousRes.status).toBe(200);
+    expect(previousRes.body.cycleType).toBe('previous');
+  });
+
+  it('supports pagination on Olympiad rankings with correct rank offsets', async () => {
+    const res = await request(app).get('/api/olympiad/rankings?classId=132&page=2&limit=2');
+    expect(res.status).toBe(200);
+    expect(res.body.page).toBe(2);
+    expect(res.body.limit).toBe(2);
+
+    const group = res.body.classes[0];
+    expect(group.totalPlayers).toBeGreaterThanOrEqual(group.players.length);
+    if (group.players.length > 0) {
+      // Offset for page 2, limit 2 starts at rank 3
+      expect(group.players[0].rank).toBe(3);
+    }
+  });
 });

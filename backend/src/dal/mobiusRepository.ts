@@ -1,6 +1,12 @@
 import { env } from '../config/env.js';
 import { executeReadOnlyQuery } from './database.js';
-import { getClassName, THIRD_CLASS_LIST, type L2ClassInfo } from '../../../shared/l2Classes.js';
+import {
+  getClassName,
+  THIRD_CLASS_LIST,
+  OLYMPIAD_CLASSES,
+  type L2ClassInfo,
+  type OlympiadClassInfo,
+} from '../../../shared/l2Classes.js';
 import { L2BLITZ_BOSS_CATALOG } from '../../../shared/staticGameContent.js';
 import type {
   PlayerRankingItem,
@@ -335,85 +341,179 @@ export async function queryOlympiadHeroes(): Promise<{
 }
 
 /**
- * Queries Olympiad nobles for current cycle rankings.
- * Schema: L2J Mobius CT 2.6 High Five `olympiad_nobles`
- * Columns: charId, class_id, olympiad_points, competitions_done, competitions_won, competitions_lost
+ * Queries Olympiad nobles for current or previous cycle rankings.
+ * Reference: L2J Mobius CT 2.6 High Five (`Olympiad.java`)
  *
- * Tie-Breaker Rule (Section 1):
- * 1. `olympiad_points DESC` (primary rank)
- * 2. `competitions_won DESC` (L2J Mobius standard: more wins breaks tie)
- * 3. `competitions_done DESC` (more participation)
- * 4. `c.char_name ASC` (deterministic alphabetical tie-breaker)
+ * Tables:
+ * - Current Cycle: `olympiad_nobles`
+ * - Previous Cycle: `olympiad_nobles_eom` (End of Month snapshot)
+ * - Cycle Info: `olympiad_data` (current_cycle, period, olympiad_end, validation_end)
  *
- * CRITICAL PRIVACY/INTEGRITY REQUIREMENT:
- * Points & win statistics are computed strictly on backend for ranking sorting.
- * They are NEVER exposed in the public payload!
+ * Rules:
+ * 1. Sorting Order (Mobius standard):
+ *    - `olympiad_points DESC` (primary rank)
+ *    - `competitions_done DESC` (total matches played when points are equal)
+ *    - `competitions_won DESC` (wins when both points and done are equal)
+ *    - `c.charId ASC` (deterministic final tie-breaker)
+ * 2. Class Grouping:
+ *    - Male Soulhound (132) and Female Soulhound (133) are unified into Soulhound (132).
+ * 3. Participation threshold:
+ *    - Players must satisfy `competitions_done >= env.OLYMPIAD_MIN_MATCHES` (default 9).
+ * 4. Privacy & Zero-leak:
+ *    - Public API payload NEVER exposes `olympiad_points` or match counts!
  */
-export async function queryOlympiadRankings(selectedClassId: number | null): Promise<{
+export async function queryOlympiadRankings(options: {
+  cycleType: 'current' | 'previous';
+  selectedClassId: number | null;
+  page: number;
+  limit: number;
+}): Promise<{
   currentCycle: number | null;
+  cycleNumber: number | null;
+  period: number | null;
+  periodNameTh: string;
+  periodNameEn: string;
+  hasPreviousData: boolean;
   classes: Array<{
     classId: number;
     className: string;
     race: string;
+    totalPlayers: number;
     players: Array<{ rank: number; charName: string; clanName: string | null }>;
   }>;
 }> {
   const { clause, params } = buildValidCharacterWhereClause('c');
 
   let currentCycle: number | null = null;
+  let period: number | null = 0;
   try {
-    const cycleRows = await executeReadOnlyQuery<{ current_cycle: number }>(
-      `SELECT current_cycle FROM olympiad_data LIMIT 1`
+    const cycleRows = await executeReadOnlyQuery<{ current_cycle: number; period: number }>(
+      `SELECT current_cycle, period FROM olympiad_data LIMIT 1`
     );
-    currentCycle = cycleRows[0]?.current_cycle ?? null;
+    if (cycleRows[0]) {
+      currentCycle = Number(cycleRows[0].current_cycle);
+      period = Number(cycleRows[0].period);
+    }
   } catch {
     currentCycle = null;
+    period = 0;
+  }
+
+  const periodNameTh =
+    period === 1
+      ? 'ช่วงตรวจสอบผลและแต่งตั้งฮีโร่ (Validation Period)'
+      : 'ช่วงแข่งขันประจำรอบ (Competition Period)';
+  const periodNameEn =
+    period === 1 ? 'Validation & Hero Period' : 'Active Competition Period';
+
+  // Check if olympiad_nobles_eom has previous cycle data
+  let hasPreviousData = false;
+  try {
+    const eomCount = await executeReadOnlyQuery<{ count: number }>(
+      `SELECT COUNT(*) AS count FROM olympiad_nobles_eom LIMIT 1`
+    );
+    hasPreviousData = (eomCount[0]?.count ?? 0) > 0;
+  } catch {
+    hasPreviousData = false;
+  }
+
+  // Choose table based on cycleType requested
+  const targetTable =
+    options.cycleType === 'previous' && hasPreviousData
+      ? 'olympiad_nobles_eom'
+      : 'olympiad_nobles';
+
+  // If user requested previous cycle but no EOM data exists, return empty/safe state
+  if (options.cycleType === 'previous' && !hasPreviousData) {
+    const targetClasses =
+      options.selectedClassId !== null
+        ? OLYMPIAD_CLASSES.filter((c) => c.id === options.selectedClassId)
+        : OLYMPIAD_CLASSES;
+
+    return {
+      currentCycle,
+      cycleNumber: currentCycle && currentCycle > 1 ? currentCycle - 1 : null,
+      period,
+      periodNameTh,
+      periodNameEn,
+      hasPreviousData: false,
+      classes: targetClasses.map((c) => ({
+        classId: c.id,
+        className: c.name,
+        race: c.race,
+        totalPlayers: 0,
+        players: [],
+      })),
+    };
   }
 
   interface RawOlympiadNobleRow {
+    charId: number;
     char_name: string;
     class_id: number;
     clan_name: string | null;
     olympiad_points: number;
-    competitions_won: number;
     competitions_done: number;
+    competitions_won: number;
   }
 
+  // Filter for specific class or memberClassIds (e.g. [132, 133] for Soulhound)
   const whereParts = [`${clause}`, `on.class_id > 0`];
   const queryParams = [...params];
 
-  if (selectedClassId !== null) {
-    whereParts.push(`on.class_id = ?`);
-    queryParams.push(selectedClassId);
+  // Apply OLYMPIAD_MIN_MATCHES rule from Mobius High Five
+  if (env.OLYMPIAD_MIN_MATCHES > 0) {
+    whereParts.push(`on.competitions_done >= ?`);
+    queryParams.push(env.OLYMPIAD_MIN_MATCHES);
+  }
+
+  if (options.selectedClassId !== null) {
+    const classDef = OLYMPIAD_CLASSES.find((c) => c.id === options.selectedClassId);
+    if (classDef && classDef.memberClassIds.length > 1) {
+      const placeholders = classDef.memberClassIds.map(() => '?').join(', ');
+      whereParts.push(`on.class_id IN (${placeholders})`);
+      queryParams.push(...classDef.memberClassIds);
+    } else {
+      whereParts.push(`on.class_id = ?`);
+      queryParams.push(options.selectedClassId);
+    }
   }
 
   const fullWhere = whereParts.join(' AND ');
 
+  /**
+   * Mobius High Five Olympiad Tie-Breaker:
+   * 1. olympiad_points DESC
+   * 2. competitions_done DESC
+   * 3. competitions_won DESC
+   * 4. c.charId ASC
+   */
   const rows = await executeReadOnlyQuery<RawOlympiadNobleRow>(
     `SELECT
+      c.charId,
       c.char_name,
-      on.class_id,
+      CASE WHEN on.class_id IN (132, 133) THEN 132 ELSE on.class_id END AS class_id,
       cd.clan_name,
       IFNULL(on.olympiad_points, 0) AS olympiad_points,
-      IFNULL(on.competitions_won, 0) AS competitions_won,
-      IFNULL(on.competitions_done, 0) AS competitions_done
-    FROM olympiad_nobles on
+      IFNULL(on.competitions_done, 0) AS competitions_done,
+      IFNULL(on.competitions_won, 0) AS competitions_won
+    FROM \`${targetTable}\` on
     INNER JOIN characters c ON c.charId = on.charId
     LEFT JOIN clan_data cd ON cd.clan_id = c.clanid
     WHERE ${fullWhere}
     ORDER BY
-      on.class_id ASC,
+      class_id ASC,
       on.olympiad_points DESC,
-      on.competitions_won DESC,
       on.competitions_done DESC,
-      c.char_name ASC`,
+      on.competitions_won DESC,
+      c.charId ASC`,
     queryParams
   );
 
-  // Group by class_id
+  // Group by mapped class_id (combining 132 and 133 into 132)
   const groupMap = new Map<
     number,
-    Array<{ rank: number; charName: string; clanName: string | null }>
+    Array<{ charName: string; clanName: string | null }>
   >();
 
   for (const row of rows) {
@@ -423,26 +523,55 @@ export async function queryOlympiadRankings(selectedClassId: number | null): Pro
     }
     const currentList = groupMap.get(cid)!;
     currentList.push({
-      rank: currentList.length + 1,
       charName: row.char_name,
       clanName: row.clan_name || null,
     });
   }
 
-  // Target classes to present (if selectedClassId provided, only that class; otherwise all 3rd classes)
   const targetClasses =
-    selectedClassId !== null
-      ? THIRD_CLASS_LIST.filter((c) => c.id === selectedClassId)
-      : THIRD_CLASS_LIST;
+    options.selectedClassId !== null
+      ? OLYMPIAD_CLASSES.filter((c) => c.id === options.selectedClassId)
+      : OLYMPIAD_CLASSES;
 
-  const resultClasses = targetClasses.map((c) => ({
-    classId: c.id,
-    className: c.name,
-    race: c.race,
-    players: groupMap.get(c.id) ?? [],
-  }));
+  const resultClasses = targetClasses.map((c) => {
+    const allPlayersInClass = groupMap.get(c.id) ?? [];
+    const totalPlayers = allPlayersInClass.length;
 
-  return { currentCycle, classes: resultClasses };
+    // Apply pagination per class (default page 1, limit 10)
+    const offset = (options.page - 1) * options.limit;
+    const pagedSlice = allPlayersInClass.slice(offset, offset + options.limit);
+
+    const players = pagedSlice.map((p, idx) => ({
+      rank: offset + idx + 1,
+      charName: p.charName,
+      clanName: p.clanName,
+    }));
+
+    return {
+      classId: c.id,
+      className: c.name,
+      race: c.race,
+      totalPlayers,
+      players,
+    };
+  });
+
+  const cycleNumber =
+    options.cycleType === 'previous'
+      ? currentCycle && currentCycle > 1
+        ? currentCycle - 1
+        : null
+      : currentCycle;
+
+  return {
+    currentCycle,
+    cycleNumber,
+    period,
+    periodNameTh,
+    periodNameEn,
+    hasPreviousData,
+    classes: resultClasses,
+  };
 }
 
 export async function queryCastles(): Promise<CastleItem[]> {

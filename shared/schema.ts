@@ -167,11 +167,12 @@ export const OlympiadHeroesResponseSchema = z.object({
 export type OlympiadHeroesResponse = z.infer<typeof OlympiadHeroesResponseSchema>;
 
 /**
- * Olympiad Rankings by Class (Section 1 & 2):
+ * Olympiad Rankings by Class (Section 1, 2, 3, 5):
  * Displays player rank, character name, clan name per High Five class.
- * CRITICAL RULE:
+ *
+ * CRITICAL PRIVACY RULE:
  * - "ใช้คะแนนเพื่อจัดอันดับภายในระบบเท่านั้น ห้ามแสดงตัวเลขคะแนนบนเว็บไซต์"
- * - API strictly does NOT expose points (olympiad_points) to public JSON payload!
+ * - API strictly does NOT expose points (olympiad_points) or match counts in public payload!
  */
 export const OlympiadClassRankPlayerSchema = z.object({
   rank: z.number(),
@@ -184,13 +185,23 @@ export const OlympiadClassGroupSchema = z.object({
   classId: z.number(),
   className: z.string(),
   race: z.string(),
+  totalPlayers: z.number(),
   players: z.array(OlympiadClassRankPlayerSchema),
 });
 export type OlympiadClassGroup = z.infer<typeof OlympiadClassGroupSchema>;
 
 export const OlympiadRankingsResponseSchema = z.object({
   enabled: z.boolean(),
+  cycleType: z.enum(['current', 'previous']),
   currentCycle: z.number().nullable(),
+  cycleNumber: z.number().nullable(),
+  period: z.number().nullable(), // 0 = Competition, 1 = Validation
+  periodNameTh: z.string(),
+  periodNameEn: z.string(),
+  minMatchesRequired: z.number(),
+  hasPreviousData: z.boolean(),
+  page: z.number(),
+  limit: z.number(),
   selectedClassId: z.number().nullable(), // null means "All Classes"
   classes: z.array(OlympiadClassGroupSchema),
   meta: ApiMetaSchema,

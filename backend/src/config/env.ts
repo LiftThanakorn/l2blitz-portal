@@ -77,6 +77,9 @@ const EnvSchema = z.object({
     .default('false')
     .transform((v) => v.toLowerCase() === 'true'),
 
+  // Olympiad Minimum Matches requirement (defaults to 9 as per Mobius High Five standard)
+  OLYMPIAD_MIN_MATCHES: z.coerce.number().min(0).default(9),
+
   // Server Rates Config (Easy override via .env)
   RATE_EXP: z.coerce.number().default(1000),
   RATE_SP: z.coerce.number().default(1000),

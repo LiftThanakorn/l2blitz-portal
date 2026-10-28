@@ -182,13 +182,46 @@ export const apiClient = {
       meta: clientDemoMeta(),
     })),
 
-  getOlympiadRankings: (classId?: number | null): Promise<import('@shared/schema').OlympiadRankingsResponse> => {
-    const qs = classId !== undefined && classId !== null ? `?classId=${classId}` : '';
+  getOlympiadRankings: (params?: {
+    classId?: number | null;
+    cycle?: 'current' | 'previous';
+    page?: number;
+    limit?: number;
+  }): Promise<import('@shared/schema').OlympiadRankingsResponse> => {
+    const search = new URLSearchParams();
+    if (params?.classId !== undefined && params?.classId !== null) {
+      search.set('classId', String(params.classId));
+    }
+    if (params?.cycle) {
+      search.set('cycle', params.cycle);
+    }
+    if (params?.page) {
+      search.set('page', String(params.page));
+    }
+    if (params?.limit) {
+      search.set('limit', String(params.limit));
+    }
+    const qs = search.toString() ? `?${search.toString()}` : '';
+
     return fetchJson(`/olympiad/rankings${qs}`, () => ({
       enabled: true,
+      cycleType: params?.cycle ?? 'current',
       currentCycle: 4,
-      selectedClassId: classId ?? null,
-      classes: buildDemoOlympiadRankings(classId ?? null),
+      cycleNumber: params?.cycle === 'previous' ? 3 : 4,
+      period: 0,
+      periodNameTh: 'ช่วงแข่งขันประจำรอบ (Competition Period)',
+      periodNameEn: 'Active Competition Period',
+      minMatchesRequired: 9,
+      hasPreviousData: true,
+      page: params?.page ?? 1,
+      limit: params?.limit ?? 10,
+      selectedClassId: params?.classId ?? null,
+      classes: buildDemoOlympiadRankings({
+        cycleType: params?.cycle ?? 'current',
+        selectedClassId: params?.classId ?? null,
+        page: params?.page ?? 1,
+        limit: params?.limit ?? 10,
+      }),
       meta: clientDemoMeta(),
     }));
   },
