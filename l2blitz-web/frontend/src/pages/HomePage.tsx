@@ -524,7 +524,7 @@ export function HomePage() {
                 decoding="async"
                 alt={t(
                   'พื้นที่ฟาร์มหุบเขามังกร Dragon Valley และถ้ำอันธารัส',
-                  'Dragon Valley and Lair of Antharas High Five farming canyon'
+                  'Fantasy artwork illustrating L2Blitz farming'
                 )}
               />
             </picture>
@@ -639,7 +639,7 @@ export function HomePage() {
                 kindEn: 'Automated Event',
                 placeTh: 'Team vs Team (TvT) รอบบ่ายและค่ำ',
                 placeEn: 'Team vs Team (TvT) Arena Matches',
-                time: '14:00 / 18:00 / 20:30 / 22:30',
+                time: '00:00–22:00 / ทุก 2 ชม.',
                 to: '/events',
               },
               {
@@ -655,7 +655,7 @@ export function HomePage() {
                 kindEn: 'Epic Jewelry Boss',
                 placeTh: 'Queen Ant (รังมดชั้นใน · Lv. 40)',
                 placeEn: 'Queen Ant (The Ant Nest Chamber)',
-                time: t('ตรวจสอบสถานะสด →', 'Check Status →'),
+                time: t('สถานะรอยืนยัน →', 'Status not verified →'),
                 to: '/raidboss',
               },
               {
@@ -663,22 +663,22 @@ export function HomePage() {
                 kindEn: 'Grand Boss',
                 placeTh: 'Baium (หอคอยโองการสวรรค์ ชั้น 14 · Lv. 75)',
                 placeEn: 'Baium (Tower of Insolence 14F)',
-                time: t('ตรวจสอบสถานะสด →', 'Check Status →'),
+                time: t('สถานะรอยืนยัน →', 'Status not verified →'),
                 to: '/raidboss',
               },
               {
                 kindTh: 'บอสมังกร',
                 kindEn: 'World Dragon',
-                placeTh: 'Antharas & Valakas (Lv. 85 High Five)',
-                placeEn: 'Antharas & Valakas Sanctums',
+                placeTh: 'Daily Epic Boss: Queen Ant หรือ Baium (20:00)',
+                placeEn: 'Daily Epic Boss — Queen Ant or Baium (20:00)',
                 time: t('ดูเงื่อนไขการเข้า →', 'Entry Rules →'),
                 to: '/raidboss',
               },
               {
                 kindTh: 'พื้นที่ฟาร์ม',
                 kindEn: 'PvP Farm Zone',
-                placeTh: 'หุบเขามังกร (Dragon Valley) & ถ้ำอันธารัส (LoA)',
-                placeEn: 'Dragon Valley & Lair of Antharas',
+                placeTh: 'FARMZONE 1: Chimera Field และ FARMZONE 2: Battered Lands',
+                placeEn: 'Chimera Field & Battered Lands',
                 time: t('เปิดตลอด 24 ชม. →', 'Open 24/7 →'),
                 to: '/farmzones',
               },
@@ -741,7 +741,7 @@ export function HomePage() {
 
             <div>
               <h3 className="lead-statement font-semibold text-[#1A1917]">
-                {t('ฟาร์มวัตถุดิบ S84 ใน Dragon Valley และถ้ำอันธารัส', 'Farm S84 materials in Dragon Valley and Lair of Antharas.')}
+                {t('ฟาร์ม Adena จากคิเมร่าใน FARMZONE 1 และ FARMZONE 2', 'Farm Adena from Chimeras in FARMZONE 1 and FARMZONE 2.')}
               </h3>
               <p className="body-copy text-[#1A1917] mt-2">
                 {t(
@@ -792,7 +792,7 @@ export function HomePage() {
                 height={1080}
                 loading="lazy"
                 decoding="async"
-                alt={t('หุบเขามังกร Dragon Valley', 'Dragon Valley farming canyon')}
+                alt={t('หุบเขามังกร Dragon Valley', 'L2Blitz farm zone fantasy artwork')}
                 className="w-full h-full object-cover block"
               />
             </picture>

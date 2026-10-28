@@ -232,7 +232,7 @@ export function ServerInfoPage() {
               titleTh: 'การสร้างไอเทมสายปะทะ (PvP Craft & Upgrade)',
               titleEn: 'PvP Craft & S84 Synthesis',
               bodyTh:
-                'นำเหรียญรางวัลจากการสังหารผู้เล่น (PvP Token) เหรียญกิจกรรม TvT และวัตถุดิบจากมอนสเตอร์ใน Dragon Valley / Lair of Antharas มาแลกอัปเกรดเป็นชุดเกราะ Vorpal, Elegia, อาวุธ Top S84, ผ้าคลุมบอส และเข็มขัดระดับสูง',
+                'นำเหรียญรางวัลจากการสังหารผู้เล่น (PvP Token) เหรียญกิจกรรม TvT และวัตถุดิบจากมอนสเตอร์ใน FARMZONE 1 / FARMZONE 2 มาแลกอัปเกรดเป็นชุดเกราะ Vorpal, Elegia, อาวุธ Top S84, ผ้าคลุมบอส และเข็มขัดระดับสูง',
               bodyEn:
                 'Synthesize Vorpal and Elegia armor sets, Top S84 weapons, Soul Cloaks, and Top-Grade PvP Belts by combining farm zone materials with PvP and TvT tokens.',
             },

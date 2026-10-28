@@ -1,3 +1,4 @@
+import { probeConfiguredPort } from './portProbe.js';
 import {
   DEV_FIXTURE_CLANS,
   DEV_FIXTURE_HEROES,
@@ -46,20 +47,29 @@ export async function getServerStatus(): Promise<ServerStatusDto> {
     if (isDatabaseConfigured()) {
       const ping = await executeReadOnlyQuery<{ ok: number }>('SELECT 1 AS ok');
       if (ping && ping.length > 0) {
+        const [loginServer, gameServer] = await Promise.all([
+          probeConfiguredPort('LOGIN_STATUS_PORT'),
+          probeConfiguredPort('GAME_STATUS_PORT'),
+        ]);
+        const status = loginServer === 'offline' || gameServer === 'offline'
+          ? 'offline'
+          : loginServer === 'online' && gameServer === 'online' ? 'online' : 'unknown';
         return {
-          status: 'online',
-          loginServer: 'online',
-          gameServer: 'online',
+          status, loginServer, gameServer,
           chronicle: 'High Five (CT 2.6)',
           region: 'Thailand (GMT+7)',
-          messageTh: 'เซิร์ฟเวอร์ออนไลน์ เชื่อมต่อฐานข้อมูล L2J Mobius สำเร็จ',
-          messageEn: 'Server Online — Connected to L2J Mobius High Five database.',
+          messageTh: status === 'unknown'
+            ? 'เชื่อมฐานข้อมูลได้ แต่ยังไม่เปิดตรวจสอบพอร์ตเซิร์ฟเวอร์'
+            : 'สถานะจากการตรวจสอบพอร์ต TCP ของเซิร์ฟเวอร์ (ไม่ใช่การยืนยันการเล่นเกม)',
+          messageEn: status === 'unknown'
+            ? 'Game database connected; port probes are not configured.'
+            : 'Status reflects TCP port reachability, not full gameplay health.',
         };
       }
       return {
-        status: 'offline',
+        status: 'unknown',
         loginServer: 'unknown',
-        gameServer: 'offline',
+        gameServer: 'unknown',
         chronicle: 'High Five (CT 2.6)',
         region: 'Thailand (GMT+7)',
         messageTh: 'ไม่สามารถติดต่อฐานข้อมูล GameServer ได้ในขณะนี้',
@@ -174,7 +184,8 @@ export async function getPvpRankings(params: {
               online: r.online === 1,
             };
           });
-          return { items, total: items.length, page: params.page, limit: params.limit };
+          const countRows = await executeReadOnlyQuery<{ total: number }>('SELECT COUNT(*) AS total FROM characters WHERE accesslevel = 0 AND char_name LIKE ?', [searchLike]);
+          return { items, total: Number(countRows?.[0]?.total ?? items.length), page: params.page, limit: params.limit };
         }
       }
 
@@ -256,7 +267,8 @@ export async function getPkRankings(params: {
               online: r.online === 1,
             };
           });
-          return { items, total: items.length, page: params.page, limit: params.limit };
+          const countRows = await executeReadOnlyQuery<{ total: number }>('SELECT COUNT(*) AS total FROM characters WHERE accesslevel = 0 AND char_name LIKE ?', [searchLike]);
+          return { items, total: Number(countRows?.[0]?.total ?? items.length), page: params.page, limit: params.limit };
         }
       }
 
@@ -336,7 +348,8 @@ export async function getClanRankings(params: {
             castleName: r.castle_name,
             allyName: r.ally_name,
           }));
-          return { items, total: items.length, page: params.page, limit: params.limit };
+          const countRows = await executeReadOnlyQuery<{ total: number }>('SELECT COUNT(*) AS total FROM clan_data WHERE clan_name LIKE ?', [searchLike]);
+          return { items, total: Number(countRows?.[0]?.total ?? items.length), page: params.page, limit: params.limit };
         }
       }
 
@@ -529,7 +542,7 @@ export async function getOlympiadHeroes(): Promise<{
         clan_name: string | null;
         ally_name: string | null;
       }>(
-        `SELECT h.char_name, h.class_id, h.count, cd.clan_name, cd.ally_name
+        `SELECT c.char_name, h.class_id, h.count, cd.clan_name, cd.ally_name
          FROM heroes h
          LEFT JOIN characters c ON h.charId = c.charId
          LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
@@ -603,50 +616,9 @@ export async function getCastles(): Promise<CastleDto[]> {
 }
 
 export async function getRaidBosses(): Promise<RaidBossDto[]> {
-  return withTtlCache('world:raidbosses', 30_000, async () => {
-    if (isDatabaseConfigured()) {
-      const grandRows = await executeReadOnlyQuery<{
-        boss_id: number;
-        respawn_time: number;
-        status: number;
-      }>('SELECT boss_id, respawn_time, status FROM grandboss_data');
-
-      const raidRows = await executeReadOnlyQuery<{
-        boss_id: number;
-        respawn_time: number;
-      }>('SELECT boss_id, respawn_time FROM raidboss_spawnlist');
-
-      if (grandRows || raidRows) {
-        const now = Date.now();
-        return HIGH_FIVE_RAIDBOSS_CATALOG.map((boss) => {
-          const grand = grandRows?.find((g) => Number(g.boss_id) === boss.bossId);
-          if (grand) {
-            const respawnMs = Number(grand.respawn_time || 0);
-            const isDead = respawnMs > now || Number(grand.status) > 0;
-            return {
-              ...boss,
-              status: isDead ? 'dead' : 'alive',
-              nextSpawnWindow: respawnMs > now ? new Date(respawnMs).toISOString() : null,
-            };
-          }
-          const raid = raidRows?.find((r) => Number(r.boss_id) === boss.bossId);
-          if (raid) {
-            const respawnMs = Number(raid.respawn_time || 0);
-            const isDead = respawnMs > now;
-            return {
-              ...boss,
-              status: isDead ? 'dead' : 'alive',
-              nextSpawnWindow: respawnMs > now ? new Date(respawnMs).toISOString() : null,
-            };
-          }
-          return boss;
-        });
-      }
-    }
-
-    // Never invent real-time statuses or spawn times when GameServer DB is unavailable
-    return HIGH_FIVE_RAIDBOSS_CATALOG;
-  });
+  // Custom DailyEpicBoss runtime state is NOT represented reliably by
+  // Mobius grandboss_data or raidboss_spawnlist. Never invent alive/dead status.
+  return HIGH_FIVE_RAIDBOSS_CATALOG;
 }
 
 export async function getTvtEventInfo(): Promise<TvtEventDto> {

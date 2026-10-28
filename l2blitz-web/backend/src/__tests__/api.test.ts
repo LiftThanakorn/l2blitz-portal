@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createApp } from '../app.js';
 import { clearMemoryCache } from '../db/mysqlAdapter.js';
 import { computePublicOlympiadRankings } from '../services/l2Service.js';
-import { DEV_FIXTURE_OLYMPIAD_NOBLES } from '../data/fixtures.js';
+import { DEV_FIXTURE_OLYMPIAD_NOBLES, HIGH_FIVE_TVT_EVENT, HIGH_FIVE_RAIDBOSS_CATALOG } from '../data/fixtures.js';
 
 describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => {
   beforeEach(() => {
@@ -98,5 +98,17 @@ describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => 
     } finally {
       server.close();
     }
+  });
+
+  it('4. Publishes only L2Blitz active daily epic bosses and accurate TvT schedule', () => {
+    assert.deepEqual(HIGH_FIVE_RAIDBOSS_CATALOG.map((b) => b.bossId), [29001, 29020]);
+    assert.ok(HIGH_FIVE_RAIDBOSS_CATALOG.every((b) => b.status === 'unknown'));
+    assert.equal(HIGH_FIVE_TVT_EVENT.scheduleTimes.length, 12);
+    assert.equal(HIGH_FIVE_TVT_EVENT.scheduleTimes[0], '00:00');
+    assert.equal(HIGH_FIVE_TVT_EVENT.scheduleTimes[11], '22:00');
+    assert.equal(HIGH_FIVE_TVT_EVENT.levelRequirement, 20);
+    assert.match(HIGH_FIVE_TVT_EVENT.rewardsNoteEn, /120M/);
+    assert.match(HIGH_FIVE_TVT_EVENT.rewardsNoteEn, /50M/);
+    assert.equal(HIGH_FIVE_TVT_EVENT.resultsVerified, false);
   });
 });

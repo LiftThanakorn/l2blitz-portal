@@ -24,126 +24,44 @@ interface FarmZoneSpec {
 
 const HIGH_FIVE_FARM_ZONES: FarmZoneSpec[] = [
   {
-    id: 'dragon-valley',
-    nameTh: 'หุบเขามังกร (Dragon Valley · Reworked Lv. 80–85)',
-    nameEn: 'Dragon Valley (High Five Reworked Lv. 80–85)',
-    levelRange: 'Lv. 80 – 85',
-    modeTh: 'โซนฟาร์มเดี่ยวและปาร์ตี้ขนาดเล็ก (รองรับ AutoFarm)',
-    modeEn: 'Solo & Small-Party Farm Zone (AutoFarm Supported)',
-    teleportTh: 'Alt+B → พื้นที่ฟาร์ม → หุบเขามังกร (ทิศเหนือ / ทิศใต้ / แยกมังกร)',
-    teleportEn: 'Alt+B → Farm Zones → Dragon Valley (North / South / Necropolis Fork)',
+    id: 'farmzone-1',
+    nameTh: 'FARMZONE 1 — ทุ่งคิเมร่า',
+    nameEn: 'FARMZONE 1 — Chimera Field',
+    levelRange: 'Chimera Lv. 81',
+    modeTh: 'พื้นที่ฟาร์มหลักของ L2Blitz · PvP และ AutoFarm',
+    modeEn: 'L2Blitz primary farming area · PvP and AutoFarm',
+    teleportTh: 'Alt+B → วาร์ป → FARMZONE 1',
+    teleportEn: 'Alt+B → Teleport → FARMZONE 1',
     monsters: [
-      { nameEn: 'Drakos Warrior (NPC 22822)', nameTh: 'นักรบดราคอส', level: 82, traits: 'Dragon / Weak to Dual Swords & Bow' },
-      { nameEn: 'Emerald Drake (NPC 22829)', nameTh: 'เอเมอรัลด์เดรค', level: 83, traits: 'Dragon / High Morale Buff Trigger' },
-      { nameEn: 'Gem Dragon (NPC 22830)', nameTh: 'มังกรอัญมณี', level: 83, traits: 'Fast Respawn / Vital Herb Drop' },
-      { nameEn: 'Dust Rider (NPC 22854)', nameTh: 'ดัสต์ไรเดอร์', level: 84, traits: 'Elite / High Adena & Crystal Yield' },
+      { nameEn: 'Chimera of Earth (22349)', nameTh: 'คิเมร่าธาตุดิน', level: 81, traits: 'Earth' },
+      { nameEn: 'Chimera of Darkness (22350)', nameTh: 'คิเมร่าธาตุมืด', level: 81, traits: 'Darkness' },
+      { nameEn: 'Chimera of Wind (22351)', nameTh: 'คิเมร่าธาตุลม', level: 81, traits: 'Wind' },
+      { nameEn: 'Chimera of Fire (22352)', nameTh: 'คิเมร่าธาตุไฟ', level: 81, traits: 'Fire' },
     ],
-    dropsTh: [
-      'Adena พื้นฐานอัตราสูง (ค่าตัวคูณสุทธิรอยืนยันจาก XML ของเซิร์ฟเวอร์)',
-      'หินธาตุและคริสตัลธาตุระดับ 150 / 300 (Attribute Stones & Crystals)',
-      'ชิ้นส่วนและใบสูตรอุปกรณ์ Vorpal / Vesper (S84)',
-      'กระดูกมังกรขนาดใหญ่ (Large Dragon Bone) สำหรับเรียกบอส 7 Raid',
-    ],
-    dropsEn: [
-      'High-yield Adena drops (exact custom multiplier pending GameServer XML import)',
-      'Elemental Attribute Stones (150) & Crystals (300)',
-      'Vesper & Vorpal (S84) equipment materials',
-      'Large Dragon Bone (used at Dragon Vortex to summon 7 Raid Bosses)',
-    ],
-    instructionsTh:
-      'เมื่อจัดปาร์ตี้ที่มีสายอาชีพหลากหลายเข้าฟาร์มในหุบเขามังกร จะได้รับบัฟ Morale Boost ช่วยเร่งความเร็วโจมตี คริติคอล และพลังเวทมนตร์ เหมาะสำหรับการเริ่มต้นสะสมอาเดน่าและหินธาตุหลังจากสร้างตัวละครเลเวล 85',
-    instructionsEn:
-      'Forming balanced parties in Dragon Valley triggers the High Five Morale Boost (Lv. 1–3), substantially increasing Atk.Spd, Casting Spd, and Critical Rate. Ideal entry zone for fresh Lv. 85 characters.',
+    dropsTh: ['Adena 1,500,000–3,500,000 ต่อการกำจัด Chimera (ค่าที่กำหนดไว้ใน L2Blitz)', 'ไอเทมอื่นให้ตรวจสอบจากรายการดรอปในเกม'],
+    dropsEn: ['1,500,000–3,500,000 Adena per Chimera (L2Blitz custom configuration)', 'Check in-game monster drops for other items'],
+    instructionsTh: 'วาร์ปได้จาก Community Board (Alt+B) พื้นที่นี้เปิดให้ปะทะ PvP และใช้ AutoFarm ได้ตามกฎเซิร์ฟเวอร์',
+    instructionsEn: 'Teleport through Community Board (Alt+B). PvP and AutoFarm are supported under L2Blitz server rules.',
   },
   {
-    id: 'lair-of-antharas',
-    nameTh: 'ถ้ำอันธารัส (Lair of Antharas · High Five Endgame)',
-    nameEn: 'Lair of Antharas (LoA · High Five Endgame Zone)',
-    levelRange: 'Lv. 83 – 85',
-    modeTh: 'โซนปาร์ตี้เต็มรูปแบบและการปะทะชิงพื้นที่ (Contested PvP)',
-    modeEn: 'Full Party & Contested Clan PvP Zone',
-    teleportTh: 'Alt+B → พื้นที่ฟาร์ม → ทางเข้าถ้ำอันธารัส / สะพานข้ามเหว / ใจกลางถ้ำ',
-    teleportEn: 'Alt+B → Farm Zones → Lair of Antharas Entrance / Knoriks Bridge / Heart',
+    id: 'farmzone-2',
+    nameTh: 'FARMZONE 2 — ทวีปรอยแผล',
+    nameEn: 'FARMZONE 2 — Battered Lands',
+    levelRange: 'Chimera Lv. 81',
+    modeTh: 'พื้นที่ฟาร์มสำรอง · กระจายผู้เล่นจากโซนแรก',
+    modeEn: 'Secondary farm area · alternative to Zone 1',
+    teleportTh: 'Alt+B → วาร์ป → FARMZONE 2',
+    teleportEn: 'Alt+B → Teleport → FARMZONE 2',
     monsters: [
-      { nameEn: 'Malruk Knight (NPC 22844)', nameTh: 'อัศวินมัลรุก', level: 84, traits: 'Demon / Heavy Physical Defense' },
-      { nameEn: 'Karik (NPC 22853)', nameTh: 'คาริค (มอนสเตอร์ท็อปของถ้ำ)', level: 85, traits: 'Demon / High S84 & PvP Token Drop' },
-      { nameEn: 'Bloody Karinness (NPC 22848)', nameTh: 'บลัดดี้คารินเนส', level: 84, traits: 'Aggressive / Group Spawn' },
-      { nameEn: 'Knoriks (NPC 22857)', nameTh: 'นอริกส์ (ตัวลาดตระเวน)', level: 85, traits: 'Patrol / Bonus Vorpal & Crystal Drop' },
+      { nameEn: 'Chimera of Earth (22349)', nameTh: 'คิเมร่าธาตุดิน', level: 81, traits: 'Earth' },
+      { nameEn: 'Chimera of Darkness (22350)', nameTh: 'คิเมร่าธาตุมืด', level: 81, traits: 'Darkness' },
+      { nameEn: 'Chimera of Wind (22351)', nameTh: 'คิเมร่าธาตุลม', level: 81, traits: 'Wind' },
+      { nameEn: 'Chimera of Fire (22352)', nameTh: 'คิเมร่าธาตุไฟ', level: 81, traits: 'Fire' },
     ],
-    dropsTh: [
-      'เหรียญอัปเกรดยุทโธปกรณ์สายปะทะ (PvP Craft Token · รอยืนยันไอดีไอเทม)',
-      'ชิ้นส่วนชุดเกราะ Vorpal และวัตถุดิบแลกชุด Elegia',
-      'สมุดสกิล Giant’s Codex - Mastery และ Blessed Enchant Scrolls',
-      'หิน Life Stone ระดับ 84 (High-Grade / Top-Grade Life Stone Lv. 84)',
-    ],
-    dropsEn: [
-      'PvP Craft Tokens (custom item ID pending GameServer XML sync)',
-      'Vorpal armor pieces & Elegia synthesis materials',
-      'Giant’s Codex - Mastery & Blessed Enchant Scrolls',
-      'High-Grade & Top-Grade Life Stones (Level 84)',
-    ],
-    instructionsTh:
-      'มอนสเตอร์ในถ้ำอันธารัสมีพลังโจมตีสูงและมีสกิลติดสตั๊น/เลือดไหล แนะนำให้จัดปาร์ตี้พร้อมฮีลเลอร์ (Cardinal / Eva’s Saint) และระวังการปะทะกับแคลนคู่อริบริเวณจุดเกิดของมอนสเตอร์ Karik และ Knoriks',
-    instructionsEn:
-      'Monsters inside Lair of Antharas hit hard and apply bleed/stun debuffs. Bring dedicated healers and prepare for frequent clan skirmishes around high-density Karik and Knoriks rooms.',
-  },
-  {
-    id: 'monastery-of-silence',
-    nameTh: 'อารามแห่งความเงียบชั้นบน (Monastery of Silence · Solina)',
-    nameEn: 'Monastery of Silence (Upper Floors · High Five)',
-    levelRange: 'Lv. 82 – 85',
-    modeTh: 'โซนฟาร์มสายหอก (Polearm AoE) และสายเวทมนตร์',
-    modeEn: 'Polearm AoE & Magical Farming Sanctum',
-    teleportTh: 'Alt+B → พื้นที่ฟาร์ม → อารามแห่งความเงียบ (ชั้น 1 / ชั้น 2 / ห้องสมุด)',
-    teleportEn: 'Alt+B → Farm Zones → Monastery of Silence (1F / 2F / Library)',
-    monsters: [
-      { nameEn: 'Solina Knight (NPC 22789)', nameTh: 'อัศวินโซลินา', level: 83, traits: 'Angel / Weak to Dark Element' },
-      { nameEn: 'Divinity Judge (NPC 22794)', nameTh: 'ผู้พิพากษาศักดิ์สิทธิ์', level: 84, traits: 'Angel / Holy Magic Caster' },
-      { nameEn: 'Divinity Protector (NPC 22798)', nameTh: 'ผู้พิทักษ์ศักดิ์สิทธิ์', level: 84, traits: 'Social Aggro / Holy Crystal Drop' },
-    ],
-    dropsTh: [
-      'หินธาตุศักดิ์สิทธิ์ (Holy Attribute Stone / Crystal) และอาเดน่าจำนวนมาก',
-      'อาวุธและชุดเกราะระดับ S80 / S84 (Moirai / Vesper)',
-      'คัมภีร์ปลดล็อกเควสต์บอส Anais และหอสมุดลับ',
-    ],
-    dropsEn: [
-      'Holy Attribute Stones/Crystals & dense Adena drops',
-      'S80/S84 Moirai and Vesper weapons and armor',
-      'Secret Room keys & Anais raid triggers',
-    ],
-    instructionsTh:
-      'มอนสเตอร์ในอารามชั้นบนแพ้ธาตุมืด (Dark Attribute) อย่างชัดเจน เหมาะสำหรับอาชีพ Dreadnought (Warlord), Doombringer หรือจอมเวท Soultaker / Storm Screamer ที่ฝังธาตุมืด 300',
-    instructionsEn:
-      'Upper Monastery angels share a pronounced weakness to Dark elemental attacks, making this zone prime territory for 300-Dark Dreadnoughts, Doombringers, and Dark Mages.',
-  },
-  {
-    id: 'seed-of-annihilation',
-    nameTh: 'เมล็ดพันธุ์แห่งการทำลายล้าง (Seed of Annihilation · Gracia)',
-    nameEn: 'Seed of Annihilation (Gracia Continent · Lv. 84–85)',
-    levelRange: 'Lv. 84 – 85',
-    modeTh: '3 เขตนิเวศวิทยา (Bistakon / Reptilikon / Cokrakon)',
-    modeEn: 'Tri-Biome Endgame Zone (Bistakon / Reptilikon / Cokrakon)',
-    teleportTh: 'Alt+B → พื้นที่ฟาร์ม → ทวีปกราเซีย → Seed of Annihilation',
-    teleportEn: 'Alt+B → Farm Zones → Gracia → Seed of Annihilation Dock',
-    monsters: [
-      { nameEn: 'Bgurent (NPC 22746 - Bistakon)', nameTh: 'บีกูเรนท์ (เขตบิสตาคอน)', level: 85, traits: 'Physical Melee Weak' },
-      { nameEn: 'Turtleslian (NPC 22754 - Reptilikon)', nameTh: 'เทอร์เทิลเลียน (เขトレปทิลิคอน)', level: 85, traits: 'Bow / Crossbow / Dagger Weak' },
-      { nameEn: 'Kanibi (NPC 22760 - Cokrakon)', nameTh: 'คานิบิ (เขตโคคราคอน)', level: 85, traits: 'Magic Damage Weak' },
-    ],
-    dropsTh: [
-      'คริสตัลธาตุระดับ 300 ทุกธาตุ (Elemental Crystals)',
-      'ชิ้นส่วนชุดเกราะและอาวุธ Vesper / Vorpal ระดับสูงสุด',
-      'อาเดน่าและเหรียญแลกเปลี่ยนพิเศษสำหรับอัปเกรดประดับ',
-    ],
-    dropsEn: [
-      'All 6 Elemental Attribute Crystals (150–300)',
-      'Vesper & Vorpal high-tier equipment components',
-      'High-density Adena and endgame exchange tokens',
-    ],
-    instructionsTh:
-      'แต่ละเขตใน Seed of Annihilation มีบัฟภูมิภาคที่เอื้อต่อสายอาชีพต่างกัน: Bistakon สำหรับนักรบประชิด, Reptilikon สำหรับนักธนูและมีด, และ Cokrakon สำหรับจอมเวท',
-    instructionsEn:
-      'Each biome rotates daily field buffs tailored to specific combat archetypes: Bistakon favors melee fighters, Reptilikon favors archers/daggers, and Cokrakon favors mages.',
+    dropsTh: ['Adena 1,500,000–3,500,000 ต่อ Chimera เช่นเดียวกับ FARMZONE 1', 'รายการดรอปอื่นอ้างอิงข้อมูลในเกม'],
+    dropsEn: ['1,500,000–3,500,000 Adena per Chimera, same as FARMZONE 1', 'See in-game drop information for other items'],
+    instructionsTh: 'ใช้ปุ่ม FARMZONE 2 ใน Community Board (Alt+B) สำหรับฟาร์มและต่อสู้ในพื้นที่ทางเลือก',
+    instructionsEn: 'Choose FARMZONE 2 in Community Board (Alt+B) for farming and PvP in the alternate area.',
   },
 ];
 
@@ -160,12 +78,12 @@ export function FarmZonesPage() {
       <div className="editorial-axis-grid items-end pb-12">
         <div className="col-span-12 lg:col-span-5">
           <p className="small-note text-[#E97540] font-semibold m-0">
-            {t('คู่มือพื้นที่ฟาร์มและเศรษฐกิจ S84', 'High Five Farming & Economy Guide')}
+            {t('พื้นที่ฟาร์ม L2Blitz', 'L2Blitz Farm Zones')}
           </p>
           <p className="body-copy text-[#77736C] mt-3">
             {t(
-              'ข้อมูลพื้นที่ฟาร์มหลักในแพตช์ Lineage II High Five รายชื่อมอนสเตอร์ จุดเทเลพอร์ต ไอเทมดรอป และคำแนะนำการจัดสายอาชีพ พร้อมโครงสร้างรองรับการนำเข้าข้อมูลจากไฟล์ XML ของ L2J Mobius โดยตรง',
-              'Detailed directory of High Five farming zones, monster NPC IDs, drop tables, teleport paths, and party composition guidelines · structured for direct L2J Mobius XML spawn/droplist import.'
+              'พื้นที่ฟาร์ม FARMZONE 1 และ FARMZONE 2 ของ L2Blitz พร้อมคิเมร่า 4 ธาตุ จุดวาร์ป และข้อมูลอาเดน่าจากการตั้งค่าเซิร์ฟเวอร์',
+              'The two active L2Blitz farm zones with four Chimera elements, teleport routes and verified custom Adena range.'
             )}
           </p>
         </div>
@@ -178,7 +96,7 @@ export function FarmZonesPage() {
         </div>
       </div>
 
-      {/* Hero Artwork: Dragon Valley & Lair of Antharas (16:9) */}
+      {/* Editorial fantasy artwork; not presented as an in-game zone screenshot. */}
       <figure className="m-0 mb-16 surface-stone overflow-hidden max-h-[460px]">
         <picture>
           <source srcSet="/assets/images/farm-zone.webp" type="image/webp" />
@@ -187,8 +105,8 @@ export function FarmZonesPage() {
             width={1920}
             height={1080}
             alt={t(
-              'ภาพประกอบพื้นที่ฟาร์มหุบเขามังกร Dragon Valley และโครงกระดูกมังกรโบราณ',
-              'Dragon Valley limestone canyon with ancient dragon ribcage fossils and Drake silhouettes'
+              'ภาพประกอบแนวแฟนตาซีสำหรับพื้นที่ฟาร์ม L2Blitz',
+              'Fantasy artwork accompanying the L2Blitz farm zone guide'
             )}
             className="w-full h-full object-cover block"
           />
@@ -248,8 +166,8 @@ export function FarmZonesPage() {
             <div className="pt-6 mt-6">
               <p className="small-note text-[#77736C] m-0">
                 {t(
-                  'หมายเหตุ: อัตราดรอปสุทธิพร้อมซิงค์จาก data/stats/npcs/ ของ L2J Mobius ทันทีเมื่อเชื่อมเซิร์ฟเวอร์',
-                  'Note: Exact drop probabilities are structured to import directly from L2J Mobius data/stats/npcs XMLs.'
+                  'ไอเทมดรอปอื่นให้ดูรายละเอียดจากตัวเกมจริง',
+                  'For other monster drops, check current in-game information.'
                 )}
               </p>
             </div>

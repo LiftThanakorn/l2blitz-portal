@@ -135,11 +135,11 @@ export function EventsPage() {
               {t('รอบเวลาแข่งขันประจำวัน', 'Daily Match Schedule')}
             </h2>
             <p className="small-note text-[#E8E3DB] mt-2">
-              {t('เวลาประเทศไทย (GMT+7) · เลเวลขั้นต่ำ Lv. 85', 'Thailand Time (GMT+7) · Minimum Level 85')}
+              {t('เวลาประเทศไทย (GMT+7) · เลเวลขั้นต่ำ Lv. 20', 'Thailand Time (GMT+7) · Minimum Level 20')}
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6">
-              {(tvtData?.scheduleTimes || ['14:00', '18:00', '20:30', '22:30', '00:00']).map(
+              {(tvtData?.scheduleTimes || ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00']).map(
                 (time) => (
                   <div
                     key={time}
@@ -158,7 +158,7 @@ export function EventsPage() {
               <strong className="text-[#F7F5F0]">
                 {tvtData
                   ? t(tvtData.arenaTh, tvtData.arenaEn)
-                  : 'Colosseum & Aden Fortress (Instanced)'}
+                  : 'Coliseum'}
               </strong>
             </p>
           </div>
@@ -189,15 +189,15 @@ export function EventsPage() {
               {tvtData
                 ? t(tvtData.rewardsNoteTh, tvtData.rewardsNoteEn)
                 : t(
-                    'ผู้เล่นฝ่ายชนะที่ทำคะแนนสังหารอย่างน้อย 1 ครั้งจะได้รับเหรียญกิจกรรมสำหรับแลกไอเทมอัปเกรด',
-                    'Winning team members with ≥1 kill earn Event Medals redeemable for S84 progression items.'
+                    'ทีมชนะรับพื้นฐาน 120M ทีมแพ้รับ 50M Adena (มีเงื่อนไขการจ่ายรางวัล)',
+                    'Base Adena rewards: 120M winning team, 50M losing team (eligibility conditions apply).'
                   )}
             </p>
           </div>
           <p className="small-note text-[#E97540] font-medium mt-6 m-0">
             {t(
-              'สถานะรางวัล: จำนวนเหรียญสุทธิต่อรอบรอการยืนยันจากไฟล์ตั้งค่า TvTEvent.xml ของเซิร์ฟเวอร์จริง',
-              'Reward Status: Exact token quantities per match are pending verification from live TvTEvent.xml.'
+              'จำนวนรางวัลขึ้นอยู่กับขนาดทีม กิจกรรมจริง และเงื่อนไขป้องกันการฟาร์มรางวัล',
+              'Rewards depend on team size, valid activity and anti-abuse eligibility checks.'
             )}
           </p>
         </div>
@@ -213,7 +213,7 @@ export function EventsPage() {
             <p className="lead-statement mx-auto text-[#1A1917]">
               {t(
                 'ยังไม่มีบันทึกผลการแข่งขัน TvT จากเซิร์ฟเวอร์จริงในขณะนี้ · ข้อมูลคะแนนทั้งสองฝั่งและผู้เล่นที่สังหารสูงสุดจะแสดงเมื่อเชื่อมต่อฐานข้อมูล GameServer',
-                'No verified TvT match logs available yet · faction scores and top killer records will appear automatically once the live GameServer is active.'
+                'No verified match-history integration is configured for the website yet.'
               )}
             </p>
           </div>
