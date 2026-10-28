@@ -27,6 +27,7 @@ import {
   ClanRankingRow,
   OlympiadHeroRow,
   OlympiadPublicRankingRow,
+  OlympiadTopByClassResponse,
   PvpPkRankingRow,
   RaidBossDto,
   ServerRatesDto,
@@ -527,6 +528,79 @@ export async function getOlympiadRankings(options: {
       };
     }
   );
+}
+
+/**
+ * All High Five Olympiad brackets in ONE request: exactly three public ranks per class.
+ * Never serialize points, wins, or match counts. Empty classes remain visible.
+ */
+export function computePublicOlympiadTopByClass(
+  records: InternalOlympiadNobleRecord[],
+  cycle: 'current' | 'previous'
+): OlympiadTopByClassResponse {
+  return {
+    dataAvailable: true,
+    cycle,
+    minimumMatchesRequired: OLYMPIAD_MIN_MATCHES,
+    classes: HIGH_FIVE_OLYMPIAD_CLASSES.map((cls) => ({
+      classId: cls.id,
+      classNameEn: cls.nameEn,
+      classNameTh: cls.nameTh,
+      race: cls.race,
+      raceTh: cls.raceTh,
+      rows: computePublicOlympiadRankings(records, {
+        classId: cls.id,
+        cycle,
+        page: 1,
+        limit: 3,
+      }).items,
+    })),
+  };
+}
+
+export async function getOlympiadTopByClass(
+  cycle: 'current' | 'previous'
+): Promise<OlympiadTopByClassResponse> {
+  return withTtlCache(`olympiad:top-by-class:${cycle}`, 30_000, async () => {
+    if (isDatabaseConfigured()) {
+      // Exactly one read-only query for all classes (not 35 API or DB requests).
+      const table = cycle === 'previous' ? 'olympiad_nobles_eom' : 'olympiad_nobles';
+      const rows = await executeReadOnlyQuery<{
+        charId: number;
+        char_name: string;
+        class_id: number;
+        olympiad_points: number;
+        competitions_done: number;
+        competitions_won: number;
+        competitions_lost: number;
+        clan_name: string | null;
+      }>(
+        `SELECT n.charId, c.char_name, n.class_id, n.olympiad_points,
+                n.competitions_done, n.competitions_won, n.competitions_lost, cd.clan_name
+         FROM ${table} n
+         INNER JOIN characters c ON n.charId = c.charId
+         LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
+         WHERE n.competitions_done >= 15 AND n.competitions_won >= 1`
+      );
+      if (rows) {
+        return computePublicOlympiadTopByClass(rows.map((r) => ({
+          charId: r.charId,
+          charName: r.char_name,
+          classId: r.class_id,
+          clanName: r.clan_name,
+          olympiadPoints: r.olympiad_points,
+          competitionsDone: r.competitions_done,
+          competitionsWon: r.competitions_won,
+          competitionsLost: r.competitions_lost,
+          cycle,
+        })), cycle);
+      }
+    }
+    if (isDevFixtureEnabled()) {
+      return computePublicOlympiadTopByClass(DEV_FIXTURE_OLYMPIAD_NOBLES, cycle);
+    }
+    return { ...computePublicOlympiadTopByClass([], cycle), dataAvailable: false };
+  });
 }
 
 export async function getOlympiadHeroes(): Promise<{

@@ -2,7 +2,7 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createApp } from '../app.js';
 import { clearMemoryCache } from '../db/mysqlAdapter.js';
-import { computePublicOlympiadRankings } from '../services/l2Service.js';
+import { computePublicOlympiadRankings, computePublicOlympiadTopByClass } from '../services/l2Service.js';
 import { DEV_FIXTURE_OLYMPIAD_NOBLES, HIGH_FIVE_TVT_EVENT, HIGH_FIVE_RAIDBOSS_CATALOG } from '../data/fixtures.js';
 
 describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => {
@@ -58,7 +58,22 @@ describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => 
     }
   });
 
-  it('3. Returns Unknown / Unavailable (never fake numbers) when GameServer DB is offline in production mode', async () => {
+  it('3. Returns all 35 classes in one response, ranked 1–3 without revealing private points', () => {
+    const data = computePublicOlympiadTopByClass(DEV_FIXTURE_OLYMPIAD_NOBLES, 'current');
+    assert.equal(data.dataAvailable, true);
+    assert.equal(data.classes.length, 35);
+    assert.ok(data.classes.every((cls) => cls.rows.length <= 3));
+    assert.ok(data.classes.every((cls) => cls.rows.every((row, i) => row.rank === i + 1)));
+    assert.equal(data.classes.find((cls) => cls.classId === 132)?.rows.length, 3);
+    assert.deepEqual(data.classes.find((cls) => cls.classId === 132)?.rows.map((r) => r.charName),
+      ['KaelenVex', 'SeraphinaNoir', 'zephyrWing']);
+    assert.equal(data.classes.find((cls) => cls.classId === 89)?.rows.length, 0);
+    assert.ok(data.classes.flatMap((cls) => cls.rows).every((row) =>
+      !('olympiadPoints' in row) && !('competitionsDone' in row) && !('competitionsWon' in row)));
+    assert.equal(computePublicOlympiadTopByClass(DEV_FIXTURE_OLYMPIAD_NOBLES, 'previous').classes.length, 35);
+  });
+
+  it('4. Returns Unknown / Unavailable (never fake numbers) when GameServer DB is offline in production mode', async () => {
     process.env.NODE_ENV = 'production';
     process.env.USE_DEV_FIXTURES = 'false';
 
@@ -100,7 +115,28 @@ describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => 
     }
   });
 
-  it('4. Publishes only L2Blitz active daily epic bosses and accurate TvT schedule', () => {
+  it('5. All-class Olympiad API refuses invalid cycles and displays empty brackets offline', async () => {
+    const app = createApp();
+    const server = app.listen(0);
+    const address = server.address();
+    const port = typeof address === 'object' && address ? address.port : 0;
+    try {
+      const response = await fetch(`http://127.0.0.1:${port}/api/olympiad/top-by-class?cycle=current`);
+      const body = (await response.json()) as {
+        data: { classes: { rows: unknown[] }[]; dataAvailable: boolean };
+      };
+      assert.equal(response.status, 200);
+      assert.equal(body.data.dataAvailable, false);
+      assert.equal(body.data.classes.length, 35);
+      assert.ok(body.data.classes.every((cls) => cls.rows.length === 0));
+      const bad = await fetch(`http://127.0.0.1:${port}/api/olympiad/top-by-class?cycle=invalid`);
+      assert.equal(bad.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  it('6. Publishes only L2Blitz active daily epic bosses and accurate TvT schedule', () => {
     assert.deepEqual(HIGH_FIVE_RAIDBOSS_CATALOG.map((b) => b.bossId), [29001, 29020]);
     assert.ok(HIGH_FIVE_RAIDBOSS_CATALOG.every((b) => b.status === 'unknown'));
     assert.equal(HIGH_FIVE_TVT_EVENT.scheduleTimes.length, 12);

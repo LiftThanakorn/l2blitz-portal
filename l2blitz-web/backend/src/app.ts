@@ -10,6 +10,7 @@ import {
   getClanRankings,
   getOlympiadHeroes,
   getOlympiadRankings,
+  getOlympiadTopByClass,
   getPkRankings,
   getPvpRankings,
   getRaidBosses,
@@ -22,6 +23,7 @@ import {
 import {
   ApiEnvelope,
   OlympiadRankingQuerySchema,
+  OlympiadCycleQuerySchema,
   PaginationQuerySchema,
 } from './types/api.js';
 
@@ -106,6 +108,16 @@ export function createApp() {
       return;
     }
     const result = await getOlympiadRankings(parsed.data);
+    res.json(wrapEnvelope(result));
+  });
+
+  app.get('/api/olympiad/top-by-class', async (req, res) => {
+    const parsed = OlympiadCycleQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: 'Invalid Olympiad cycle' });
+      return;
+    }
+    const result = await getOlympiadTopByClass(parsed.data.cycle);
     res.json(wrapEnvelope(result));
   });
 

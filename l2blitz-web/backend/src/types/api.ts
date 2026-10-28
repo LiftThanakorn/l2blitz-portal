@@ -14,6 +14,26 @@ export const OlympiadRankingQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(10),
 });
 
+export const OlympiadCycleQuerySchema = z.object({
+  cycle: z.enum(['current', 'previous']).default('current'),
+});
+
+export interface OlympiadClassTopThree {
+  classId: number;
+  classNameEn: string;
+  classNameTh: string;
+  race: string;
+  raceTh: string;
+  rows: OlympiadPublicRankingRow[];
+}
+
+export interface OlympiadTopByClassResponse {
+  dataAvailable: boolean;
+  cycle: 'current' | 'previous';
+  minimumMatchesRequired: number;
+  classes: OlympiadClassTopThree[];
+}
+
 export type DataSourceMode = 'live_mysql' | 'dev_fixture' | 'unavailable';
 
 export interface ApiEnvelope<T> {
