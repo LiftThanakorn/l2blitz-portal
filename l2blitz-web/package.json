@@ -1,0 +1,15 @@
+{
+  "name": "l2blitz-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "L2BLITZ PVP — Lineage II High Five (CT 2.6) Instant PvP Portal",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck",
+    "test": "npm --prefix backend run test && npm --prefix frontend run test"
+  }
+}

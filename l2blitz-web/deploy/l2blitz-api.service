@@ -1,0 +1,25 @@
+# /etc/systemd/system/l2blitz-api.service
+# Systemd Service Unit for L2BLITZ PVP Read-Only Node.js API on Ubuntu VPS
+
+[Unit]
+Description=L2BLITZ PVP Lineage II High Five (CT 2.6) REST API
+After=network.target mariadb.service mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/l2blitz-web/backend
+Environment=NODE_ENV=production
+Environment=PORT=4000
+EnvironmentFile=/opt/l2blitz-web/backend/.env
+ExecStart=/usr/bin/node /opt/l2blitz-web/backend/dist/index.js
+Restart=on-failure
+RestartSec=5
+MemoryMax=256M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,412 @@
+@import "tailwindcss";
+
+:root {
+  /* Core Brand Design Tokens (Mandatory Light Editorial Theme) */
+  --background: #F7F5F0;
+  --surface: #FFFFFF;
+  --surface-muted: #F0EDE7;
+  --foreground: #1A1917;
+  --text-secondary: #5C5852;
+  --border: #E8E3DB;
+  --accent: #E97540;
+  --accent-hover: #CE6333;
+  --accent-text: #C4531E;
+  --success: #32846B;
+  --error: #B95348;
+
+  /* Taste Skill v2 Alias Tokens */
+  --bg: var(--background);
+  --ink: var(--foreground);
+  --muted: var(--text-secondary);
+  --accent-ink: #FFFFFF;
+
+  /* Typography Families */
+  --font-sans: 'IBM Plex Sans Thai', 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Geist', 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Strict Five-Step Type Scale (Taste Skill v2 Law: <= 5 sizes across the entire page) */
+  --step-small: 0.875rem;   /* 14px */
+  --step-body: 1.0625rem;   /* 17px */
+  --step-lead: 1.375rem;    /* 22px */
+  --step-head: clamp(2rem, 1.4rem + 2vw, 3rem);         /* 48px @ 1440px */
+  --step-display: clamp(2.5rem, 1.5rem + 4vw, 5.25rem); /* 84px @ 1440px */
+
+  /* Spatial & Editorial Grid Tokens */
+  --margin: clamp(1rem, 2.5vw, 2.5rem);
+  --gutter: clamp(0.75rem, 1.5vw, 1.5rem);
+  --section-gap: clamp(5rem, 9vw, 8.5rem);
+
+  /* Motion Tokens (Taste Skill v2) */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
+  --t-press: 140ms;
+  --t-hover: 180ms;
+  --t-ui: 240ms;
+  --t-reveal: 800ms;
+  --t-open: 1100ms;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-size: var(--step-body);
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--accent);
+  color: #FFFFFF;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Typography Rules — Strictly <= 2 lines for headings & capped measure */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: inherit;
+  text-wrap: balance;
+  hyphens: none;
+}
+
+p {
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+.display-title {
+  font-size: var(--step-display);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+.section-heading {
+  font-size: var(--step-head);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+.lead-statement {
+  font-size: var(--step-lead);
+  line-height: 1.42;
+  max-width: 56ch;
+  margin: 0;
+}
+
+.body-copy {
+  font-size: var(--step-body);
+  line-height: 1.6;
+  max-width: 60ch;
+  margin: 0;
+}
+
+.small-note {
+  font-size: var(--step-small);
+  line-height: 1.45;
+  max-width: 62ch;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Editorial Layout System */
+.editorial-frame {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: var(--margin);
+}
+
+.editorial-axis-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--gutter);
+}
+
+/* Surface Steps */
+.surface-paper {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.surface-white {
+  background-color: var(--surface);
+  color: var(--foreground);
+}
+
+.surface-stone {
+  background-color: var(--surface-muted);
+  color: var(--foreground);
+}
+
+.surface-ink {
+  background-color: var(--foreground);
+  color: var(--background);
+}
+
+.surface-accent {
+  background-color: var(--accent);
+  color: #FFFFFF;
+}
+
+/* Buttons & Interactive Controls */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--accent);
+  color: #1A1917;
+  font-size: var(--step-body);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border: 0;
+  border-radius: 0;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--t-press) var(--ease-out), background-color var(--t-hover) ease, color var(--t-hover) ease;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-surface {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--surface-muted);
+  color: var(--foreground);
+  font-size: var(--step-body);
+  font-weight: 500;
+  padding: 0.75rem 1.35rem;
+  border: 0;
+  border-radius: 0;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--t-press) var(--ease-out), background-color var(--t-hover) ease, color var(--t-hover) ease;
+}
+
+.btn-surface:active {
+  transform: scale(0.98);
+}
+
+.btn-ink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--foreground);
+  color: var(--background);
+  font-size: var(--step-body);
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border: 0;
+  border-radius: 0;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--t-press) var(--ease-out), background-color var(--t-hover) ease;
+}
+
+.btn-ink:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover {
+    background-color: var(--foreground);
+    color: var(--background);
+  }
+  .btn-surface:hover {
+    background-color: var(--foreground);
+    color: var(--background);
+  }
+  .btn-ink:hover {
+    background-color: var(--accent);
+    color: #FFFFFF;
+  }
+}
+
+/* Data Tables & Form Controls */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th {
+  text-align: left;
+  font-size: var(--step-small);
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0.85rem 1rem;
+  border-bottom: 2px solid var(--border);
+  background-color: var(--surface-muted);
+}
+
+.data-table td {
+  font-size: var(--step-body);
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.data-table tbody tr {
+  transition: background-color var(--t-hover) ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .data-table tbody tr:hover {
+    background-color: var(--surface-muted);
+  }
+}
+
+/* Unequal Showcase Panels (Blueprint 3: flex 5, 2, 3, 2) */
+.showcase-strip {
+  display: flex;
+  width: 100%;
+  height: clamp(380px, 62svh, 640px);
+  overflow: hidden;
+}
+
+.showcase-panel {
+  position: relative;
+  overflow: hidden;
+  transition: flex-grow 500ms var(--ease-out);
+}
+
+.showcase-panel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 700ms var(--ease-soft);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .showcase-panel:hover {
+    flex-grow: 6 !important;
+  }
+  .showcase-panel:hover img {
+    transform: scale(1.04);
+  }
+}
+
+@media (max-width: 768px) {
+  .showcase-strip {
+    display: grid;
+    grid-template-columns: 64fr 36fr;
+    grid-template-rows: 1fr 1fr;
+    height: 76svh;
+  }
+}
+
+/* Motion Layer & Signature Image Shutter (Taste Skill Step 9) */
+.shutter-frame {
+  overflow: clip;
+  background-color: var(--surface-muted);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .shutter-frame {
+    clip-path: inset(0 0 0 0);
+    animation: shutter-open 1100ms var(--ease-in-out) both;
+  }
+  .js .shutter-frame img {
+    animation: shutter-settle 1400ms var(--ease-expo) both;
+  }
+  /* Staggered arrival for child parts inside each revealed section */
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 750ms var(--ease-out), transform 900ms var(--ease-expo);
+  }
+  .js [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+  }
+  .js [data-reveal] h2,
+  .js [data-reveal] h3,
+  .js [data-reveal] p,
+  .js [data-reveal] figure,
+  .js [data-reveal] a {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 650ms var(--ease-out), transform 800ms var(--ease-expo);
+  }
+  .js [data-reveal].is-in h2 {
+    opacity: 1;
+    transform: none;
+    transition-delay: 60ms;
+  }
+  .js [data-reveal].is-in h3,
+  .js [data-reveal].is-in p {
+    opacity: 1;
+    transform: none;
+    transition-delay: 140ms;
+  }
+  .js [data-reveal].is-in figure,
+  .js [data-reveal].is-in a {
+    opacity: 1;
+    transform: none;
+    transition-delay: 220ms;
+  }
+  .js .slow-drift {
+    animation: ambient-drift 18s var(--ease-soft) infinite alternate;
+  }
+}
+
+@keyframes shutter-open {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes shutter-settle {
+  from {
+    transform: scale(1.1);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes ambient-drift {
+  from {
+    transform: scale(1.01) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.06) translate3d(-1.5%, -1%, 0);
+  }
+}

@@ -1,0 +1,2957 @@
+{
+ "url": "http://127.0.0.1:4173",
+ "at": "2026-10-28T10:18:16.607Z",
+ "allow": [
+  "palette-claude",
+  "no-footage"
+ ],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 9,
+   "filled": [
+    1,
+    0.79,
+    0.6,
+    0.82,
+    0.76,
+    0.39,
+    0.55,
+    0.93,
+    0.87
+   ],
+   "motion": {
+    "elements": 69,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 69,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 7287,
+     "screens": 8.1,
+     "words": 484,
+     "img": 12,
+     "video": 0,
+     "canvas": 0,
+     "svg": 0,
+     "sections": 8,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 2,
+     "uiAbuse": false,
+     "realPictures": 12,
+     "videoCount": 0,
+     "uiPictures": 1,
+     "pictureSamples": [
+      "hero-pvp.webp",
+      "olympiad-duel.webp",
+      "server-features.webp",
+      "raid-bosses.webp",
+      "farm-zone.webp",
+      "events-tvt.webp",
+      "olympiad-duel.webp",
+      "poleaxe.jpg"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+     "words": 2,
+     "chars": 26,
+     "lines": 2,
+     "size": 81.6,
+     "vw": 5.7,
+     "font": "Geist",
+     "weight": 600,
+     "tracking": -0.03,
+     "leading": 0.98,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "left",
+     "widthRatio": 0.35,
+     "top": 114,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+     "words": 2,
+     "lines": 2,
+     "size": 81.6,
+     "font": "Geist"
+    },
+    "headings": [
+     {
+      "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+      "words": 2,
+      "chars": 26,
+      "lines": 2,
+      "size": 81.6,
+      "vw": 5.7,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 0.98,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.35,
+      "top": 114,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "ตัวชี้วัดเซิร์ฟเวอร์และเรทพื้นฐาน",
+      "words": 1,
+      "chars": 33,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.48,
+      "top": 1093,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "ไม่ทราบค่า",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.3,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.28,
+      "top": 1244,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Lv. 85 / S84",
+      "words": 4,
+      "chars": 12,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.3,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.28,
+      "top": 1602,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "จำลองสายอาชีพและยุทโธปกรณ์คลาส 3",
+      "words": 2,
+      "chars": 32,
+      "lines": 2,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.48,
+      "top": 2036,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "ออกแบบเพื่อการปะทะ ในแพตช์ High Five",
+      "words": 4,
+      "chars": 36,
+      "lines": 2,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.42,
+      "top": 3096,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "สมรภูมิหลักในแพตช์ High Five",
+      "words": 3,
+      "chars": 28,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.48,
+      "top": 3765,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "กำหนดการสมรภูมิและเป้าหมายประจำวัน",
+      "words": 1,
+      "chars": 34,
+      "lines": 2,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.48,
+      "top": 4527,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "เริ่มต้นเข้าสู่สมรภูมิใน 4 ขั้นตอน",
+      "words": 3,
+      "chars": 34,
+      "lines": 2,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.34,
+      "top": 5428,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "เตรียมความพร้อมก่อนเข้าสู่เซิร์ฟเวอร์",
+      "words": 1,
+      "chars": 37,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.51,
+      "top": 6390,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "L2BLITZ HIGH FIVE",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 81.6,
+      "vw": 5.7,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 0.98,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.89,
+      "top": 6751,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 11,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 3,
+     "centered": 0,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "IBM Plex Sans Thai",
+       "share": 0.88,
+       "mono": false
+      },
+      {
+       "family": "Geist",
+       "share": 0.12,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      14,
+      17,
+      22,
+      48,
+      82
+     ],
+     "sizeCount": 5,
+     "notLoaded": [],
+     "body": {
+      "font": "IBM Plex Sans Thai",
+      "size": 17,
+      "leading": 1.6,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 16.1
+     },
+     "measureChars": 74,
+     "max": {
+      "size": 81.6,
+      "vw": 5.7,
+      "font": "Geist",
+      "text": "สมรภูมิไฮไฟว์พร้อมรบทันที"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.1,
+     "centerShare": 0.02,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f7f5f0",
+     "bodyBgHsl": {
+      "h": 43,
+      "s": 0.3,
+      "l": 0.95
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f7f5f0",
+       "top": 0,
+       "hsl": {
+        "h": 43,
+        "s": 0.3,
+        "l": 0.95
+       }
+      },
+      {
+       "color": "#f0ede7",
+       "top": 1204,
+       "hsl": {
+        "h": 40,
+        "s": 0.23,
+        "l": 0.92
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 2234,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#1a1917",
+       "top": 6687,
+       "hsl": {
+        "h": 40,
+        "s": 0.06,
+        "l": 0.1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#1a1917",
+       "share": 0.55
+      },
+      {
+       "color": "#e8e3db",
+       "share": 0.23
+      },
+      {
+       "color": "#f7f5f0",
+       "share": 0.11
+      },
+      {
+       "color": "#e97540",
+       "share": 0.06
+      },
+      {
+       "color": "#524e48",
+       "share": 0.05
+      }
+     ],
+     "button": {
+      "bg": "#1a1917",
+      "hsl": {
+       "h": 40,
+       "s": 0.06,
+       "l": 0.1
+      },
+      "fg": "#1a1917"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 16,
+     "inHero": 4,
+     "radius": 0,
+     "height": 40,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "L2BLITZ H5 PVP",
+      "ดาวน์โหลดตัวเกม →",
+      "ดาวน์โหลดไคลเอนต์ H5",
+      "อ่านโครงสร้างเซิร์ฟเวอร์"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 11,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 4,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 3040
+      }
+     ]
+    },
+    "heroMedia": [
+     {
+      "type": "img",
+      "ratio": 0.3
+     },
+     {
+      "type": "img",
+      "ratio": 0.16
+     }
+    ],
+    "nav": {
+     "links": 8,
+     "fixed": false,
+     "height": 74,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "geist",
+     "ibm plex sans thai"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 7287,
+    "margins": {
+     "left": 0,
+     "right": 8
+    },
+    "sections": [
+     {
+      "sel": "main.flex-1",
+      "tag": "main",
+      "top": 74,
+      "height": 6517,
+      "words": 503,
+      "media": 22,
+      "middle": 0,
+      "heading": {
+       "text": "สมรภูมิไฮไฟว์",
+       "size": 82,
+       "tag": "h1"
+      },
+      "left": 0,
+      "right": 0,
+      "textLeft": 24,
+      "textRight": 43,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "footer.surface-ink.mt-24",
+      "tag": "footer",
+      "top": 6687,
+      "height": 599,
+      "words": 91,
+      "media": 0,
+      "middle": 117,
+      "heading": {
+       "text": "L2BLITZ HIGH FIVE",
+       "size": 82,
+       "tag": "p"
+      },
+      "left": 80,
+      "right": 178,
+      "textLeft": 80,
+      "textRight": 178,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+      "size": 82,
+      "top": 114,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 622,
+      "n": 17
+     },
+     {
+      "x": 48,
+      "n": 6
+     },
+     {
+      "x": 756,
+      "n": 4
+     },
+     {
+      "x": 1033,
+      "n": 4
+     },
+     {
+      "x": 671,
+      "n": 3
+     },
+     {
+      "x": 1000,
+      "n": 2
+     },
+     {
+      "x": 116,
+      "n": 1
+     },
+     {
+      "x": 637,
+      "n": 1
+     },
+     {
+      "x": 1054,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 39,
+    "bodySize": 17,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0.12,
+    "voidBox": {
+     "x": 600,
+     "y": 720,
+     "w": 840,
+     "h": 180
+    }
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 1280,
+   "height": 800,
+   "load": "load",
+   "screens": 10,
+   "filled": [
+    1,
+    0.79,
+    0.61,
+    0.82,
+    0.87,
+    0.54,
+    0.4,
+    0.7,
+    0.87,
+    0.87
+   ],
+   "motion": {
+    "elements": 69,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 69,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1280,
+     "h": 800
+    },
+    "page": {
+     "height": 7221,
+     "screens": 9,
+     "words": 484,
+     "img": 12,
+     "video": 0,
+     "canvas": 0,
+     "svg": 0,
+     "sections": 8,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 2,
+     "uiAbuse": false,
+     "realPictures": 12,
+     "videoCount": 0,
+     "uiPictures": 1,
+     "pictureSamples": [
+      "hero-pvp.webp",
+      "olympiad-duel.webp",
+      "server-features.webp",
+      "raid-bosses.webp",
+      "farm-zone.webp",
+      "events-tvt.webp",
+      "olympiad-duel.webp",
+      "poleaxe.jpg"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+     "words": 2,
+     "chars": 26,
+     "lines": 2,
+     "size": 75.2,
+     "vw": 5.9,
+     "font": "Geist",
+     "weight": 600,
+     "tracking": -0.03,
+     "leading": 0.98,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "left",
+     "widthRatio": 0.35,
+     "top": 114,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+     "words": 2,
+     "lines": 2,
+     "size": 75.2,
+     "font": "Geist"
+    },
+    "headings": [
+     {
+      "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+      "words": 2,
+      "chars": 26,
+      "lines": 2,
+      "size": 75.2,
+      "vw": 5.9,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 0.98,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.35,
+      "top": 114,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "ตัวชี้วัดเซิร์ฟเวอร์และเรทพื้นฐาน",
+      "words": 1,
+      "chars": 33,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.8,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.55,
+      "top": 1072,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "ไม่ทราบค่า",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.8,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.27,
+      "top": 1223,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Lv. 85 / S84",
+      "words": 4,
+      "chars": 12,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.8,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.27,
+      "top": 1543,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "จำลองสายอาชีพและยุทโธปกรณ์คลาส 3",
+      "words": 2,
+      "chars": 32,
+      "lines": 2,
+      "size": 48,
+      "vw": 3.8,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.55,
+      "top": 1935,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "ออกแบบเพื่อการปะทะ ในแพตช์ High Five",
+      "words": 4,
+      "chars": 36,
+      "lines": 2,
+      "size": 48,
+      "vw": 3.8,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.41,
+      "top": 2995,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "สมรภูมิหลักในแพตช์ High Five",
+      "words": 3,
+      "chars": 28,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.8,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.55,
+      "top": 3716,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "กำหนดการสมรภูมิและเป้าหมายประจำวัน",
+      "words": 1,
+      "chars": 34,
+      "lines": 2,
+      "size": 48,
+      "vw": 3.8,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.55,
+      "top": 4416,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "เริ่มต้นเข้าสู่สมรภูมิใน 4 ขั้นตอน",
+      "words": 3,
+      "chars": 34,
+      "lines": 2,
+      "size": 48,
+      "vw": 3.8,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.39,
+      "top": 5323,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "เตรียมความพร้อมก่อนเข้าสู่เซิร์ฟเวอร์",
+      "words": 1,
+      "chars": 37,
+      "lines": 2,
+      "size": 48,
+      "vw": 3.8,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.54,
+      "top": 6248,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "L2BLITZ HIGH FIVE",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 75.2,
+      "vw": 5.9,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 0.98,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.94,
+      "top": 6692,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 11,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 3,
+     "centered": 0,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "IBM Plex Sans Thai",
+       "share": 0.88,
+       "mono": false
+      },
+      {
+       "family": "Geist",
+       "share": 0.12,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      14,
+      17,
+      22,
+      48,
+      75
+     ],
+     "sizeCount": 5,
+     "notLoaded": [],
+     "body": {
+      "font": "IBM Plex Sans Thai",
+      "size": 17,
+      "leading": 1.6,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 16.1
+     },
+     "measureChars": 74,
+     "max": {
+      "size": 75.2,
+      "vw": 5.9,
+      "font": "Geist",
+      "text": "สมรภูมิไฮไฟว์พร้อมรบทันที"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.1,
+     "centerShare": 0.02,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f7f5f0",
+     "bodyBgHsl": {
+      "h": 43,
+      "s": 0.3,
+      "l": 0.95
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f7f5f0",
+       "top": 0,
+       "hsl": {
+        "h": 43,
+        "s": 0.3,
+        "l": 0.95
+       }
+      },
+      {
+       "color": "#f0ede7",
+       "top": 74,
+       "hsl": {
+        "h": 40,
+        "s": 0.23,
+        "l": 0.92
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 2133,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#1a1917",
+       "top": 6628,
+       "hsl": {
+        "h": 40,
+        "s": 0.06,
+        "l": 0.1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#1a1917",
+       "share": 0.55
+      },
+      {
+       "color": "#e8e3db",
+       "share": 0.23
+      },
+      {
+       "color": "#f7f5f0",
+       "share": 0.11
+      },
+      {
+       "color": "#e97540",
+       "share": 0.06
+      },
+      {
+       "color": "#524e48",
+       "share": 0.05
+      }
+     ],
+     "button": {
+      "bg": "#1a1917",
+      "hsl": {
+       "h": 40,
+       "s": 0.06,
+       "l": 0.1
+      },
+      "fg": "#1a1917"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 16,
+     "inHero": 4,
+     "radius": 0,
+     "height": 40,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "L2BLITZ H5 PVP",
+      "ดาวน์โหลดตัวเกม →",
+      "ดาวน์โหลดไคลเอนต์ H5",
+      "อ่านโครงสร้างเซิร์ฟเวอร์"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 11,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 4,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 2939
+      }
+     ]
+    },
+    "heroMedia": [
+     {
+      "type": "img",
+      "ratio": 0.35
+     },
+     {
+      "type": "img",
+      "ratio": 0.11
+     }
+    ],
+    "nav": {
+     "links": 8,
+     "fixed": false,
+     "height": 74,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "geist",
+     "ibm plex sans thai"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1280,
+     "h": 800
+    },
+    "pageH": 7221,
+    "margins": {
+     "left": 0,
+     "right": 8
+    },
+    "sections": [
+     {
+      "sel": "main.flex-1",
+      "tag": "main",
+      "top": 74,
+      "height": 6458,
+      "words": 503,
+      "media": 22,
+      "middle": 0,
+      "heading": {
+       "text": "สมรภูมิไฮไฟว์",
+       "size": 75,
+       "tag": "h1"
+      },
+      "left": 0,
+      "right": 0,
+      "textLeft": 24,
+      "textRight": 32,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "footer.surface-ink.mt-24",
+      "tag": "footer",
+      "top": 6628,
+      "height": 593,
+      "words": 91,
+      "media": 0,
+      "middle": 102,
+      "heading": {
+       "text": "L2BLITZ HIGH FIVE",
+       "size": 75,
+       "tag": "p"
+      },
+      "left": 40,
+      "right": 122,
+      "textLeft": 40,
+      "textRight": 122,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+      "size": 75,
+      "top": 114,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 547,
+      "n": 17
+     },
+     {
+      "x": 48,
+      "n": 6
+     },
+     {
+      "x": 676,
+      "n": 4
+     },
+     {
+      "x": 919,
+      "n": 4
+     },
+     {
+      "x": 591,
+      "n": 3
+     },
+     {
+      "x": 893,
+      "n": 2
+     },
+     {
+      "x": 32,
+      "n": 1
+     },
+     {
+      "x": 570,
+      "n": 1
+     },
+     {
+      "x": 941,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 39,
+    "bodySize": 17,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0.04,
+    "voidBox": {
+     "x": 533,
+     "y": 747,
+     "w": 747,
+     "h": 53
+    }
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 10,
+   "filled": [
+    0.99,
+    0.84,
+    0.78,
+    0.76,
+    1,
+    0.84,
+    0.79,
+    0.43,
+    0.76,
+    0.87
+   ],
+   "motion": {
+    "elements": 69,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 69,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 10039,
+     "screens": 9.8,
+     "words": 477,
+     "img": 12,
+     "video": 0,
+     "canvas": 0,
+     "svg": 0,
+     "sections": 8,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 2,
+     "uiAbuse": false,
+     "realPictures": 12,
+     "videoCount": 0,
+     "uiPictures": 1,
+     "pictureSamples": [
+      "hero-pvp.webp",
+      "olympiad-duel.webp",
+      "server-features.webp",
+      "raid-bosses.webp",
+      "farm-zone.webp",
+      "events-tvt.webp",
+      "olympiad-duel.webp",
+      "poleaxe.jpg"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+     "words": 2,
+     "chars": 26,
+     "lines": 2,
+     "size": 54.7,
+     "vw": 7.1,
+     "font": "Geist",
+     "weight": 600,
+     "tracking": -0.03,
+     "leading": 0.98,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.88,
+     "top": 114,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+     "words": 2,
+     "lines": 2,
+     "size": 54.7,
+     "font": "Geist"
+    },
+    "headings": [
+     {
+      "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+      "words": 2,
+      "chars": 26,
+      "lines": 2,
+      "size": 54.7,
+      "vw": 7.1,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 0.98,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.88,
+      "top": 114,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "ตัวชี้วัดเซิร์ฟเวอร์และเรทพื้นฐาน",
+      "words": 1,
+      "chars": 33,
+      "lines": 1,
+      "size": 37.8,
+      "vw": 4.9,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.95,
+      "top": 1789,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "ไม่ทราบค่า",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 37.8,
+      "vw": 4.9,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.4,
+      "top": 2505,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Lv. 85 / S84",
+      "words": 4,
+      "chars": 12,
+      "lines": 1,
+      "size": 37.8,
+      "vw": 4.9,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.4,
+      "top": 2505,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "จำลองสายอาชีพและยุทโธปกรณ์คลาส 3",
+      "words": 2,
+      "chars": 32,
+      "lines": 1,
+      "size": 37.8,
+      "vw": 4.9,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.95,
+      "top": 2858,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "ออกแบบเพื่อการปะทะ ในแพตช์ High Five",
+      "words": 4,
+      "chars": 36,
+      "lines": 2,
+      "size": 37.8,
+      "vw": 4.9,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.85,
+      "top": 4165,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "สมรภูมิหลักในแพตช์ High Five",
+      "words": 3,
+      "chars": 28,
+      "lines": 1,
+      "size": 37.8,
+      "vw": 4.9,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.95,
+      "top": 5353,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "กำหนดการสมรภูมิและเป้าหมายประจำวัน",
+      "words": 1,
+      "chars": 34,
+      "lines": 1,
+      "size": 37.8,
+      "vw": 4.9,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.95,
+      "top": 6324,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "เริ่มต้นเข้าสู่สมรภูมิใน 4 ขั้นตอน",
+      "words": 3,
+      "chars": 34,
+      "lines": 1,
+      "size": 37.8,
+      "vw": 4.9,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.95,
+      "top": 7930,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "เตรียมความพร้อมก่อนเข้าสู่เซิร์ฟเวอร์",
+      "words": 1,
+      "chars": 37,
+      "lines": 1,
+      "size": 37.8,
+      "vw": 4.9,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 9094,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "L2BLITZ HIGH FIVE",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 54.7,
+      "vw": 7.1,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 0.98,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 9476,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 11,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 3,
+     "centered": 0,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "IBM Plex Sans Thai",
+       "share": 0.88,
+       "mono": false
+      },
+      {
+       "family": "Geist",
+       "share": 0.12,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      14,
+      17,
+      22,
+      38,
+      55
+     ],
+     "sizeCount": 5,
+     "notLoaded": [],
+     "body": {
+      "font": "IBM Plex Sans Thai",
+      "size": 17,
+      "leading": 1.6,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 16.1
+     },
+     "measureChars": 74,
+     "max": {
+      "size": 54.7,
+      "vw": 7.1,
+      "font": "Geist",
+      "text": "สมรภูมิไฮไฟว์พร้อมรบทันที"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.1,
+     "centerShare": 0.02,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f7f5f0",
+     "bodyBgHsl": {
+      "h": 43,
+      "s": 0.3,
+      "l": 0.95
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f7f5f0",
+       "top": 0,
+       "hsl": {
+        "h": 43,
+        "s": 0.3,
+        "l": 0.95
+       }
+      },
+      {
+       "color": "#f0ede7",
+       "top": 74,
+       "hsl": {
+        "h": 40,
+        "s": 0.23,
+        "l": 0.92
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 2993,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#1a1917",
+       "top": 9412,
+       "hsl": {
+        "h": 40,
+        "s": 0.06,
+        "l": 0.1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#1a1917",
+       "share": 0.54
+      },
+      {
+       "color": "#e8e3db",
+       "share": 0.23
+      },
+      {
+       "color": "#f7f5f0",
+       "share": 0.12
+      },
+      {
+       "color": "#e97540",
+       "share": 0.06
+      },
+      {
+       "color": "#524e48",
+       "share": 0.06
+      }
+     ],
+     "button": {
+      "bg": "#1a1917",
+      "hsl": {
+       "h": 40,
+       "s": 0.06,
+       "l": 0.1
+      },
+      "fg": "#1a1917"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 16,
+     "inHero": 4,
+     "radius": 0,
+     "height": 40,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "L2BLITZ H5 PVP",
+      "ดาวน์โหลดตัวเกม →",
+      "ดาวน์โหลดไคลเอนต์ H5",
+      "อ่านโครงสร้างเซิร์ฟเวอร์"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 11,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "img",
+      "ratio": 0.4
+     },
+     {
+      "type": "img",
+      "ratio": 0.14
+     }
+    ],
+    "nav": {
+     "links": 2,
+     "fixed": false,
+     "height": 74,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "geist",
+     "ibm plex sans thai"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 10039,
+    "margins": {
+     "left": 0,
+     "right": 0
+    },
+    "sections": [
+     {
+      "sel": "main.flex-1",
+      "tag": "main",
+      "top": 74,
+      "height": 9242,
+      "words": 503,
+      "media": 22,
+      "middle": 0,
+      "heading": {
+       "text": "สมรภูมิไฮไฟว์",
+       "size": 55,
+       "tag": "h1"
+      },
+      "left": 0,
+      "right": 0,
+      "textLeft": 16,
+      "textRight": 19,
+      "fullBleed": true,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "footer.surface-ink.mt-24",
+      "tag": "footer",
+      "top": 9412,
+      "height": 627,
+      "words": 91,
+      "media": 0,
+      "middle": 39,
+      "heading": {
+       "text": "L2BLITZ HIGH FIVE",
+       "size": 55,
+       "tag": "p"
+      },
+      "left": 40,
+      "right": 52,
+      "textLeft": 40,
+      "textRight": 52,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+      "size": 55,
+      "top": 114,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 19,
+      "n": 15
+     },
+     {
+      "x": 36,
+      "n": 9
+     },
+     {
+      "x": 48,
+      "n": 6
+     },
+     {
+      "x": 333,
+      "n": 4
+     },
+     {
+      "x": 91,
+      "n": 3
+     },
+     {
+      "x": 420,
+      "n": 2
+     }
+    ],
+    "leftBlocks": 39,
+    "bodySize": 17,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 12,
+   "filled": [
+    1,
+    0.8,
+    0.9,
+    0.66,
+    0.89,
+    0.86,
+    1,
+    0.76,
+    0.65,
+    0.33,
+    0.6,
+    1
+   ],
+   "motion": {
+    "elements": 69,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 69,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 11453,
+     "screens": 13.6,
+     "words": 475,
+     "img": 12,
+     "video": 0,
+     "canvas": 0,
+     "svg": 0,
+     "sections": 8,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 2,
+     "uiAbuse": false,
+     "realPictures": 12,
+     "videoCount": 0,
+     "uiPictures": 1,
+     "pictureSamples": [
+      "hero-pvp.webp",
+      "olympiad-duel.webp",
+      "server-features.webp",
+      "raid-bosses.webp",
+      "farm-zone.webp",
+      "events-tvt.webp",
+      "olympiad-duel.webp",
+      "poleaxe.jpg"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+     "words": 2,
+     "chars": 26,
+     "lines": 2,
+     "size": 40,
+     "vw": 10.3,
+     "font": "Geist",
+     "weight": 600,
+     "tracking": -0.03,
+     "leading": 0.98,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.84,
+     "top": 98,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+     "words": 2,
+     "lines": 2,
+     "size": 40,
+     "font": "Geist"
+    },
+    "headings": [
+     {
+      "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+      "words": 2,
+      "chars": 26,
+      "lines": 2,
+      "size": 40,
+      "vw": 10.3,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 0.98,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.84,
+      "top": 98,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "พอร์ทัลข้อมูลเซิร์ฟเวอร์ Lineage II High Five (CT 2.6) รูปแบบ Instant PvP ประเทศไทย เริ่มต้นเลเวล 85 คลาสสามครบทุกสายอาชีพ",
+      "words": 14,
+      "chars": 122,
+      "lines": 4,
+      "size": 22,
+      "vw": 5.6,
+      "font": "IBM Plex Sans Thai",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.84,
+      "top": 176,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "ระบบโอลิมเพียดรวมคลาส Soul Hound ชาย/หญิง (132/133) และซ่อนคะแนนต่อสู้สาธารณะตามซอร์ส L2J Mobius",
+      "words": 8,
+      "chars": 96,
+      "lines": 4,
+      "size": 22,
+      "vw": 5.6,
+      "font": "IBM Plex Sans Thai",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.84,
+      "top": 1127,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "รายงานสถานะตามความจริง แสดงค่าไม่ทราบสถานะเมื่อยังไม่เชื่อม DB แทนการสุ่มตัวเลขผู้เล่นปลอม",
+      "words": 4,
+      "chars": 90,
+      "lines": 3,
+      "size": 22,
+      "vw": 5.6,
+      "font": "IBM Plex Sans Thai",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.84,
+      "top": 1375,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "ตัวชี้วัดเซิร์ฟเวอร์และเรทพื้นฐาน",
+      "words": 1,
+      "chars": 33,
+      "lines": 2,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 1695,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "ไม่ทราบค่า",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.84,
+      "top": 2242,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Lv. 85 / S84",
+      "words": 4,
+      "chars": 12,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.84,
+      "top": 2502,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "จำลองสายอาชีพและยุทโธปกรณ์คลาส 3",
+      "words": 2,
+      "chars": 32,
+      "lines": 2,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 2842,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "โซลฮาวด์ (รวมคลาสชาย 132 / หญิง 133)",
+      "words": 6,
+      "chars": 36,
+      "lines": 2,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.67,
+      "top": 3546,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "ออกแบบเพื่อการปะทะ ในแพตช์ High Five",
+      "words": 4,
+      "chars": 36,
+      "lines": 2,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.84,
+      "top": 4505,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Community Board (Alt+B) ครบวงจร",
+      "words": 4,
+      "chars": 31,
+      "lines": 2,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.86,
+      "top": 5021,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "ระบบ AutoFarm และ AutoPotion มาตรฐาน",
+      "words": 5,
+      "chars": 36,
+      "lines": 2,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.86,
+      "top": 5253,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "PvP Craft และการอัปเกรดระดับ S84",
+      "words": 4,
+      "chars": 32,
+      "lines": 2,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.86,
+      "top": 5511,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "แกรนด์โอลิมเพียดและศึกชิงปราสาท",
+      "words": 1,
+      "chars": 31,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.86,
+      "top": 5743,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "สมรภูมิหลักในแพตช์ High Five",
+      "words": 3,
+      "chars": 28,
+      "lines": 2,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 6027,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "เรดบอสและบอสใหญ่",
+      "words": 1,
+      "chars": 16,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.49,
+      "top": 6160,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "กำหนดการสมรภูมิและเป้าหมายประจำวัน",
+      "words": 1,
+      "chars": 34,
+      "lines": 2,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 6890,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "เริ่มต้นเข้าสู่สมรภูมิใน 4 ขั้นตอน",
+      "words": 3,
+      "chars": 34,
+      "lines": 2,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 8328,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "ติดตั้งไคลเอนต์ High Five และรันลอนเชอร์",
+      "words": 4,
+      "chars": 40,
+      "lines": 2,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 8409,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "สร้างตัวละครรับเลเวล 85 และคลาส 3 ทันที",
+      "words": 5,
+      "chars": 39,
+      "lines": 2,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 8566,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "ฟาร์มวัตถุดิบ S84 ใน Dragon Valley และถ้ำอันธารัส",
+      "words": 6,
+      "chars": 49,
+      "lines": 2,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 8722,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "ชิงความเป็นหนึ่งในโอลิมเพียดและบอสใหญ่",
+      "words": 1,
+      "chars": 38,
+      "lines": 2,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 8879,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "เตรียมความพร้อมก่อนเข้าสู่เซิร์ฟเวอร์",
+      "words": 1,
+      "chars": 37,
+      "lines": 2,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Geist",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 10139,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "ตรวจสอบคู่มือการติดตั้งและสถานะไฟล์ไคลเอนต์ High Five ได้ที่หน้าดาวน์โหลด →",
+      "words": 5,
+      "chars": 75,
+      "lines": 3,
+      "size": 22,
+      "vw": 5.6,
+      "font": "IBM Plex Sans Thai",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 10208,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "L2BLITZ HIGH FIVE",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 40,
+      "vw": 10.3,
+      "font": "IBM Plex Sans Thai",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 0.98,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 10607,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "ดาวน์โหลดไคลเอนต์ CT 2.6",
+      "words": 3,
+      "chars": 24,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "IBM Plex Sans Thai",
+      "weight": 500,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 10703,
+      "tag": "a",
+      "kind": "heading"
+     },
+     {
+      "text": "ทำเนียบแกรนด์โอลิมเพียด",
+      "words": 1,
+      "chars": 23,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "IBM Plex Sans Thai",
+      "weight": 500,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 10746,
+      "tag": "a",
+      "kind": "heading"
+     },
+     {
+      "text": "ตารางเวลาเกิดบอสใหญ่",
+      "words": 1,
+      "chars": 20,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "IBM Plex Sans Thai",
+      "weight": 500,
+      "tracking": 0,
+      "leading": 1.42,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 10789,
+      "tag": "a",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 28,
+     "maxLines": 4,
+     "over2Lines": 0,
+     "statements": 8,
+     "centered": 0,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "IBM Plex Sans Thai",
+       "share": 0.88,
+       "mono": false
+      },
+      {
+       "family": "Geist",
+       "share": 0.12,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      14,
+      17,
+      22,
+      32,
+      40
+     ],
+     "sizeCount": 5,
+     "notLoaded": [],
+     "body": {
+      "font": "IBM Plex Sans Thai",
+      "size": 17,
+      "leading": 1.6,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 16.1
+     },
+     "measureChars": 51,
+     "max": {
+      "size": 40,
+      "vw": 10.3,
+      "font": "Geist",
+      "text": "สมรภูมิไฮไฟว์พร้อมรบทันที"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.1,
+     "centerShare": 0.02,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f7f5f0",
+     "bodyBgHsl": {
+      "h": 43,
+      "s": 0.3,
+      "l": 0.95
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f7f5f0",
+       "top": 0,
+       "hsl": {
+        "h": 43,
+        "s": 0.3,
+        "l": 0.95
+       }
+      },
+      {
+       "color": "#f0ede7",
+       "top": 74,
+       "hsl": {
+        "h": 40,
+        "s": 0.23,
+        "l": 0.92
+       }
+      },
+      {
+       "color": "#1a1917",
+       "top": 2210,
+       "hsl": {
+        "h": 40,
+        "s": 0.06,
+        "l": 0.1
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 3033,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#252320",
+       "top": 5225,
+       "hsl": {
+        "h": 36,
+        "s": 0.07,
+        "l": 0.14
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#1a1917",
+       "share": 0.54
+      },
+      {
+       "color": "#e8e3db",
+       "share": 0.23
+      },
+      {
+       "color": "#f7f5f0",
+       "share": 0.11
+      },
+      {
+       "color": "#e97540",
+       "share": 0.06
+      },
+      {
+       "color": "#524e48",
+       "share": 0.06
+      }
+     ],
+     "button": {
+      "bg": "#1a1917",
+      "hsl": {
+       "h": 40,
+       "s": 0.06,
+       "l": 0.1
+      },
+      "fg": "#1a1917"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 15,
+     "inHero": 3,
+     "radius": 0,
+     "height": 40,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "L2BLITZ H5 PVP",
+      "ดาวน์โหลดไคลเอนต์ H5",
+      "อ่านโครงสร้างเซิร์ฟเวอร์"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 9,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "img",
+      "ratio": 0.34
+     }
+    ],
+    "nav": {
+     "links": 1,
+     "fixed": false,
+     "height": 74,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "geist",
+     "ibm plex sans thai"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 11453,
+    "margins": {
+     "left": 0,
+     "right": 0
+    },
+    "sections": [
+     {
+      "sel": "main.flex-1",
+      "tag": "main",
+      "top": 74,
+      "height": 10373,
+      "words": 503,
+      "media": 22,
+      "middle": 0,
+      "heading": {
+       "text": "สมรภูมิไฮไฟว์",
+       "size": 40,
+       "tag": "h1"
+      },
+      "left": 0,
+      "right": 0,
+      "textLeft": 16,
+      "textRight": 18,
+      "fullBleed": true,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "footer.surface-ink.mt-24",
+      "tag": "footer",
+      "top": 10543,
+      "height": 910,
+      "words": 91,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "L2BLITZ HIGH FIVE",
+       "size": 40,
+       "tag": "p"
+      },
+      "left": 16,
+      "right": 21,
+      "textLeft": 16,
+      "textRight": 21,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "สมรภูมิไฮไฟว์ พร้อมรบทันที",
+      "size": 40,
+      "top": 98,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 18
+     },
+     {
+      "x": 28,
+      "n": 18
+     },
+     {
+      "x": 64,
+      "n": 3
+     }
+    ],
+    "leftBlocks": 39,
+    "bodySize": 17,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  }
+ ],
+ "findings": [],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\desktop-1440-fold.jpg",
+   "pages": [
+    "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\desktop-1440-page-01.jpg",
+    "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\desktop-1440-page-02.jpg",
+    "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\desktop-1440-page-03.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "desktop",
+   "width": 1280,
+   "fold": "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\desktop-1280-fold.jpg",
+   "pages": [
+    "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\desktop-1280-page-01.jpg",
+    "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\desktop-1280-page-02.jpg",
+    "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\desktop-1280-page-03.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\tablet-fold.jpg",
+   "pages": [
+    "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\tablet-page-01.jpg",
+    "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\tablet-page-02.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\mobile-fold.jpg",
+   "pages": [
+    "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\mobile-page-01.jpg",
+    "C:\\Users\\123\\Documents\\antigravity\\amazing-darwin\\l2blitz-web\\.taste-skill\\inspect\\mobile-page-02.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

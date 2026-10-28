@@ -1,0 +1,438 @@
+import { DEV_FIXTURE_CLANS, DEV_FIXTURE_HEROES, DEV_FIXTURE_OLYMPIAD_NOBLES, DEV_FIXTURE_PVP_RANKINGS, HIGH_FIVE_CASTLES_CATALOG, HIGH_FIVE_RAIDBOSS_CATALOG, HIGH_FIVE_SERVER_RATES, HIGH_FIVE_TVT_EVENT, } from '../data/fixtures.js';
+import { getClassInfoById, HIGH_FIVE_OLYMPIAD_CLASSES, resolveCanonicalClassId, } from '../data/highFiveClasses.js';
+import { executeReadOnlyQuery, getActiveDataSourceMode, isDatabaseConfigured, isDevFixtureEnabled, withTtlCache, } from '../db/mysqlAdapter.js';
+/**
+ * Official L2J Mobius CT 2.6 High Five Olympiad Minimum Requirements
+ * Reference: Olympiad.java / Olympiad.properties (`AltOlyDividerClassed`, min 15 matches & 1 win for ranking/hero)
+ */
+const OLYMPIAD_MIN_MATCHES = 15;
+const OLYMPIAD_MIN_WINS = 1;
+export async function getServerStatus() {
+    return withTtlCache('server:status', 15_000, async () => {
+        if (isDatabaseConfigured()) {
+            const ping = await executeReadOnlyQuery('SELECT 1 AS ok');
+            if (ping && ping.length > 0) {
+                return {
+                    status: 'online',
+                    loginServer: 'online',
+                    gameServer: 'online',
+                    chronicle: 'High Five (CT 2.6)',
+                    region: 'Thailand (GMT+7)',
+                    messageTh: 'เซิร์ฟเวอร์ออนไลน์ เชื่อมต่อฐานข้อมูล L2J Mobius สำเร็จ',
+                    messageEn: 'Server Online — Connected to L2J Mobius High Five database.',
+                };
+            }
+            return {
+                status: 'offline',
+                loginServer: 'unknown',
+                gameServer: 'offline',
+                chronicle: 'High Five (CT 2.6)',
+                region: 'Thailand (GMT+7)',
+                messageTh: 'ไม่สามารถติดต่อฐานข้อมูล GameServer ได้ในขณะนี้',
+                messageEn: 'GameServer database is currently unreachable.',
+            };
+        }
+        // Honest default when GameServer is not connected yet: Unknown (Never fake Online status)
+        return {
+            status: 'unknown',
+            loginServer: 'unknown',
+            gameServer: 'unknown',
+            chronicle: 'High Five (CT 2.6)',
+            region: 'Thailand (GMT+7)',
+            messageTh: 'ไม่ทราบสถานะ (รอเชื่อมต่อฐานข้อมูล L2J Mobius GameServer จริง)',
+            messageEn: 'Unknown Status (Pending live L2J Mobius GameServer connection)',
+        };
+    });
+}
+export async function getServerStats() {
+    return withTtlCache('server:stats', 20_000, async () => {
+        if (isDatabaseConfigured()) {
+            const charRows = await executeReadOnlyQuery('SELECT SUM(CASE WHEN online = 1 THEN 1 ELSE 0 END) AS onlineCount, COUNT(*) AS totalChars FROM characters WHERE accesslevel = 0');
+            const clanRows = await executeReadOnlyQuery('SELECT COUNT(*) AS totalClans FROM clan_data');
+            const nobleRows = await executeReadOnlyQuery('SELECT COUNT(*) AS totalNobles FROM olympiad_nobles');
+            if (charRows && charRows[0]) {
+                return {
+                    playersOnline: Number(charRows[0].onlineCount || 0),
+                    totalCharacters: Number(charRows[0].totalChars || 0),
+                    totalClans: clanRows?.[0] ? Number(clanRows[0].totalClans) : 0,
+                    activeOlympiadNobles: nobleRows?.[0] ? Number(nobleRows[0].totalNobles) : 0,
+                    status: 'verified',
+                };
+            }
+        }
+        // NEVER invent fake player numbers when GameServer is unavailable
+        return {
+            playersOnline: null,
+            totalCharacters: null,
+            totalClans: null,
+            activeOlympiadNobles: null,
+            status: 'unavailable',
+        };
+    });
+}
+export async function getServerRates() {
+    return HIGH_FIVE_SERVER_RATES;
+}
+export async function getPvpRankings(params) {
+    return withTtlCache(`rankings:pvp:${params.page}:${params.limit}:${params.search}:${params.sort || 'pvp'}`, 30_000, async () => {
+        if (isDatabaseConfigured()) {
+            const offset = (params.page - 1) * params.limit;
+            const searchLike = `%${params.search}%`;
+            const rows = await executeReadOnlyQuery(`SELECT c.char_name, c.classid, c.level, c.pvpkills, c.pkkills, c.online, cd.clan_name
+           FROM characters c
+           LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
+           WHERE c.accesslevel = 0 AND c.char_name LIKE ?
+           ORDER BY c.pvpkills DESC, c.pkkills DESC
+           LIMIT ? OFFSET ?`, [searchLike, params.limit, offset]);
+            if (rows) {
+                const items = rows.map((r, idx) => {
+                    const cls = getClassInfoById(r.classid);
+                    return {
+                        rank: offset + idx + 1,
+                        charName: r.char_name,
+                        classId: r.classid,
+                        classNameEn: cls?.nameEn || `Class ${r.classid}`,
+                        classNameTh: cls?.nameTh || `คลาส ${r.classid}`,
+                        clanName: r.clan_name,
+                        level: r.level,
+                        pvpKills: r.pvpkills,
+                        pkKills: r.pkkills,
+                        online: r.online === 1,
+                    };
+                });
+                return { items, total: items.length, page: params.page, limit: params.limit };
+            }
+        }
+        if (isDevFixtureEnabled()) {
+            let filtered = [...DEV_FIXTURE_PVP_RANKINGS];
+            if (params.search) {
+                const q = params.search.toLowerCase();
+                filtered = filtered.filter((r) => r.charName.toLowerCase().includes(q) ||
+                    (r.clanName && r.clanName.toLowerCase().includes(q)) ||
+                    r.classNameEn.toLowerCase().includes(q));
+            }
+            filtered.sort((a, b) => b.pvpKills - a.pvpKills);
+            const reranked = filtered.map((item, idx) => ({ ...item, rank: idx + 1 }));
+            const start = (params.page - 1) * params.limit;
+            return {
+                items: reranked.slice(start, start + params.limit),
+                total: reranked.length,
+                page: params.page,
+                limit: params.limit,
+            };
+        }
+        return { items: [], total: 0, page: params.page, limit: params.limit };
+    });
+}
+export async function getPkRankings(params) {
+    return withTtlCache(`rankings:pk:${params.page}:${params.limit}:${params.search}`, 30_000, async () => {
+        if (isDatabaseConfigured()) {
+            const offset = (params.page - 1) * params.limit;
+            const searchLike = `%${params.search}%`;
+            const rows = await executeReadOnlyQuery(`SELECT c.char_name, c.classid, c.level, c.pvpkills, c.pkkills, c.online, cd.clan_name
+           FROM characters c
+           LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
+           WHERE c.accesslevel = 0 AND c.char_name LIKE ?
+           ORDER BY c.pkkills DESC, c.pvpkills DESC
+           LIMIT ? OFFSET ?`, [searchLike, params.limit, offset]);
+            if (rows) {
+                const items = rows.map((r, idx) => {
+                    const cls = getClassInfoById(r.classid);
+                    return {
+                        rank: offset + idx + 1,
+                        charName: r.char_name,
+                        classId: r.classid,
+                        classNameEn: cls?.nameEn || `Class ${r.classid}`,
+                        classNameTh: cls?.nameTh || `คลาส ${r.classid}`,
+                        clanName: r.clan_name,
+                        level: r.level,
+                        pvpKills: r.pvpkills,
+                        pkKills: r.pkkills,
+                        online: r.online === 1,
+                    };
+                });
+                return { items, total: items.length, page: params.page, limit: params.limit };
+            }
+        }
+        if (isDevFixtureEnabled()) {
+            let filtered = [...DEV_FIXTURE_PVP_RANKINGS];
+            if (params.search) {
+                const q = params.search.toLowerCase();
+                filtered = filtered.filter((r) => r.charName.toLowerCase().includes(q) ||
+                    (r.clanName && r.clanName.toLowerCase().includes(q)) ||
+                    r.classNameEn.toLowerCase().includes(q));
+            }
+            filtered.sort((a, b) => b.pkKills - a.pkKills || b.pvpKills - a.pvpKills);
+            const reranked = filtered.map((item, idx) => ({ ...item, rank: idx + 1 }));
+            const start = (params.page - 1) * params.limit;
+            return {
+                items: reranked.slice(start, start + params.limit),
+                total: reranked.length,
+                page: params.page,
+                limit: params.limit,
+            };
+        }
+        return { items: [], total: 0, page: params.page, limit: params.limit };
+    });
+}
+export async function getClanRankings(params) {
+    return withTtlCache(`rankings:clans:${params.page}:${params.limit}:${params.search}`, 45_000, async () => {
+        if (isDatabaseConfigured()) {
+            const offset = (params.page - 1) * params.limit;
+            const searchLike = `%${params.search}%`;
+            const rows = await executeReadOnlyQuery(`SELECT cd.clan_name, cd.clan_level, cd.reputation_score, cd.ally_name,
+                  c.char_name AS leader_name, cs.name AS castle_name,
+                  (SELECT COUNT(*) FROM characters m WHERE m.clanid = cd.clan_id) AS members
+           FROM clan_data cd
+           LEFT JOIN characters c ON cd.leader_id = c.charId
+           LEFT JOIN castle cs ON cd.hasCastle = cs.id
+           WHERE cd.clan_name LIKE ?
+           ORDER BY cd.clan_level DESC, cd.reputation_score DESC
+           LIMIT ? OFFSET ?`, [searchLike, params.limit, offset]);
+            if (rows) {
+                const items = rows.map((r, idx) => ({
+                    rank: offset + idx + 1,
+                    clanName: r.clan_name,
+                    leaderName: r.leader_name || 'Unknown',
+                    clanLevel: r.clan_level,
+                    reputationScore: r.reputation_score,
+                    memberCount: Number(r.members || 0),
+                    castleName: r.castle_name,
+                    allyName: r.ally_name,
+                }));
+                return { items, total: items.length, page: params.page, limit: params.limit };
+            }
+        }
+        if (isDevFixtureEnabled()) {
+            let filtered = [...DEV_FIXTURE_CLANS];
+            if (params.search) {
+                const q = params.search.toLowerCase();
+                filtered = filtered.filter((c) => c.clanName.toLowerCase().includes(q) ||
+                    c.leaderName.toLowerCase().includes(q));
+            }
+            const start = (params.page - 1) * params.limit;
+            return {
+                items: filtered.slice(start, start + params.limit),
+                total: filtered.length,
+                page: params.page,
+                limit: params.limit,
+            };
+        }
+        return { items: [], total: 0, page: params.page, limit: params.limit };
+    });
+}
+/**
+ * Computes Grand Olympiad Rankings according to L2J Mobius CT 2.6 High Five:
+ * 1. Groups Soul Hound Male (132) & Female (133) into canonical bracket 132.
+ * 2. Filters out participants who have not met the minimum 15 matches & 1 win (`competitions_done >= 15 AND competitions_won >= 1`).
+ * 3. Sorts internally by `olympiad_points DESC, competitions_won DESC, competitions_done ASC`.
+ * 4. Strips all points, wins, and match counts before returning the public DTO (`rank`, `charName`, `clanName`, `classId`, `classNameEn`, `classNameTh`).
+ */
+export function computePublicOlympiadRankings(records, options) {
+    const canonicalFilter = options.classId ? resolveCanonicalClassId(options.classId) : null;
+    const eligible = records.filter((rec) => {
+        if (rec.cycle !== options.cycle)
+            return false;
+        if (rec.competitionsDone < OLYMPIAD_MIN_MATCHES || rec.competitionsWon < OLYMPIAD_MIN_WINS) {
+            return false;
+        }
+        if (canonicalFilter !== null) {
+            return resolveCanonicalClassId(rec.classId) === canonicalFilter;
+        }
+        return true;
+    });
+    // Sort internally using points, wins, and win rate (just like L2J Mobius Olympiad.java)
+    eligible.sort((a, b) => {
+        if (b.olympiadPoints !== a.olympiadPoints) {
+            return b.olympiadPoints - a.olympiadPoints;
+        }
+        if (b.competitionsWon !== a.competitionsWon) {
+            return b.competitionsWon - a.competitionsWon;
+        }
+        return a.competitionsDone - b.competitionsDone;
+    });
+    // Map to strictly sanitized public DTO (NO points, NO match counts exposed)
+    const sanitized = eligible.map((rec, index) => {
+        const canonicalId = resolveCanonicalClassId(rec.classId);
+        const classMeta = getClassInfoById(canonicalId);
+        return {
+            rank: index + 1,
+            charName: rec.charName,
+            clanName: rec.clanName,
+            classId: canonicalId,
+            classNameEn: classMeta?.nameEn || `Class ${canonicalId}`,
+            classNameTh: classMeta?.nameTh || `คลาส ${canonicalId}`,
+        };
+    });
+    const start = (options.page - 1) * options.limit;
+    return {
+        items: sanitized.slice(start, start + options.limit),
+        total: sanitized.length,
+        page: options.page,
+        limit: options.limit,
+        canonicalClassId: canonicalFilter,
+        minimumMatchesRequired: OLYMPIAD_MIN_MATCHES,
+    };
+}
+export async function getOlympiadRankings(options) {
+    return withTtlCache(`olympiad:rankings:${options.classId || 'all'}:${options.cycle}:${options.page}:${options.limit}`, 30_000, async () => {
+        if (isDatabaseConfigured()) {
+            const table = options.cycle === 'previous' ? 'olympiad_nobles_eom' : 'olympiad_nobles';
+            const canonical = options.classId ? resolveCanonicalClassId(options.classId) : null;
+            const classClause = canonical === 132
+                ? 'AND n.class_id IN (132, 133)'
+                : canonical === 136
+                    ? 'AND n.class_id IN (135, 136)'
+                    : canonical !== null
+                        ? `AND n.class_id = ${Number(canonical)}`
+                        : '';
+            const rows = await executeReadOnlyQuery(`SELECT n.charId, c.char_name, n.class_id, n.olympiad_points,
+                  n.competitions_done, n.competitions_won, n.competitions_lost, cd.clan_name
+           FROM ${table} n
+           INNER JOIN characters c ON n.charId = c.charId
+           LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
+           WHERE n.competitions_done >= 15 AND n.competitions_won >= 1 ${classClause}
+           ORDER BY n.olympiad_points DESC, n.competitions_won DESC`);
+            if (rows) {
+                const internalRecords = rows.map((r) => ({
+                    charId: r.charId,
+                    charName: r.char_name,
+                    classId: r.class_id,
+                    clanName: r.clan_name,
+                    olympiadPoints: r.olympiad_points,
+                    competitionsDone: r.competitions_done,
+                    competitionsWon: r.competitions_won,
+                    competitionsLost: r.competitions_lost,
+                    cycle: options.cycle,
+                }));
+                return {
+                    ...computePublicOlympiadRankings(internalRecords, options),
+                    classes: HIGH_FIVE_OLYMPIAD_CLASSES,
+                };
+            }
+        }
+        if (isDevFixtureEnabled()) {
+            return {
+                ...computePublicOlympiadRankings(DEV_FIXTURE_OLYMPIAD_NOBLES, options),
+                classes: HIGH_FIVE_OLYMPIAD_CLASSES,
+            };
+        }
+        return {
+            items: [],
+            total: 0,
+            page: options.page,
+            limit: options.limit,
+            canonicalClassId: options.classId ? resolveCanonicalClassId(options.classId) : null,
+            minimumMatchesRequired: OLYMPIAD_MIN_MATCHES,
+            classes: HIGH_FIVE_OLYMPIAD_CLASSES,
+        };
+    });
+}
+export async function getOlympiadHeroes() {
+    return withTtlCache('olympiad:heroes', 60_000, async () => {
+        if (isDatabaseConfigured()) {
+            const rows = await executeReadOnlyQuery(`SELECT h.char_name, h.class_id, h.count, cd.clan_name, cd.ally_name
+         FROM heroes h
+         LEFT JOIN characters c ON h.charId = c.charId
+         LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
+         WHERE h.played = 1
+         ORDER BY h.class_id ASC`);
+            if (rows) {
+                const heroes = rows.map((r) => {
+                    const canonical = resolveCanonicalClassId(r.class_id);
+                    const cls = getClassInfoById(canonical);
+                    return {
+                        classId: canonical,
+                        classNameEn: cls?.nameEn || `Class ${canonical}`,
+                        classNameTh: cls?.nameTh || `คลาส ${canonical}`,
+                        charName: r.char_name,
+                        clanName: r.clan_name,
+                        allyName: r.ally_name,
+                        heroCount: Number(r.count || 1),
+                        cycleVerified: true,
+                    };
+                });
+                return { heroes, verified: true };
+            }
+        }
+        if (isDevFixtureEnabled()) {
+            return { heroes: DEV_FIXTURE_HEROES, verified: false };
+        }
+        return { heroes: [], verified: false };
+    });
+}
+export async function getCastles() {
+    return withTtlCache('world:castles', 60_000, async () => {
+        if (isDatabaseConfigured()) {
+            const rows = await executeReadOnlyQuery(`SELECT cs.id, cs.name, cs.taxPercent, cs.siegeDate, cd.clan_name, c.char_name AS leader_name
+         FROM castle cs
+         LEFT JOIN clan_data cd ON cd.hasCastle = cs.id
+         LEFT JOIN characters c ON cd.leader_id = c.charId
+         ORDER BY cs.id ASC`);
+            if (rows && rows.length > 0) {
+                return rows.map((r) => {
+                    const ref = HIGH_FIVE_CASTLES_CATALOG.find((c) => c.castleId === r.id);
+                    return {
+                        castleId: r.id,
+                        nameEn: ref?.nameEn || `${r.name} Castle`,
+                        nameTh: ref?.nameTh || `ปราสาท ${r.name}`,
+                        ownerClan: r.clan_name,
+                        leaderName: r.leader_name,
+                        taxPercent: r.taxPercent,
+                        siegeDate: r.siegeDate ? new Date(Number(r.siegeDate)).toISOString() : null,
+                        status: 'verified',
+                    };
+                });
+            }
+        }
+        return HIGH_FIVE_CASTLES_CATALOG;
+    });
+}
+export async function getRaidBosses() {
+    return withTtlCache('world:raidbosses', 30_000, async () => {
+        if (isDatabaseConfigured()) {
+            const grandRows = await executeReadOnlyQuery('SELECT boss_id, respawn_time, status FROM grandboss_data');
+            const raidRows = await executeReadOnlyQuery('SELECT boss_id, respawn_time FROM raidboss_spawnlist');
+            if (grandRows || raidRows) {
+                const now = Date.now();
+                return HIGH_FIVE_RAIDBOSS_CATALOG.map((boss) => {
+                    const grand = grandRows?.find((g) => Number(g.boss_id) === boss.bossId);
+                    if (grand) {
+                        const respawnMs = Number(grand.respawn_time || 0);
+                        const isDead = respawnMs > now || Number(grand.status) > 0;
+                        return {
+                            ...boss,
+                            status: isDead ? 'dead' : 'alive',
+                            nextSpawnWindow: respawnMs > now ? new Date(respawnMs).toISOString() : null,
+                        };
+                    }
+                    const raid = raidRows?.find((r) => Number(r.boss_id) === boss.bossId);
+                    if (raid) {
+                        const respawnMs = Number(raid.respawn_time || 0);
+                        const isDead = respawnMs > now;
+                        return {
+                            ...boss,
+                            status: isDead ? 'dead' : 'alive',
+                            nextSpawnWindow: respawnMs > now ? new Date(respawnMs).toISOString() : null,
+                        };
+                    }
+                    return boss;
+                });
+            }
+        }
+        // Never invent real-time statuses or spawn times when GameServer DB is unavailable
+        return HIGH_FIVE_RAIDBOSS_CATALOG;
+    });
+}
+export async function getTvtEventInfo() {
+    return HIGH_FIVE_TVT_EVENT;
+}
+export function getVerificationNotice() {
+    const mode = getActiveDataSourceMode();
+    if (mode === 'live_mysql')
+        return undefined;
+    if (mode === 'dev_fixture') {
+        return 'DEVELOPMENT PREVIEW FIXTURE MODE — Live GameServer MySQL is not connected. Do not enable USE_DEV_FIXTURES in production.';
+    }
+    return 'LIVE GAMESERVER OFFLINE / UNCONFIGURED — Displaying verified High Five reference mechanics and UNKNOWN live telemetry.';
+}
