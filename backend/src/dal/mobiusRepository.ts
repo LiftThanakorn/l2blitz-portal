@@ -1,6 +1,6 @@
 import { env } from '../config/env.js';
 import { executeReadOnlyQuery } from './database.js';
-import { getClassName } from '../../../shared/l2Classes.js';
+import { getClassName, THIRD_CLASS_LIST, type L2ClassInfo } from '../../../shared/l2Classes.js';
 import { L2BLITZ_BOSS_CATALOG } from '../../../shared/staticGameContent.js';
 import type {
   PlayerRankingItem,
@@ -332,6 +332,117 @@ export async function queryOlympiadHeroes(): Promise<{
   }));
 
   return { currentCycle, items };
+}
+
+/**
+ * Queries Olympiad nobles for current cycle rankings.
+ * Schema: L2J Mobius CT 2.6 High Five `olympiad_nobles`
+ * Columns: charId, class_id, olympiad_points, competitions_done, competitions_won, competitions_lost
+ *
+ * Tie-Breaker Rule (Section 1):
+ * 1. `olympiad_points DESC` (primary rank)
+ * 2. `competitions_won DESC` (L2J Mobius standard: more wins breaks tie)
+ * 3. `competitions_done DESC` (more participation)
+ * 4. `c.char_name ASC` (deterministic alphabetical tie-breaker)
+ *
+ * CRITICAL PRIVACY/INTEGRITY REQUIREMENT:
+ * Points & win statistics are computed strictly on backend for ranking sorting.
+ * They are NEVER exposed in the public payload!
+ */
+export async function queryOlympiadRankings(selectedClassId: number | null): Promise<{
+  currentCycle: number | null;
+  classes: Array<{
+    classId: number;
+    className: string;
+    race: string;
+    players: Array<{ rank: number; charName: string; clanName: string | null }>;
+  }>;
+}> {
+  const { clause, params } = buildValidCharacterWhereClause('c');
+
+  let currentCycle: number | null = null;
+  try {
+    const cycleRows = await executeReadOnlyQuery<{ current_cycle: number }>(
+      `SELECT current_cycle FROM olympiad_data LIMIT 1`
+    );
+    currentCycle = cycleRows[0]?.current_cycle ?? null;
+  } catch {
+    currentCycle = null;
+  }
+
+  interface RawOlympiadNobleRow {
+    char_name: string;
+    class_id: number;
+    clan_name: string | null;
+    olympiad_points: number;
+    competitions_won: number;
+    competitions_done: number;
+  }
+
+  const whereParts = [`${clause}`, `on.class_id > 0`];
+  const queryParams = [...params];
+
+  if (selectedClassId !== null) {
+    whereParts.push(`on.class_id = ?`);
+    queryParams.push(selectedClassId);
+  }
+
+  const fullWhere = whereParts.join(' AND ');
+
+  const rows = await executeReadOnlyQuery<RawOlympiadNobleRow>(
+    `SELECT
+      c.char_name,
+      on.class_id,
+      cd.clan_name,
+      IFNULL(on.olympiad_points, 0) AS olympiad_points,
+      IFNULL(on.competitions_won, 0) AS competitions_won,
+      IFNULL(on.competitions_done, 0) AS competitions_done
+    FROM olympiad_nobles on
+    INNER JOIN characters c ON c.charId = on.charId
+    LEFT JOIN clan_data cd ON cd.clan_id = c.clanid
+    WHERE ${fullWhere}
+    ORDER BY
+      on.class_id ASC,
+      on.olympiad_points DESC,
+      on.competitions_won DESC,
+      on.competitions_done DESC,
+      c.char_name ASC`,
+    queryParams
+  );
+
+  // Group by class_id
+  const groupMap = new Map<
+    number,
+    Array<{ rank: number; charName: string; clanName: string | null }>
+  >();
+
+  for (const row of rows) {
+    const cid = Number(row.class_id);
+    if (!groupMap.has(cid)) {
+      groupMap.set(cid, []);
+    }
+    const currentList = groupMap.get(cid)!;
+    currentList.push({
+      rank: currentList.length + 1,
+      charName: row.char_name,
+      clanName: row.clan_name || null,
+    });
+  }
+
+  // Target classes to present (if selectedClassId provided, only that class; otherwise all 3rd classes)
+  const targetClasses =
+    selectedClassId !== null
+      ? THIRD_CLASS_LIST.filter((c) => c.id === selectedClassId)
+      : THIRD_CLASS_LIST;
+
+  const resultClasses = targetClasses.map((c) => ({
+    classId: c.id,
+    className: c.name,
+    race: c.race,
+    players: groupMap.get(c.id) ?? [],
+  }));
+
+  return { currentCycle, classes: resultClasses };
 }
 
 export async function queryCastles(): Promise<CastleItem[]> {

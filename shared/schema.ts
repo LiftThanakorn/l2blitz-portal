@@ -166,6 +166,37 @@ export const OlympiadHeroesResponseSchema = z.object({
 });
 export type OlympiadHeroesResponse = z.infer<typeof OlympiadHeroesResponseSchema>;
 
+/**
+ * Olympiad Rankings by Class (Section 1 & 2):
+ * Displays player rank, character name, clan name per High Five class.
+ * CRITICAL RULE:
+ * - "ใช้คะแนนเพื่อจัดอันดับภายในระบบเท่านั้น ห้ามแสดงตัวเลขคะแนนบนเว็บไซต์"
+ * - API strictly does NOT expose points (olympiad_points) to public JSON payload!
+ */
+export const OlympiadClassRankPlayerSchema = z.object({
+  rank: z.number(),
+  charName: z.string(),
+  clanName: z.string().nullable(),
+});
+export type OlympiadClassRankPlayer = z.infer<typeof OlympiadClassRankPlayerSchema>;
+
+export const OlympiadClassGroupSchema = z.object({
+  classId: z.number(),
+  className: z.string(),
+  race: z.string(),
+  players: z.array(OlympiadClassRankPlayerSchema),
+});
+export type OlympiadClassGroup = z.infer<typeof OlympiadClassGroupSchema>;
+
+export const OlympiadRankingsResponseSchema = z.object({
+  enabled: z.boolean(),
+  currentCycle: z.number().nullable(),
+  selectedClassId: z.number().nullable(), // null means "All Classes"
+  classes: z.array(OlympiadClassGroupSchema),
+  meta: ApiMetaSchema,
+});
+export type OlympiadRankingsResponse = z.infer<typeof OlympiadRankingsResponseSchema>;
+
 export const CastleItemSchema = z.object({
   id: z.number(),
   name: z.string(),

@@ -4,8 +4,9 @@ import {
   type OlympiadHeroItem,
   type CastleItem,
   type RaidBossItem,
+  type OlympiadClassGroup,
 } from '../../../shared/schema.js';
-import { getClassName } from '../../../shared/l2Classes.js';
+import { getClassName, THIRD_CLASS_LIST } from '../../../shared/l2Classes.js';
 import { L2BLITZ_BOSS_CATALOG } from '../../../shared/staticGameContent.js';
 
 /**
@@ -78,6 +79,51 @@ export const DEMO_HEROES: OlympiadHeroItem[] = [
   { charName: 'SoulReaperTH', classId: 132, className: getClassName(132), level: 85, clanName: 'ApexPredators', heroCount: 2, message: 'Steal Divinity!' },
   { charName: 'JudicatorX', classId: 136, className: getClassName(136), level: 85, clanName: 'SiamVanguard', heroCount: 1, message: 'Appetite for Destruction ready.' },
 ];
+
+/**
+ * Builds demo Olympiad rankings by class for development mode preview.
+ * NOTE: Points are calculated internally for sorting and never exposed!
+ */
+export function buildDemoOlympiadRankings(selectedClassId: number | null): OlympiadClassGroup[] {
+  const targetClasses =
+    selectedClassId !== null
+      ? THIRD_CLASS_LIST.filter((c) => c.id === selectedClassId)
+      : THIRD_CLASS_LIST;
+
+  const mockClanPool = ['SiamVanguard', 'ApexPredators', 'NightStalkers', 'IronBlood', 'RedSkulls', null];
+
+  return targetClasses.map((c) => {
+    // Generate realistic 2-4 contestants for active classes, empty for niche ones
+    let players: Array<{ rank: number; charName: string; clanName: string | null }> = [];
+
+    // Check if one of our known hero players matches this class
+    const hero = DEMO_HEROES.find((h) => h.classId === c.id);
+
+    if (hero) {
+      players = [
+        { rank: 1, charName: hero.charName, clanName: hero.clanName },
+        { rank: 2, charName: `${c.name}Challenger`, clanName: 'ApexPredators' },
+        { rank: 3, charName: `Noble${c.name.replace(/\s+/g, '')}`, clanName: 'NightStalkers' },
+      ];
+    } else if (c.id === 89 || c.id === 91 || c.id === 92 || c.id === 101 || c.id === 107 || c.id === 113) {
+      players = [
+        { rank: 1, charName: `Top${c.name.replace(/\s+/g, '')}`, clanName: mockClanPool[c.id % mockClanPool.length] },
+        { rank: 2, charName: `Vanguard${c.name.replace(/\s+/g, '').slice(0, 8)}`, clanName: 'SiamVanguard' },
+      ];
+    } else if (c.id % 2 === 0) {
+      players = [
+        { rank: 1, charName: `Contender${c.id}`, clanName: 'IronBlood' },
+      ];
+    }
+
+    return {
+      classId: c.id,
+      className: c.name,
+      race: c.race,
+      players,
+    };
+  });
+}
 
 export const DEMO_CASTLES: CastleItem[] = [
   { id: 1, name: 'Gludio', ownerClan: null, leaderName: null, allyName: null, taxPercent: 0, siegeDate: Date.now() + 3 * 86400000 },

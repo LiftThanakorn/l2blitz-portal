@@ -8,6 +8,7 @@ import {
   queryPlayerRankings,
   queryClanRankings,
   queryOlympiadHeroes,
+  queryOlympiadRankings,
   queryCastles,
   queryRaidBosses,
 } from '../dal/mobiusRepository.js';
@@ -19,6 +20,7 @@ import {
   DEMO_HEROES,
   DEMO_CASTLES,
   buildDemoRaidBosses,
+  buildDemoOlympiadRankings,
 } from '../dal/demoFixtures.js';
 import { L2BLITZ_BOSS_CATALOG } from '../../../shared/staticGameContent.js';
 import type {
@@ -30,6 +32,7 @@ import type {
   PlayerRankingsResponse,
   ClanRankingsResponse,
   OlympiadHeroesResponse,
+  OlympiadRankingsResponse,
   CastlesResponse,
   RaidBossesResponse,
   TvtEventResponse,
@@ -698,6 +701,115 @@ export async function getOlympiadHeroes(): Promise<OlympiadHeroesResponse> {
     enabled: true,
     currentCycle: null,
     items: [],
+    meta: createMeta({
+      mode: 'unavailable',
+      updatedAt: new Date().toISOString(),
+      cached: false,
+      cacheTtlSeconds: ttl,
+      warning: 'Olympiad database is currently unavailable.',
+    }),
+  };
+}
+
+export async function getOlympiadRankings(
+  selectedClassId: number | null
+): Promise<OlympiadRankingsResponse> {
+  const ttl = 180;
+  const cacheKey = `olympiad:rankings:class:${selectedClassId ?? 'all'}`;
+  const isDemo = env.DEMO_MODE && env.NODE_ENV !== 'production';
+
+  if (!env.ENABLE_OLYMPIAD_HEROES) {
+    return {
+      enabled: false,
+      currentCycle: null,
+      selectedClassId,
+      classes: [],
+      meta: createMeta({
+        mode: isDemo ? 'demo' : 'live',
+        updatedAt: new Date().toISOString(),
+        cached: true,
+        cacheTtlSeconds: ttl,
+        warning: 'Olympiad feature is currently disabled in server configuration.',
+      }),
+    };
+  }
+
+  const fresh = apiCache.getFresh<Omit<OlympiadRankingsResponse, 'meta'>>(cacheKey);
+  if (fresh) {
+    return {
+      ...fresh.value,
+      meta: createMeta({
+        mode: isDemo ? 'demo' : 'live',
+        updatedAt: fresh.updatedAtIso,
+        cached: true,
+        cacheTtlSeconds: ttl,
+      }),
+    };
+  }
+
+  const infra = await probeInfrastructure();
+
+  if (env.DB_ENABLED && infra.database === 'online') {
+    try {
+      const result = await queryOlympiadRankings(selectedClassId);
+      const payload: Omit<OlympiadRankingsResponse, 'meta'> = {
+        enabled: true,
+        currentCycle: result.currentCycle,
+        selectedClassId,
+        classes: result.classes,
+      };
+      const updatedAt = apiCache.set(cacheKey, payload, ttl);
+      return {
+        ...payload,
+        meta: createMeta({
+          mode: 'live',
+          updatedAt,
+          cached: false,
+          cacheTtlSeconds: ttl,
+        }),
+      };
+    } catch (err) {
+      const stale = apiCache.getStale<Omit<OlympiadRankingsResponse, 'meta'>>(cacheKey);
+      if (stale) {
+        return {
+          ...stale.value,
+          meta: createMeta({
+            mode: 'stale',
+            updatedAt: stale.updatedAtIso,
+            cached: true,
+            cacheTtlSeconds: ttl,
+            warning: `Stale Olympiad rankings returned due to SQL error: ${(err as Error).message}`,
+          }),
+        };
+      }
+    }
+  }
+
+  if (isDemo) {
+    const payload: Omit<OlympiadRankingsResponse, 'meta'> = {
+      enabled: true,
+      currentCycle: 4,
+      selectedClassId,
+      classes: buildDemoOlympiadRankings(selectedClassId),
+    };
+    const updatedAt = apiCache.set(cacheKey, payload, ttl);
+    return {
+      ...payload,
+      meta: createMeta({
+        mode: 'demo',
+        updatedAt,
+        cached: false,
+        cacheTtlSeconds: ttl,
+        warning: 'DEMO MODE: Showing fixture Olympiad rankings (Scores remain private).',
+      }),
+    };
+  }
+
+  return {
+    enabled: true,
+    currentCycle: null,
+    selectedClassId,
+    classes: [],
     meta: createMeta({
       mode: 'unavailable',
       updatedAt: new Date().toISOString(),

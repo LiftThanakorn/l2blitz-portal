@@ -18,6 +18,7 @@ import {
   DEMO_HEROES,
   DEMO_CASTLES,
   buildDemoRaidBosses,
+  buildDemoOlympiadRankings,
 } from '../../backend/src/dal/demoFixtures';
 import { SITE_CONFIG } from '../config/siteConfig';
 
@@ -180,6 +181,17 @@ export const apiClient = {
       items: DEMO_HEROES,
       meta: clientDemoMeta(),
     })),
+
+  getOlympiadRankings: (classId?: number | null): Promise<import('@shared/schema').OlympiadRankingsResponse> => {
+    const qs = classId !== undefined && classId !== null ? `?classId=${classId}` : '';
+    return fetchJson(`/olympiad/rankings${qs}`, () => ({
+      enabled: true,
+      currentCycle: 4,
+      selectedClassId: classId ?? null,
+      classes: buildDemoOlympiadRankings(classId ?? null),
+      meta: clientDemoMeta(),
+    }));
+  },
 
   getCastles: (): Promise<CastlesResponse> =>
     fetchJson('/castles', () => ({

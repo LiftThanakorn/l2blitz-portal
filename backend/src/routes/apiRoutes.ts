@@ -8,6 +8,7 @@ import {
   getPlayerRankings,
   getClanRankings,
   getOlympiadHeroes,
+  getOlympiadRankings,
   getCastles,
   getRaidBosses,
   getTvtEventInfo,
@@ -140,6 +141,24 @@ apiRouter.get('/rankings/clans', async (req, res, next) => {
 apiRouter.get('/olympiad/heroes', async (_req, res, next) => {
   try {
     const data = await getOlympiadHeroes();
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+apiRouter.get('/olympiad/rankings', async (req, res, next) => {
+  try {
+    const classIdQuery = req.query.classId;
+    let selectedClassId: number | null = null;
+    if (classIdQuery && typeof classIdQuery === 'string' && classIdQuery.trim() !== '') {
+      const num = Number(classIdQuery.trim());
+      if (!Number.isNaN(num) && num >= 0 && num <= 136) {
+        selectedClassId = num;
+      }
+    }
+
+    const data = await getOlympiadRankings(selectedClassId);
     res.json(data);
   } catch (err) {
     next(err);

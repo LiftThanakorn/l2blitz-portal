@@ -109,4 +109,35 @@ describe('L2Blitz Backend API & Data Integrity Suite', () => {
     expect(qa?.isCustomTeleport).toBe(true);
     expect(baium?.isCustomTeleport).toBe(true);
   });
+
+  it('GET /api/olympiad/rankings returns classes with ranked players without exposing points', async () => {
+    const res = await request(app).get('/api/olympiad/rankings');
+    expect(res.status).toBe(200);
+
+    // Verify response matches OlympiadRankingsResponseSchema
+    const { OlympiadRankingsResponseSchema } = await import('../../shared/schema.js');
+    expect(OlympiadRankingsResponseSchema.safeParse(res.body).success).toBe(true);
+
+    // Crucial rule: Check that NO player object has olympiad_points or points field
+    for (const group of res.body.classes) {
+      expect(group).toHaveProperty('classId');
+      expect(group).toHaveProperty('className');
+      expect(group).toHaveProperty('race');
+      for (const p of group.players) {
+        expect(p).toHaveProperty('rank');
+        expect(p).toHaveProperty('charName');
+        expect(p).toHaveProperty('clanName');
+        // STRICT CHECK: Points MUST NOT exist in public payload
+        expect(p).not.toHaveProperty('olympiad_points');
+        expect(p).not.toHaveProperty('points');
+      }
+    }
+
+    // Filter by classId (e.g. Duelist #88)
+    const duelistRes = await request(app).get('/api/olympiad/rankings?classId=88');
+    expect(duelistRes.status).toBe(200);
+    expect(duelistRes.body.classes.length).toBe(1);
+    expect(duelistRes.body.classes[0].classId).toBe(88);
+    expect(duelistRes.body.classes[0].className).toBe('Duelist');
+  });
 });

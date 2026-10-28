@@ -22,12 +22,13 @@ import type {
   PlayerRankingsResponse,
   ClanRankingsResponse,
   OlympiadHeroesResponse,
+  OlympiadRankingsResponse,
   CastlesResponse,
   TvtEventResponse,
   ApiMeta,
 } from '@shared/schema';
 
-type RankingTab = 'pvp' | 'pk' | 'clans' | 'heroes' | 'castles' | 'tvt';
+type RankingTab = 'pvp' | 'pk' | 'clans' | 'olympiad_rankings' | 'heroes' | 'castles' | 'tvt';
 
 export const RankingsPage: React.FC = () => {
   const { lang, t } = useI18n();
@@ -35,7 +36,7 @@ export const RankingsPage: React.FC = () => {
   const initialTab = (searchParams.get('tab') as RankingTab) || 'pvp';
 
   const [tab, setTab] = useState<RankingTab>(
-    ['pvp', 'pk', 'clans', 'heroes', 'castles', 'tvt'].includes(initialTab) ? initialTab : 'pvp'
+    ['pvp', 'pk', 'clans', 'olympiad_rankings', 'heroes', 'castles', 'tvt'].includes(initialTab) ? initialTab : 'pvp'
   );
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -45,6 +46,7 @@ export const RankingsPage: React.FC = () => {
   const [playerData, setPlayerData] = useState<PlayerRankingsResponse | null>(null);
   const [clanData, setClanData] = useState<ClanRankingsResponse | null>(null);
   const [heroData, setHeroData] = useState<OlympiadHeroesResponse | null>(null);
+  const [olympiadRankingsData, setOlympiadRankingsData] = useState<OlympiadRankingsResponse | null>(null);
   const [castleData, setCastleData] = useState<CastlesResponse | null>(null);
   const [tvtData, setTvtData] = useState<TvtEventResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,6 +72,9 @@ export const RankingsPage: React.FC = () => {
       } else if (tab === 'clans') {
         const res = await apiClient.getClanRankings(page, limit);
         setClanData(res);
+      } else if (tab === 'olympiad_rankings') {
+        const res = await apiClient.getOlympiadRankings(classFilter);
+        setOlympiadRankingsData(res);
       } else if (tab === 'heroes') {
         const res = await apiClient.getOlympiadHeroes();
         setHeroData(res);
@@ -96,16 +101,19 @@ export const RankingsPage: React.FC = () => {
       ? playerData?.meta
       : tab === 'clans'
         ? clanData?.meta
-        : tab === 'heroes'
-          ? heroData?.meta
-          : tab === 'castles'
-            ? castleData?.meta
-            : tvtData?.meta;
+        : tab === 'olympiad_rankings'
+          ? olympiadRankingsData?.meta
+          : tab === 'heroes'
+            ? heroData?.meta
+            : tab === 'castles'
+              ? castleData?.meta
+              : tvtData?.meta;
 
   const tabs: Array<{ id: RankingTab; label: string; icon: React.ElementType }> = [
     { id: 'pvp', label: t('Top PvP', 'Top PvP'), icon: Swords },
     { id: 'pk', label: t('Top PK', 'Top PK'), icon: Skull },
     { id: 'clans', label: t('อันดับแคลน', 'Clan Rankings'), icon: Users },
+    { id: 'olympiad_rankings', label: t('อันดับโอลิมเพียดตามอาชีพ', 'Olympiad by Class'), icon: Trophy },
     { id: 'heroes', label: t('ฮีโร่โอลิมเพียด', 'Olympiad Heroes'), icon: Crown },
     { id: 'castles', label: t('การครองปราสาท', 'Castle Ownership'), icon: Castle },
     { id: 'tvt', label: t('สถิติ TvT', 'TvT Rankings'), icon: Flame },
@@ -162,45 +170,62 @@ export const RankingsPage: React.FC = () => {
         })}
       </div>
 
-      {/* Filter Bar for PvP / PK */}
-      {(tab === 'pvp' || tab === 'pk') && (
+      {/* Filter Bar for PvP / PK & Olympiad Rankings by Class */}
+      {(tab === 'pvp' || tab === 'pk' || tab === 'olympiad_rankings') && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-[#0d1322] p-4">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
+            {(tab === 'pvp' || tab === 'pk') && (
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setPage(1);
+                  }}
+                  placeholder={t('ค้นหาชื่อตัวละคร หรือ แคลน...', 'Search character or clan...')}
+                  className="rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
+                />
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 font-medium">
+                {t('เลือกอาชีพ:', 'Select Class:')}
+              </span>
+              <select
+                aria-label="Filter by High Five Class"
+                value={classFilter ?? ''}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value);
+                  setClassFilter(e.target.value === '' ? null : Number(e.target.value));
                   setPage(1);
                 }}
-                placeholder={t('ค้นหาชื่อตัวละคร หรือ แคลน...', 'Search character or clan...')}
-                className="rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
-              />
-            </div>
-
-            <select
-              aria-label="Filter by High Five Class"
-              value={classFilter ?? ''}
-              onChange={(e) => {
-                setClassFilter(e.target.value === '' ? null : Number(e.target.value));
-                setPage(1);
-              }}
-              className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 focus:border-sky-500 focus:outline-none"
-            >
-              <option value="">{t('ทุกอาชีพ High Five (รวม Kamael)', 'All High Five Classes (incl. Kamael)')}</option>
-              {THIRD_CLASS_LIST.map((c) => (
-                <option key={c.id} value={c.id}>
-                  [{c.race}] {c.name}
+                className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 focus:border-sky-500 focus:outline-none cursor-pointer"
+              >
+                <option value="">
+                  {t('ทุกอาชีพ (All 34 High Five Classes)', 'All 34 High Five Classes')}
                 </option>
-              ))}
-            </select>
+                {THIRD_CLASS_LIST.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    [{c.race}] {c.name} (Class #{c.id})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="text-xs text-slate-400">
-            {t('พบข้อมูลทั้งหมด:', 'Total Matching:')}{' '}
-            <strong className="font-mono text-white">{playerData?.total ?? 0}</strong>
+            {tab === 'olympiad_rankings' ? (
+              <span className="text-sky-300 font-medium">
+                {t('คะแนนใช้จัดอันดับภายในระบบ (ไม่เปิดเผยตัวเลขคะแนน)', 'Points used internally for ranking (never publicly exposed)')}
+              </span>
+            ) : (
+              <>
+                {t('พบข้อมูลทั้งหมด:', 'Total Matching:')}{' '}
+                <strong className="font-mono text-white">{playerData?.total ?? 0}</strong>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -212,20 +237,26 @@ export const RankingsPage: React.FC = () => {
             {tab === 'pvp' && t('ตารางอันดับสังหาร PvP (Top PvP)', 'Top PvP Leaderboard')}
             {tab === 'pk' && t('ตารางอันดับสังหาร PK (Top PK)', 'Top PK Leaderboard')}
             {tab === 'clans' && t('ตารางอันดับแคลน (Clan Rankings)', 'Top Clans by Level & Reputation')}
+            {tab === 'olympiad_rankings' && t('อันดับผู้เข้าแข่งขันโอลิมเพียดแยกตามอาชีพ (Olympiad by Class)', 'Olympiad Rankings by Class (Current Cycle)')}
             {tab === 'heroes' && t('ทำเนียบฮีโร่โอลิมเพียด (Olympiad Heroes)', 'Current Olympiad Heroes')}
             {tab === 'castles' && t('สถานะการครอบครองปราสาททั้ง 9 แห่ง', 'Castle Ownership & Siege Schedule')}
             {tab === 'tvt' && t('อันดับผู้เล่นกิจกรรม Team vs Team (TvT)', 'TvT Event Leaderboard')}
           </CardTitle>
           <CardDescription>
-            {tab === 'pvp' || tab === 'pk'
+            {tab === 'olympiad_rankings'
               ? t(
-                  'แสดงสถานะออนไลน์เฉพาะเมื่อตรวจสอบแล้วว่า GameServer ทำงานอยู่จริง',
-                  'Online indicator is verified against live GameServer TCP status.'
+                  'เรียงลำดับผู้เข้าแข่งขันตามคะแนนโอลิมเพียดภายในระบบ (อันดับ 1 คือผู้มีคะแนนสูงสุดของแต่ละอาชีพ โดยไม่เปิดเผยตัวเลขคะแนนบนเว็บไซต์)',
+                  'Ranked by internal Olympiad points (Rank 1 represents class leader; exact points remain private).'
                 )
-              : t(
-                  'ข้อมูลอ่านอย่างเดียวจากฐานข้อมูล L2J Mobius CT 2.6 High Five',
-                  'Read-only snapshot from L2J Mobius CT 2.6 High Five database.'
-                )}
+              : tab === 'pvp' || tab === 'pk'
+                ? t(
+                    'แสดงสถานะออนไลน์เฉพาะเมื่อตรวจสอบแล้วว่า GameServer ทำงานอยู่จริง',
+                    'Online indicator is verified against live GameServer TCP status.'
+                  )
+                : t(
+                    'ข้อมูลอ่านอย่างเดียวจากฐานข้อมูล L2J Mobius CT 2.6 High Five',
+                    'Read-only snapshot from L2J Mobius CT 2.6 High Five database.'
+                  )}
           </CardDescription>
         </CardHeader>
 
@@ -344,6 +375,102 @@ export const RankingsPage: React.FC = () => {
             ) : (
               <div className="p-10 text-center text-sm text-slate-400">
                 {t('ยังไม่มีข้อมูลแคลนในขณะนี้', 'No clan rankings available.')}
+              </div>
+            )
+          ) : tab === 'olympiad_rankings' ? (
+            olympiadRankingsData && olympiadRankingsData.enabled ? (
+              <div className="p-4 sm:p-6 space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 text-xs text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-amber-400" />
+                    <span>
+                      {t('รอบการแข่งขันโอลิมเพียดปัจจุบัน:', 'Current Olympiad Cycle:')}{' '}
+                      <strong className="font-mono text-white">
+                        Cycle #{olympiadRankingsData.currentCycle ?? 1}
+                      </strong>
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    {t(
+                      'จัดอันดับด้วยคะแนนโอลิมเพียดและผลการแข่งขัน (ระบบไม่เปิดเผยคะแนนสู่สาธารณะ)',
+                      'Tie-breaker: Points > Wins > Matches > Alphabetical (Scores hidden by policy)'
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {olympiadRankingsData.classes.map((group) => (
+                    <div
+                      key={group.classId}
+                      className="rounded-xl border border-slate-800 bg-[#090d18] overflow-hidden"
+                    >
+                      <div className="flex items-center justify-between bg-slate-900/80 px-4 py-2.5 border-b border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <Crown className="h-4 w-4 text-sky-400" />
+                          <h4 className="font-bold text-white text-xs sm:text-sm">
+                            {group.className}
+                          </h4>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            {group.race}
+                          </Badge>
+                          <span className="font-mono text-[10px] text-slate-400">
+                            ID #{group.classId}
+                          </span>
+                        </div>
+                      </div>
+
+                      {group.players.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead className="border-b border-slate-800/80 bg-slate-900/40 text-slate-400">
+                              <tr>
+                                <th className="px-3.5 py-2 w-16 font-medium">อันดับ</th>
+                                <th className="px-3.5 py-2 font-medium">ชื่อตัวละคร</th>
+                                <th className="px-3.5 py-2 font-medium">แคลน</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800/60">
+                              {group.players.map((player) => (
+                                <tr key={`${group.classId}-${player.charName}`} className="hover:bg-slate-900/40">
+                                  <td className="px-3.5 py-2 font-mono font-bold">
+                                    {player.rank === 1 ? (
+                                      <span className="inline-flex items-center gap-1 text-amber-300 font-extrabold">
+                                        <Crown className="h-3 w-3 text-amber-400" />
+                                        1
+                                      </span>
+                                    ) : player.rank === 2 ? (
+                                      <span className="text-slate-300 font-bold">2</span>
+                                    ) : player.rank === 3 ? (
+                                      <span className="text-amber-600 font-bold">3</span>
+                                    ) : (
+                                      <span className="text-slate-400">{player.rank}</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3.5 py-2 font-semibold text-white">
+                                    {player.charName}
+                                  </td>
+                                  <td className="px-3.5 py-2 text-slate-300">
+                                    {player.clanName || '-'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="py-6 px-4 text-center text-xs text-slate-500 italic">
+                          {t('ไม่มีผู้เข้าแข่งขันในอาชีพนี้', 'No active contestants for this class.')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="p-10 text-center text-sm text-slate-400">
+                {t('ระบบ Olympiad ยังไม่เปิดใช้งานหรือยังไม่มีข้อมูลการแข่งขัน', 'Olympiad data is currently unavailable.')}
               </div>
             )
           ) : tab === 'heroes' ? (

@@ -63,7 +63,21 @@ API ทั้งหมดของ L2Blitz เป็นแบบ **Read-Only (`G
 ### 2.7 `GET /api/olympiad/heroes`
 คืนค่ารายชื่อฮีโร่ปัจจุบันจากตาราง `heroes` (`played = 1`) เชื่อมกับ `characters` และ `clan_data` พร้อมรอบ Olympiad จาก `olympiad_data.current_cycle`
 
-### 2.8 `GET /api/castles`
+### 2.8 `GET /api/olympiad/rankings`
+คืนค่าอันดับผู้เข้าแข่งขัน Olympiad รอบปัจจุบันแยกตามอาชีพขั้น 3 ทั้งหมดใน High Five (`0–136` รวมเผ่า Kamael):
+- **Query Parameter**: `classId` (เลือกดูเฉพาะอาชีพ หรือละเว้นเพื่อดูทุกอาชีพ)
+- **โครงสร้างข้อมูลที่ส่งกลับ**: ส่งเฉพาะ `rank`, `charName`, และ `clanName` แยกตามกลุ่มอาชีพ
+- **กฎความซื่อสัตย์และความเป็นส่วนตัว**:
+  - **ห้ามส่งคะแนนโอลิมเพียด (`olympiad_points`) สู่ Public API เด็ดขาด**
+  - คะแนนถูกใช้เพื่อการจัดอันดับในฝั่ง Backend เท่านั้น โดยผู้ที่มีคะแนนสูงสุดของแต่ละอาชีพจะอยู่ในอันดับ 1
+  - **Tie-Breaker Rule**:
+    1. `olympiad_points DESC` (คะแนนโอลิมเพียดมากที่สุด)
+    2. `competitions_won DESC` (จำนวนครั้งที่ชนะการแข่งขันในรอบ)
+    3. `competitions_done DESC` (จำนวนรอบที่ลงแข่งขัน)
+    4. `char_name ASC` (เรียงตามตัวอักษรเพื่อความแน่นอน)
+- **เงื่อนไขคัดกรอง**: ตัด GM (`accesslevel = 0`), ตัวละครที่ลบแล้ว (`deletetime = 0`) และบัญชีทดสอบที่กำหนด
+
+### 2.9 `GET /api/castles`
 คืนค่าสถานะปราสาททั้ง 9 แห่งใน High Five (`Gludio`, `Dion`, `Giran`, `Oren`, `Aden`, `Innadril`, `Goddard`, `Rune`, `Schuttgart`) จากตาราง `castle` และ `clan_data`
 
 ### 2.9 `GET /api/raidbosses`
