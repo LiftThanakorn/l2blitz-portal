@@ -119,8 +119,8 @@ export function RankingsPage() {
           </h2>
           <p className="small-note text-[#E8E3DB] mt-1 m-0">
             {t(
-              'ระบบโอลิมเพียดแยกหน้าเฉพาะ รองรับตัวกรองครบ 35 คลาส (รวม Soul Hound 132/133) และซ่อนคะแนนสาธารณะตามกฎจริง',
-              'Visit the dedicated Olympiad portal featuring all 35 third-class brackets (with unified Soul Hound 132/133) and hidden points.'
+              'ระบบโอลิมเพียดแสดงครบ 34 กลุ่มอาชีพในหน้าเดียว (Soul Hound 132/133 รวมกัน ไม่รวม Judicator) และซ่อนคะแนนสาธารณะตามกฎจริง',
+              'Visit the dedicated Olympiad portal featuring all 34 hero-eligible brackets (Soul Hound 132/133 unified, excluding Judicator) and hidden points.'
             )}
           </p>
         </div>

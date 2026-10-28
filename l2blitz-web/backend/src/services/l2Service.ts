@@ -12,7 +12,7 @@ import {
 } from '../data/fixtures.js';
 import {
   getClassInfoById,
-  HIGH_FIVE_OLYMPIAD_CLASSES,
+  HIGH_FIVE_HERO_ELIGIBLE_CLASSES,
   resolveCanonicalClassId,
 } from '../data/highFiveClasses.js';
 import {
@@ -404,6 +404,7 @@ export function computePublicOlympiadRankings(
   const canonicalFilter = options.classId ? resolveCanonicalClassId(options.classId) : null;
 
   const eligible = records.filter((rec) => {
+    if (!HIGH_FIVE_HERO_ELIGIBLE_CLASSES.some((cls) => cls.id === resolveCanonicalClassId(rec.classId))) return false;
     if (rec.cycle !== options.cycle) return false;
     if (rec.competitionsDone < OLYMPIAD_MIN_MATCHES || rec.competitionsWon < OLYMPIAD_MIN_WINS) {
       return false;
@@ -505,7 +506,7 @@ export async function getOlympiadRankings(options: {
           }));
           return {
             ...computePublicOlympiadRankings(internalRecords, options),
-            classes: HIGH_FIVE_OLYMPIAD_CLASSES,
+            classes: HIGH_FIVE_HERO_ELIGIBLE_CLASSES,
           };
         }
       }
@@ -513,7 +514,7 @@ export async function getOlympiadRankings(options: {
       if (isDevFixtureEnabled()) {
         return {
           ...computePublicOlympiadRankings(DEV_FIXTURE_OLYMPIAD_NOBLES, options),
-          classes: HIGH_FIVE_OLYMPIAD_CLASSES,
+          classes: HIGH_FIVE_HERO_ELIGIBLE_CLASSES,
         };
       }
 
@@ -524,14 +525,14 @@ export async function getOlympiadRankings(options: {
         limit: options.limit,
         canonicalClassId: options.classId ? resolveCanonicalClassId(options.classId) : null,
         minimumMatchesRequired: OLYMPIAD_MIN_MATCHES,
-        classes: HIGH_FIVE_OLYMPIAD_CLASSES,
+        classes: HIGH_FIVE_HERO_ELIGIBLE_CLASSES,
       };
     }
   );
 }
 
 /**
- * All High Five Olympiad brackets in ONE request: exactly three public ranks per class.
+ * All 34 Hero-eligible High Five Olympiad brackets in ONE request: three public ranks per class.
  * Never serialize points, wins, or match counts. Empty classes remain visible.
  */
 export function computePublicOlympiadTopByClass(
@@ -542,7 +543,7 @@ export function computePublicOlympiadTopByClass(
     dataAvailable: true,
     cycle,
     minimumMatchesRequired: OLYMPIAD_MIN_MATCHES,
-    classes: HIGH_FIVE_OLYMPIAD_CLASSES.map((cls) => ({
+    classes: HIGH_FIVE_HERO_ELIGIBLE_CLASSES.map((cls) => ({
       classId: cls.id,
       classNameEn: cls.nameEn,
       classNameTh: cls.nameTh,

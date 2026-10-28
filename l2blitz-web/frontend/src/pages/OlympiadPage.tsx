@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { fetchApi, HIGH_FIVE_CLASSES } from '../lib/api';
+import { fetchApi, OLYMPIAD_CLASSES } from '../lib/api';
 
 /**
  * STRICT COMPLIANCE:
@@ -79,7 +79,7 @@ export function OlympiadPage() {
         setSourceMode(res.source);
         setDataAvailable(res.data?.dataAvailable ?? false);
         // Always render every class even while the backend is unavailable.
-        setClassStandings(res.data?.classes ?? HIGH_FIVE_CLASSES.map((cls) => ({
+        setClassStandings(res.data?.classes ?? OLYMPIAD_CLASSES.map((cls) => ({
           classId: cls.id,
           classNameEn: cls.nameEn,
           classNameTh: cls.nameTh,
@@ -310,7 +310,7 @@ export function OlympiadPage() {
               <div className="surface-stone p-10 text-center">
                 <p className="lead-statement mx-auto text-[#1A1917]">
                   {t(
-                    'ยังไม่มีข้อมูลฮีโร่ที่ได้รับการยืนยันในรอบปัจจุบัน · รายชื่อฮีโร่ทั้ง 35 คลาสจะแสดงเมื่อสิ้นสุดรอบการแข่งขันโอลิมเพียดบนเซิร์ฟเวอร์จริง',
+                    'ยังไม่มีข้อมูลฮีโร่ที่ได้รับการยืนยันในรอบปัจจุบัน · รายชื่อฮีโร่ทั้ง 34 กลุ่มอาชีพจะแสดงเมื่อสิ้นสุดรอบการแข่งขันโอลิมเพียดบนเซิร์ฟเวอร์จริง',
                     'No verified Olympiad Heroes recorded yet · eligible class heroes will appear here once the live GameServer completes its Olympiad cycle.'
                   )}
                 </p>

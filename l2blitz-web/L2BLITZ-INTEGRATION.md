@@ -21,8 +21,9 @@ For local API and game on the same computer set `STATUS_CHECK_ENABLE=true`, `STA
 If hosted separately on a VPS, use a private network/tunnel to the GameServer database; never publicly expose MySQL port 3306.
 
 ## Olympiad class leaderboard (Top 3)
-- Route: `/olympiad` shows all 35 High Five Olympiad class brackets on one scrollable page, grouped by race, with three ranking slots per class. Empty brackets remain visible; no fabricated players.
+- Route: `/olympiad` shows all 34 hero-eligible High Five Olympiad class brackets on one scrollable page, grouped by race, with three ranking slots per class. Empty brackets remain visible; no fabricated players.
 - API: `GET /api/olympiad/top-by-class?cycle=current|previous`. One read-only SQL query loads all eligible competitors per cycle; the 30-second cache avoids querying the game 35 times.
+- Canonical hero eligibility is taken from the GameServer `Olympiad.java` `HERO_IDS`: 88–118, 131, Soul Hound 132/133 unified, and 134. Judicator/Inspector (135/136) are not eligible hero brackets, but remain in the general class catalog for PvP/class information.
 - Olympiad minimum eligibility: 15 matches and at least one win. Soul Hound 132/133 and Judicator 135/136 remain unified under their existing brackets.
 - API outputs only rank, character name, clan, and class metadata. Points, win counts, and match counts remain server-private. `dataAvailable=false` means the read-only game query could not be completed.
 - Verified locally on 2026-10-28 against live MySQL; all 35 class brackets returned and both cycle routes respond. The database had no qualifying ranked character at verification time; empty leaderboards are expected, not placeholder fixtures.

@@ -57,6 +57,16 @@ export const HIGH_FIVE_OLYMPIAD_CLASSES: HighFiveClassInfo[] = [
   { id: 136, groupedIds: [135, 136], slug: 'judicator', nameEn: 'Judicator', nameTh: 'จูดิเคเตอร์ (Inspector)', race: 'Kamael', raceTh: 'คามาเอล', archetype: 'Enchanter', recommendedSet: 'Vorpal Light' },
 ];
 
+/**
+ * Matches Olympiad.java HERO_IDS on the actual L2Blitz GameServer.
+ * 88–118, 131, 132/133 (unified), 134. Inspector/Judicator are subclasses
+ * and never have their own Olympiad hero bracket.
+ * Retain Judicator in the general class catalog for PvP/class name lookups.
+ */
+export const HIGH_FIVE_HERO_ELIGIBLE_CLASSES = HIGH_FIVE_OLYMPIAD_CLASSES.filter(
+  (cls) => cls.id !== 136
+);
+
 export function resolveCanonicalClassId(classId: number): number {
   if (classId === 133) return 132;
   if (classId === 135) return 136;

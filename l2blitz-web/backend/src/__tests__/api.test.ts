@@ -58,19 +58,24 @@ describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => 
     }
   });
 
-  it('3. Returns all 35 classes in one response, ranked 1–3 without revealing private points', () => {
+  it('3. Returns all 34 hero-eligible classes in one response, ranked 1–3 without revealing private points', () => {
     const data = computePublicOlympiadTopByClass(DEV_FIXTURE_OLYMPIAD_NOBLES, 'current');
     assert.equal(data.dataAvailable, true);
-    assert.equal(data.classes.length, 35);
+    assert.equal(data.classes.length, 34);
+    assert.deepEqual(data.classes.filter((cls) => cls.race === 'Kamael').map((cls) => cls.classId), [131, 132, 134]);
+    assert.equal(data.classes.some((cls) => cls.classId === 136), false);
     assert.ok(data.classes.every((cls) => cls.rows.length <= 3));
     assert.ok(data.classes.every((cls) => cls.rows.every((row, i) => row.rank === i + 1)));
     assert.equal(data.classes.find((cls) => cls.classId === 132)?.rows.length, 3);
     assert.deepEqual(data.classes.find((cls) => cls.classId === 132)?.rows.map((r) => r.charName),
       ['KaelenVex', 'SeraphinaNoir', 'zephyrWing']);
     assert.equal(data.classes.find((cls) => cls.classId === 89)?.rows.length, 0);
+    const judicator = { ...DEV_FIXTURE_OLYMPIAD_NOBLES[0], charId: 9999, charName: 'ExcludedJudicator', classId: 136, olympiadPoints: 99999 };
+    const injected = computePublicOlympiadTopByClass([...DEV_FIXTURE_OLYMPIAD_NOBLES, judicator], 'current');
+    assert.ok(injected.classes.flatMap((cls) => cls.rows).every((r) => r.charName !== 'ExcludedJudicator'));
     assert.ok(data.classes.flatMap((cls) => cls.rows).every((row) =>
       !('olympiadPoints' in row) && !('competitionsDone' in row) && !('competitionsWon' in row)));
-    assert.equal(computePublicOlympiadTopByClass(DEV_FIXTURE_OLYMPIAD_NOBLES, 'previous').classes.length, 35);
+    assert.equal(computePublicOlympiadTopByClass(DEV_FIXTURE_OLYMPIAD_NOBLES, 'previous').classes.length, 34);
   });
 
   it('4. Returns Unknown / Unavailable (never fake numbers) when GameServer DB is offline in production mode', async () => {
@@ -127,10 +132,12 @@ describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => 
       };
       assert.equal(response.status, 200);
       assert.equal(body.data.dataAvailable, false);
-      assert.equal(body.data.classes.length, 35);
+      assert.equal(body.data.classes.length, 34);
       assert.ok(body.data.classes.every((cls) => cls.rows.length === 0));
       const bad = await fetch(`http://127.0.0.1:${port}/api/olympiad/top-by-class?cycle=invalid`);
       assert.equal(bad.status, 400);
+      const excluded = await fetch(`http://127.0.0.1:${port}/api/olympiad/rankings?classId=136`);
+      assert.equal(excluded.status, 400);
     } finally {
       server.close();
     }

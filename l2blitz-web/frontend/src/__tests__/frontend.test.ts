@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { HIGH_FIVE_CLASSES } from '../lib/api';
+import { HIGH_FIVE_CLASSES, OLYMPIAD_CLASSES } from '../lib/api';
 
 describe('L2BLITZ Frontend High Five Data & Routing Contracts', () => {
-  it('1. Defines all 35 Olympiad class brackets with Soul Hound 132 & 133 unified', () => {
-    expect(HIGH_FIVE_CLASSES).toHaveLength(35);
+  it('1. Defines all 34 hero-eligible Olympiad class brackets with Soul Hound 132 & 133 unified', () => {
+    expect(HIGH_FIVE_CLASSES).toHaveLength(35); // General classes, including Judicator for PvP details.
+    expect(OLYMPIAD_CLASSES).toHaveLength(34);
+    expect(OLYMPIAD_CLASSES.filter((cls) => cls.race === 'Kamael').map((cls) => cls.id)).toEqual([131, 132, 134]);
+    expect(OLYMPIAD_CLASSES.some((cls) => cls.id === 136)).toBe(false);
     const soulHound = HIGH_FIVE_CLASSES.find((c) => c.id === 132);
     expect(soulHound).toBeDefined();
     expect(soulHound?.groupedIds).toEqual([132, 133]);
