@@ -1,0 +1,8 @@
+{
+  "name": "l2blitz-cloudflare-pages",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:web": "npm --prefix l2blitz-web/frontend ci --no-audit --no-fund && npm --prefix l2blitz-web/frontend run build && node scripts/copy-frontend-dist.mjs"
+  }
+}
