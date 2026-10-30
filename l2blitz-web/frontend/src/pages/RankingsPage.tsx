@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchApi } from '../lib/api';
+import { PUBLIC_CHARACTER_DATA_ENABLED } from '../publicLaunch';
 
 interface PvpPkRow {
   rank: number;
@@ -43,6 +44,15 @@ export function RankingsPage() {
   const limit = 10;
 
   useEffect(() => {
+    if (!PUBLIC_CHARACTER_DATA_ENABLED) {
+      setPvpRows([]);
+      setClanRows([]);
+      setTotal(0);
+      setUpdatedAt('');
+      setSourceMode('unavailable');
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
 
@@ -202,7 +212,9 @@ export function RankingsPage() {
           <span>
             {t('ข้อมูลอันดับ:', 'Standings:')}{' '}
             <strong className="text-[#1A1917]">
-              {sourceMode === 'live_mysql'
+              {!PUBLIC_CHARACTER_DATA_ENABLED
+                ? t('รอเปิดเซิร์ฟเวอร์จริง', 'Pending official launch')
+                : sourceMode === 'live_mysql'
                 ? t('อัปเดตแล้ว', 'Updated')
                 : sourceMode === 'dev_fixture'
                   ? t('ยังไม่มีข้อมูล', 'No standings yet')
@@ -216,8 +228,26 @@ export function RankingsPage() {
           )}
         </div>
 
-        {/* Table Content */}
-        {loading ? (
+        {/* Keep tabs and table structure visible during Close Beta, without real player rows. */}
+        {!PUBLIC_CHARACTER_DATA_ENABLED ? (
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  {(activeTab === 'clans'
+                    ? [t('อันดับ', 'Rank'), t('ชื่อแคลน', 'Clan Name'), t('หัวหน้าแคลน', 'Leader'), t('เลเวลแคลน', 'Level'), t('คะแนนชื่อเสียง', 'Reputation'), t('สมาชิก', 'Members'), t('ปราสาทที่ครอง', 'Castle Held')]
+                    : [t('อันดับ', 'Rank'), t('ชื่อตัวละคร', 'Character'), t('สายอาชีพ (High Five)', 'Class'), t('แคลน', 'Clan'), t('สังหาร PvP', 'PvP Kills'), t('สังหาร PK', 'PK Kills')]
+                  ).map((heading) => <th key={heading}>{heading}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colSpan={activeTab === 'clans' ? 7 : 6} className="py-14 text-center text-[#77736C]">
+                  {t('ข้อมูลผู้เล่นและแคลนจะแสดงหลังเปิดเซิร์ฟเวอร์อย่างเป็นทางการ', 'Player and clan standings will appear after the official server launch.')}
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        ) : loading ? (
           <div className="py-16 text-center text-[#77736C]">
             {t('กำลังโหลดอันดับ...', 'Loading rankings...')}
           </div>

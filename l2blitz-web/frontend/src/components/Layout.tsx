@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { PUBLIC_CHARACTER_DATA_ENABLED } from '../publicLaunch';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { locale, setLocale, t } = useLanguage();
@@ -83,10 +82,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { to: '/info', labelTh: 'ข้อมูลเซิร์ฟเวอร์', labelEn: 'Server Info' },
-    ...(PUBLIC_CHARACTER_DATA_ENABLED ? [
-      { to: '/rankings', labelTh: 'อันดับผู้เล่น', labelEn: 'Rankings' },
-      { to: '/olympiad', labelTh: 'โอลิมเพียด', labelEn: 'Olympiad' },
-    ] : []),
+    { to: '/rankings', labelTh: 'อันดับผู้เล่น', labelEn: 'Rankings' },
+    { to: '/olympiad', labelTh: 'โอลิมเพียด', labelEn: 'Olympiad' },
     { to: '/raidboss', labelTh: 'เรดบอส', labelEn: 'Raid Boss' },
     { to: '/farmzones', labelTh: 'พื้นที่ฟาร์ม', labelEn: 'Farm Zones' },
     { to: '/events', labelTh: 'กิจกรรม TvT', labelEn: 'Events' },

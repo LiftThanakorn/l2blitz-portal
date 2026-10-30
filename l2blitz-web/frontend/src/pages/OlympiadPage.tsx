@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchApi, OLYMPIAD_CLASSES } from '../lib/api';
+import { PUBLIC_CHARACTER_DATA_ENABLED } from '../publicLaunch';
 
 /**
  * STRICT COMPLIANCE:
@@ -79,6 +80,20 @@ export function OlympiadPage() {
   const [lastCheckedAt, setLastCheckedAt] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!PUBLIC_CHARACTER_DATA_ENABLED) {
+      setClassStandings(OLYMPIAD_CLASSES.map((cls) => ({
+        classId: cls.id, classNameEn: cls.nameEn, classNameTh: cls.nameTh,
+        race: cls.race, raceTh: cls.raceTh, rows: [],
+      })));
+      setHeroes([]);
+      setHeroesVerified(false);
+      setDataAvailable(false);
+      setSourceMode('unavailable');
+      setLastCheckedAt(null);
+      setDataStatus('empty');
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     let inFlight = false;
     let lastRequestStarted = 0;
@@ -263,7 +278,9 @@ export function OlympiadPage() {
               }`}
             />
             <span className="text-[14px] font-medium text-[#524E48]">
-              {dataStatus === 'checking'
+              {!PUBLIC_CHARACTER_DATA_ENABLED
+                ? t('รอเปิดเผยผลหลังเปิดเซิร์ฟเวอร์จริง', 'Results become public at official launch')
+                : dataStatus === 'checking'
                 ? t('กำลังตรวจสอบข้อมูล...', 'Checking data...')
                 : dataStatus === 'unavailable'
                   ? t('ยังไม่สามารถตรวจสอบข้อมูลได้', 'Data temporarily unavailable')
@@ -283,7 +300,7 @@ export function OlympiadPage() {
                 </time>
                 &nbsp;({t('เวลาไทย', 'Bangkok time')})
               </>
-            ) : t('ยังไม่มีเวลาตรวจสอบที่ยืนยันได้', 'No verified check time yet')}
+            ) : !PUBLIC_CHARACTER_DATA_ENABLED ? t('ช่วงทดสอบ Close Beta', 'Close Beta') : t('ยังไม่มีเวลาตรวจสอบที่ยืนยันได้', 'No verified check time yet')}
           </div>
         </div>
         {viewMode === 'rankings' ? (
@@ -325,7 +342,9 @@ export function OlympiadPage() {
 
             {!dataAvailable && !loading && (
               <p className="mt-5 p-4 bg-[#F7F5F0] body-copy text-[#77736C]">
-                {t('ยังไม่มีผลการจัดอันดับให้แสดงในขณะนี้', 'No Olympiad standings available right now.')}
+                {!PUBLIC_CHARACTER_DATA_ENABLED
+                  ? t('คงรูปแบบอันดับทุกอาชีพไว้ โดยซ่อนชื่อตัวละครและข้อมูลผลการแข่งขันจนกว่าจะเปิดเซิร์ฟเวอร์จริง', 'Class leaderboards remain visible, but player names and match results are hidden until official launch.')
+                  : t('ยังไม่มีผลการจัดอันดับให้แสดงในขณะนี้', 'No Olympiad standings available right now.')}
               </p>
             )}
 
@@ -369,10 +388,10 @@ export function OlympiadPage() {
                                     </span>
                                     <div className="min-w-0 flex-1">
                                       <p className={`text-[15px] font-semibold m-0 truncate ${player ? 'text-[#1A1917]' : 'text-[#9D9992]'}`} title={player?.charName ?? undefined}>
-                                        {player?.charName ?? '—'}
+                                        {PUBLIC_CHARACTER_DATA_ENABLED ? player?.charName ?? '—' : '—'}
                                       </p>
                                       <p className="small-note text-[#77736C] m-0 mt-0.5 truncate" title={player?.clanName ?? undefined}>
-                                        {player ? player.clanName || t('ไม่มีแคลน', 'No clan') : (!dataAvailable) ? t('ยังไม่มีข้อมูล', 'No standings') : t('ยังไม่มีผู้ผ่านเกณฑ์', 'No qualified player')}
+                                        {!PUBLIC_CHARACTER_DATA_ENABLED ? t('รอเปิดจริง', 'Coming at launch') : player ? player.clanName || t('ไม่มีแคลน', 'No clan') : (!dataAvailable) ? t('ยังไม่มีข้อมูล', 'No standings') : t('ยังไม่มีผู้ผ่านเกณฑ์', 'No qualified player')}
                                       </p>
                                     </div>
                                   </li>
@@ -412,13 +431,31 @@ export function OlympiadPage() {
               <div className="py-16 text-center text-[#77736C]">
                 {t('กำลังโหลดทำเนียบฮีโร่...', 'Loading Olympiad Heroes...')}
               </div>
+            ) : heroes.length === 0 && !PUBLIC_CHARACTER_DATA_ENABLED ? (
+              <div className="overflow-x-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{t('สายอาชีพ (Class)', 'Eligible Class')}</th>
+                      <th>{t('ชื่อวีรบุรุษ (Hero Name)', 'Character Name')}</th>
+                      <th>{t('แคลน (Clan)', 'Clan')}</th>
+                      <th>{t('พันธมิตร (Alliance)', 'Alliance')}</th>
+                      <th className="text-right">{t('สมัยที่เป็นฮีโร่', 'Hero Count')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colSpan={5} className="py-14 text-center text-[#77736C]">
+                      {t('รายชื่อฮีโร่จะเปิดเผยหลังเซิร์ฟเวอร์เปิดอย่างเป็นทางการ', 'Hero names will appear after the official server launch.')}
+                    </td></tr>
+                  </tbody>
+                </table>
+              </div>
             ) : heroes.length === 0 ? (
               <div className="surface-stone p-10 text-center">
                 <p className="lead-statement mx-auto text-[#1A1917]">
-                  {t(
-                    'ยังไม่มีรายชื่อฮีโร่ให้แสดงในขณะนี้',
-                    'No Heroes to display right now.'
-                  )}
+                  {!PUBLIC_CHARACTER_DATA_ENABLED
+                    ? t('รายชื่อฮีโร่จะเปิดเผยหลังเซิร์ฟเวอร์เปิดอย่างเป็นทางการ', 'Hero names will appear after the official server launch.')
+                    : t('ยังไม่มีรายชื่อฮีโร่ให้แสดงในขณะนี้', 'No Heroes to display right now.')}
                 </p>
               </div>
             ) : (

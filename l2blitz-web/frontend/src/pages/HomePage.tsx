@@ -42,7 +42,9 @@ export function HomePage() {
 
   const exp = rates.find((item) => item.key === 'exp_sp')?.value ?? '—';
   const raid = rates.find((item) => item.key === 'raid_drop')?.value ?? '—';
-  const statusLabel = status?.status === 'online'
+  const statusLabel = !PUBLIC_CHARACTER_DATA_ENABLED
+    ? t('ทดสอบ Close Beta', 'Close Beta')
+    : status?.status === 'online'
     ? t('ออนไลน์', 'Online')
     : status?.status === 'offline'
       ? t('ออฟไลน์', 'Offline')
@@ -77,18 +79,13 @@ export function HomePage() {
         <div className="editorial-axis-grid mb-7">
           <div className="col-span-12 lg:col-start-6 lg:col-span-7">
             <h2 className="section-heading">{t('ภาพรวมเซิร์ฟเวอร์', 'At a Glance')}</h2>
-            <p className="body-copy text-[#77736C] mt-2">{PUBLIC_CHARACTER_DATA_ENABLED ? t('จำนวนผู้เล่นและข้อมูลสำคัญของเซิร์ฟเวอร์', 'Player activity and essential server details.') : t('อยู่ระหว่างเตรียมเปิดบริการจริง สถิติจากการทดสอบจะไม่ถูกเผยแพร่', 'Official launch pending; Close Beta character statistics are private.')}</p>
+            <p className="body-copy text-[#77736C] mt-2">{PUBLIC_CHARACTER_DATA_ENABLED ? t('จำนวนผู้เล่นและข้อมูลสำคัญของเซิร์ฟเวอร์', 'Player activity and essential server details.') : t('จำนวนผู้เล่นจะแสดงหลังเปิดจริง โดยยังคงแสดงส่วนอื่นของเว็บไซต์ตามปกติ', 'Player counts will appear at official launch; the rest of the website remains available.')}</p>
           </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           {[
-            ...(PUBLIC_CHARACTER_DATA_ENABLED ? [
-              { key: 'online', th: 'ตัวละครออนไลน์', en: 'Characters Online', value: count(stats?.playersOnline) },
-              { key: 'characters', th: 'ตัวละครทั้งหมด', en: 'Total Characters', value: count(stats?.totalCharacters) },
-            ] : [
-              { key: 'phase', th: 'ระยะให้บริการ', en: 'Launch Phase', value: 'CLOSE BETA' },
-              { key: 'rankings', th: 'อันดับผู้เล่น', en: 'Player Rankings', value: t('รอเปิดจริง', 'Coming Soon') },
-            ]),
+            { key: 'online', th: 'ตัวละครออนไลน์', en: 'Characters Online', value: count(stats?.playersOnline) },
+            { key: 'characters', th: 'ตัวละครทั้งหมด', en: 'Total Characters', value: count(stats?.totalCharacters) },
             { key: 'exp', th: 'EXP / SP', en: 'EXP / SP', value: exp },
             { key: 'raid', th: 'ไอเทมดรอปจากบอส', en: 'Boss Item Drops', value: raid },
           ].map((card) => (
@@ -104,11 +101,11 @@ export function HomePage() {
         <div className="editorial-axis-grid mb-7">
           <div className="col-span-12 lg:col-start-6 lg:col-span-7">
             <h2 className="section-heading">{t('สำรวจ L2Blitz', 'Explore L2Blitz')}</h2>
-            <p className="body-copy text-[#77736C] mt-2">{PUBLIC_CHARACTER_DATA_ENABLED ? t('ข้อมูลพื้นที่ฟาร์ม บอส กิจกรรม และอันดับผู้เล่นของเซิร์ฟเวอร์', 'Farm zones, bosses, events and player rankings.') : t('สำรวจพื้นที่ฟาร์ม บอส และกิจกรรมระหว่างเตรียมเปิดบริการ', 'Explore farm zones, bosses and events ahead of launch.')}</p>
+            <p className="body-copy text-[#77736C] mt-2">{t('ข้อมูลพื้นที่ฟาร์ม บอส กิจกรรม และอันดับผู้เล่นของเซิร์ฟเวอร์', 'Farm zones, bosses, events and player rankings.')}</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {DESTINATIONS.filter((item) => PUBLIC_CHARACTER_DATA_ENABLED || item.to !== '/olympiad').map((item) => (
+          {DESTINATIONS.map((item) => (
             <Link to={item.to} key={item.to} className="surface-stone p-7 sm:p-9 no-underline group">
               <h3 className="text-[22px] font-semibold text-[#1A1917] m-0 group-hover:text-[#E97540]">{t(item.th, item.en)}</h3>
               <p className="body-copy text-[#77736C] mt-3 mb-0">{t(item.descTh, item.descEn)}</p>
