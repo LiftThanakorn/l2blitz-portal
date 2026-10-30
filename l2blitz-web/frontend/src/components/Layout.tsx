@@ -278,29 +278,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </div>
-
-          <div className="mt-16 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 small-note text-[#E8E3DB]">
-            <p className="m-0 max-w-[60ch]">
-              {t(
-                'L2BLITZ PVP พอร์ทัลข้อมูลเซิร์ฟเวอร์ Lineage II High Five ข้อมูลเรทที่ยังไม่ได้รับการยืนยันจากไฟล์เซิร์ฟเวอร์จริงจะแสดงสถานะรอยืนยันอย่างชัดเจน',
-                'L2BLITZ PVP Lineage II High Five (CT 2.6) portal. Unverified configuration parameters are explicitly marked as pending GameServer verification.'
-              )}
-            </p>
-            <a
-              href="#top"
-              onClick={(e) => {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="text-[#F7F5F0] no-underline hover:text-[#E97540] shrink-0"
-            >
-              {t('กลับขึ้นด้านบน ↑', 'Back to top ↑')}
-            </a>
-          </div>
-
-          <p className="mt-4 small-note text-[#E8E3DB] opacity-80 m-0 max-w-[62ch]">
-            Archival reference plates: “Saddle” (1400–20) &amp; “Poleaxe” (19th c.), CC0 Public Domain via Art Institute of Chicago; “Sainte-Cécile Cathedral Stonework” by Marc-Julien-Photography, CC0 via Wikimedia Commons.
-          </p>
         </div>
       </footer>
     </div>
