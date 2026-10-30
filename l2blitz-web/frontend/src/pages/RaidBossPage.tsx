@@ -34,7 +34,7 @@ export function RaidBossPage() {
         <div className="col-span-12 lg:col-span-5">
           <p className="small-note text-[#E97540] font-semibold m-0">L2BLITZ · DAILY EPIC</p>
           <p className="body-copy text-[#77736C] mt-3">
-            {t('กิจกรรมบอสประจำวันของเซิร์ฟเวอร์ L2Blitz เลือกเกิดแบบสุ่มเพียงหนึ่งตัวจากสามตัว ไม่ใช่การเกิดพร้อมกันทั้งหมด', 'L2Blitz randomly selects one of three Daily Epic bosses each day. They do not all spawn together.')}
+            {t('สุ่มบอสหนึ่งตัวจาก Queen Ant, Baium หรือ Zaken ทุกวัน เวลา 20:00 น.', 'One of three Epic Bosses appears daily at 20:00 (Thailand time).')}
           </p>
         </div>
         <div className="col-span-12 lg:col-span-7">
@@ -52,7 +52,7 @@ export function RaidBossPage() {
             <p className="text-[54px] sm:text-[68px] leading-none font-semibold text-[#F7F5F0] tabular-nums m-0">20:00</p>
             <h2 className="section-heading text-[#F7F5F0] mt-5">{t('สุ่มบอสวันละหนึ่งตัว', 'One Random Boss Daily')}</h2>
           </div>
-          <p className="body-copy text-[#E8E3DB] mt-8 mb-0">{t('ประกาศล่วงหน้า 19:30 และ 19:50 · เปิดวาร์ปสองจุดต่อบอสผ่าน Alt+B', 'Announcements at 19:30 and 19:50 · Two Alt+B teleport points per boss.')}</p>
+          <p className="body-copy text-[#E8E3DB] mt-8 mb-0">{t('แจ้งเตือน 19:30 และ 19:50 น. · บอสอยู่ได้ถึง 21:30 น. · วาร์ปได้ 2 จุดผ่าน Alt+B', 'Alerts at 19:30 and 19:50 · Event ends by 21:30 · Two Alt+B warps per boss.')}</p>
         </div>
       </div>
 
@@ -63,7 +63,6 @@ export function RaidBossPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {bosses.map((boss) => (
             <article key={boss.bossId} className="surface-white p-6 sm:p-8">
-              <p className="small-note font-semibold text-[#E97540] m-0">NPC {boss.bossId}</p>
               <h3 className="text-[26px] font-semibold text-[#1A1917] mt-3 mb-5">{t(boss.nameTh, boss.nameEn)}</h3>
               <p className="body-copy text-[#524E48] m-0">{t(boss.locationTh, boss.locationEn)}</p>
               <p className="body-copy text-[#1A1917] mt-3 mb-0">{t(boss.teleportTh, boss.teleportEn)}</p>
@@ -71,9 +70,7 @@ export function RaidBossPage() {
                 <p className="small-note text-[#77736C] mb-2">{t('ไอเทมหลัก', 'Key Item')}</p>
                 <p className="body-copy text-[#1A1917] m-0">{boss.keyDrops.join(', ')}</p>
                 <p className="small-note text-[#77736C] mt-4 mb-0">
-                  {boss.status === 'unknown'
-                    ? t('ยังไม่มีข้อมูลสถานะเกิด/ตายที่ยืนยันจากระบบกิจกรรม', 'Live spawn/death status is not yet available from the event system')
-                    : boss.status === 'alive' ? t('กำลังมีชีวิต', 'Alive') : t('ถูกสังหารแล้ว', 'Defeated')}
+                  {boss.status === 'unknown' ? t('ตรวจสอบการเกิดบอสในเกม', 'Check boss availability in-game') : boss.status === 'alive' ? t('บอสปรากฏแล้ว', 'Boss available') : t('บอสถูกกำจัดแล้ว', 'Boss defeated')}
                 </p>
               </div>
             </article>

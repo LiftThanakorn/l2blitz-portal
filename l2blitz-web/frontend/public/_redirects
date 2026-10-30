@@ -1,6 +1,1 @@
-/*
-  Cloudflare Pages SPA Fallback Rule
-  Routes all frontend paths (/info, /rankings, /olympiad, /raidboss, /farmzones, /events, /downloads)
-  to index.html with 200 status.
-*/
-/*    /index.html   200
+/* /index.html 200

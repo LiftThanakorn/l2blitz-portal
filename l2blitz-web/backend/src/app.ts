@@ -2,8 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import {
   getActiveDataSourceMode,
-  isDatabaseConfigured,
-  isDevFixtureEnabled,
 } from './db/mysqlAdapter.js';
 import {
   getCastles,
@@ -49,9 +47,6 @@ export function createApp() {
       wrapEnvelope({
         service: 'l2blitz-pvp-api',
         chronicle: 'Lineage II High Five (CT 2.6)',
-        databaseConfigured: isDatabaseConfigured(),
-        devFixturesActive: isDevFixtureEnabled(),
-        readOnlyEnforced: true,
       })
     );
   });

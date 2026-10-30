@@ -10,8 +10,8 @@ interface RatesData { rates: { key: string; value: string; verified: boolean }[]
 const DESTINATIONS = [
   { to: '/farmzones', th: 'พื้นที่ฟาร์ม', en: 'Farm Zones', descTh: 'FARMZONE 1 / FARMZONE 2 · Chimera', descEn: 'FARMZONE 1 / FARMZONE 2 · Chimera' },
   { to: '/raidboss', th: 'Daily Epic Boss', en: 'Daily Epic Boss', descTh: 'Queen Ant · Baium · Zaken · 20:00', descEn: 'Queen Ant · Baium · Zaken · 20:00' },
-  { to: '/events', th: 'กิจกรรม PvP', en: 'PvP Events', descTh: 'TvT ทุก 2 ชั่วโมง', descEn: 'TvT every two hours' },
-  { to: '/olympiad', th: 'แกรนด์โอลิมเพียด', en: 'Grand Olympiad', descTh: '34 กลุ่มอาชีพ · อันดับ 1–3', descEn: '34 class brackets · Top 3' },
+  { to: '/events', th: 'กิจกรรม PvP', en: 'PvP Events', descTh: 'TvT ทุก 2 ชั่วโมง · เริ่มได้ตั้งแต่ 2v2', descEn: 'TvT every two hours · from 2v2' },
+  { to: '/olympiad', th: 'แกรนด์โอลิมเพียด', en: 'Grand Olympiad', descTh: 'แข่งทุกสุดสัปดาห์ · อันดับ 1–3', descEn: 'Weekly competition · Top 3 by class' },
 ];
 
 export function HomePage() {
@@ -72,7 +72,7 @@ export function HomePage() {
         <div className="editorial-axis-grid mb-7">
           <div className="col-span-12 lg:col-start-6 lg:col-span-7">
             <h2 className="section-heading">{t('ภาพรวมเซิร์ฟเวอร์', 'At a Glance')}</h2>
-            <p className="body-copy text-[#77736C] mt-2">{t('สถิติจากฐานข้อมูลเกม และค่าที่ตรวจสอบจากไฟล์ตั้งค่า', 'Live game database statistics and verified config values.')}</p>
+            <p className="body-copy text-[#77736C] mt-2">{t('จำนวนผู้เล่นและข้อมูลสำคัญของเซิร์ฟเวอร์', 'Player activity and essential server details.')}</p>
           </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -80,7 +80,7 @@ export function HomePage() {
             { key: 'online', th: 'ตัวละครออนไลน์', en: 'Characters Online', value: count(stats?.playersOnline) },
             { key: 'characters', th: 'ตัวละครทั้งหมด', en: 'Total Characters', value: count(stats?.totalCharacters) },
             { key: 'exp', th: 'EXP / SP', en: 'EXP / SP', value: exp },
-            { key: 'raid', th: 'จำนวนดรอป Raid', en: 'Raid Drop Amount', value: raid },
+            { key: 'raid', th: 'ไอเทมดรอปจากบอส', en: 'Boss Item Drops', value: raid },
           ].map((card) => (
             <div key={card.key} className="surface-white p-5 sm:p-7 min-w-0">
               <p className="small-note text-[#77736C] m-0">{t(card.th, card.en)}</p>

@@ -27,6 +27,7 @@ describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => 
     });
 
     assert.equal(result132.canonicalClassId, 132);
+    assert.equal(result132.minimumMatchesRequired, 9);
     assert.equal(result133.canonicalClassId, 132);
     assert.deepEqual(result132.items, result133.items);
 
@@ -35,7 +36,7 @@ describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => 
     assert.equal(result132.items[1]?.charName, 'SeraphinaNoir');
   });
 
-  it('2. Excludes characters with fewer than 15 matches and NEVER exposes olympiadPoints in public DTO', () => {
+  it('2. Excludes characters with fewer than 9 matches and NEVER exposes olympiadPoints in public DTO', () => {
     const result = computePublicOlympiadRankings(DEV_FIXTURE_OLYMPIAD_NOBLES, {
       classId: 132,
       cycle: 'current',
@@ -43,7 +44,7 @@ describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => 
       limit: 10,
     });
 
-    // UnrankedHound has 210 points but only 8 matches (< 15), so must be excluded
+    // UnrankedHound has 210 points but only 8 matches (< 9), so must be excluded
     const unrankedPresent = result.items.some((r) => r.charName === 'UnrankedHound');
     assert.equal(unrankedPresent, false);
 
@@ -177,7 +178,10 @@ describe('L2BLITZ PVP — High Five CT 2.6 Backend API & Olympiad Rules', () => 
     assert.equal(HIGH_FIVE_TVT_EVENT.scheduleTimes[0], '00:00');
     assert.equal(HIGH_FIVE_TVT_EVENT.scheduleTimes[11], '22:00');
     assert.equal(HIGH_FIVE_TVT_EVENT.levelRequirement, 20);
-    assert.match(HIGH_FIVE_TVT_EVENT.rewardsNoteEn, /120M/);
+    assert.match(HIGH_FIVE_TVT_EVENT.rewardsNoteEn, /100M/);
+    assert.match(HIGH_FIVE_TVT_EVENT.rewardsNoteEn, /2v2/);
+    assert.match(HIGH_FIVE_TVT_EVENT.rewardsNoteEn, /3v3/);
+    assert.match(HIGH_FIVE_TVT_EVENT.restrictionsEn.join(' '), /4 players/);
     assert.match(HIGH_FIVE_TVT_EVENT.rewardsNoteEn, /50M/);
     assert.equal(HIGH_FIVE_TVT_EVENT.resultsVerified, false);
   });

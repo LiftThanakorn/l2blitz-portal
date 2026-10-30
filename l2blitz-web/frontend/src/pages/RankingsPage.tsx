@@ -60,7 +60,7 @@ export function RankingsPage() {
       if (cancelled) return;
       setSourceMode(res.source);
       setUpdatedAt(res.updatedAt);
-      if (res.data) {
+      if (res.data && res.source !== 'dev_fixture') {
         if (activeTab === 'clans') {
           setClanRows(res.data.items as ClanRow[]);
         } else {
@@ -97,8 +97,8 @@ export function RankingsPage() {
           </p>
           <p className="body-copy text-[#77736C] mt-3">
             {t(
-              'ตรวจสอบอันดับผู้เล่นสายสังหาร PvP, PK และอันดับแคลนสูงสุดของเซิร์ฟเวอร์ ข้อมูลดึงแบบอ่านอย่างเดียว (Read-Only) พร้อมแคชลดภาระฐานข้อมูล',
-              'Browse top PvP fighters, PK records, and leading clans. Queried via read-only MySQL adapters with TTL caching.'
+              'ติดตามอันดับ PvP, PK และแคลนที่มีผลงานโดดเด่นใน L2Blitz',
+              'Explore PvP, PK and clan rankings in L2Blitz.'
             )}
           </p>
         </div>
@@ -119,8 +119,8 @@ export function RankingsPage() {
           </h2>
           <p className="small-note text-[#E8E3DB] mt-1 m-0">
             {t(
-              'ระบบโอลิมเพียดแสดงครบ 34 กลุ่มอาชีพในหน้าเดียว (Soul Hound 132/133 รวมกัน ไม่รวม Judicator) และซ่อนคะแนนสาธารณะตามกฎจริง',
-              'Visit the dedicated Olympiad portal featuring all 34 hero-eligible brackets (Soul Hound 132/133 unified, excluding Judicator) and hidden points.'
+              'ดูอันดับ 1–3 ของทุกอาชีพและรายชื่อฮีโร่ในหน้าโอลิมเพียด',
+              'See the top three players in every class and current Heroes.'
             )}
           </p>
         </div>
@@ -200,13 +200,13 @@ export function RankingsPage() {
         {/* Status & Source Metadata Bar */}
         <div className="flex flex-wrap items-center justify-between gap-2 py-3 px-4 bg-[#F7F5F0] mb-4 small-note text-[#77736C]">
           <span>
-            {t('แหล่งข้อมูล:', 'Data Source:')}{' '}
+            {t('ข้อมูลอันดับ:', 'Standings:')}{' '}
             <strong className="text-[#1A1917]">
               {sourceMode === 'live_mysql'
-                ? t('ฐานข้อมูล L2J Mobius สด (Live MySQL)', 'Live L2J Mobius MySQL')
+                ? t('อัปเดตแล้ว', 'Updated')
                 : sourceMode === 'dev_fixture'
-                  ? t('ข้อมูลจำลองสำหรับพัฒนา (Dev Fixture)', 'Development Preview Fixture')
-                  : t('ยังไม่ได้เชื่อมต่อ GameServer (Unavailable)', 'Unavailable · Pending GameServer Connection')}
+                  ? t('ยังไม่มีข้อมูล', 'No standings yet')
+                  : t('ยังไม่มีข้อมูล', 'No standings yet')}
             </strong>
           </span>
           {updatedAt && (
@@ -219,15 +219,15 @@ export function RankingsPage() {
         {/* Table Content */}
         {loading ? (
           <div className="py-16 text-center text-[#77736C]">
-            {t('กำลังโหลดข้อมูลการจัดอันดับ...', 'Loading leaderboard telemetry...')}
+            {t('กำลังโหลดอันดับ...', 'Loading rankings...')}
           </div>
         ) : activeTab === 'clans' ? (
           clanRows.length === 0 ? (
             <div className="py-16 px-6 text-center surface-stone">
               <p className="lead-statement mx-auto text-[#1A1917]">
                 {t(
-                  'ไม่พบข้อมูลอันดับแคลนในขณะนี้ (ฐานข้อมูล GameServer ยังไม่เปิดเชื่อมต่อ หรือไม่มีแคลนที่ตรงกับคำค้นหา)',
-                  'No clan standings available right now (Live GameServer database is not connected or no records match your query).'
+                  'ยังไม่มีอันดับแคลนที่แสดงได้ในขณะนี้',
+                  'No clan standings available right now.'
                 )}
               </p>
             </div>
@@ -267,8 +267,8 @@ export function RankingsPage() {
           <div className="py-16 px-6 text-center surface-stone">
             <p className="lead-statement mx-auto text-[#1A1917]">
               {t(
-                'ยังไม่มีข้อมูลสถิติผู้เล่นในขณะนี้ · เมื่อเชื่อมต่อฐานข้อมูล MySQL ของ L2J Mobius แล้ว อันดับการสังหารจริงจะแสดงผลโดยอัตโนมัติ',
-                'No live player combat records to display yet · once the L2J Mobius MySQL database is connected, verified PvP and PK standings will populate automatically.'
+                'ยังไม่มีอันดับผู้เล่นให้แสดงในขณะนี้',
+                'No player rankings available right now.'
               )}
             </p>
           </div>

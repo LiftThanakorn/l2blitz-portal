@@ -40,7 +40,7 @@ import {
  * Official L2J Mobius CT 2.6 High Five Olympiad Minimum Requirements
  * Reference: Olympiad.java / Olympiad.properties (`AltOlyDividerClassed`, min 15 matches & 1 win for ranking/hero)
  */
-const OLYMPIAD_MIN_MATCHES = 15;
+const OLYMPIAD_MIN_MATCHES = 9;
 const OLYMPIAD_MIN_WINS = 1;
 
 export async function getServerStatus(): Promise<ServerStatusDto> {
@@ -60,11 +60,11 @@ export async function getServerStatus(): Promise<ServerStatusDto> {
           chronicle: 'High Five (CT 2.6)',
           region: 'Thailand (GMT+7)',
           messageTh: status === 'unknown'
-            ? 'เชื่อมฐานข้อมูลได้ แต่ยังไม่เปิดตรวจสอบพอร์ตเซิร์ฟเวอร์'
-            : 'สถานะจากการตรวจสอบพอร์ต TCP ของเซิร์ฟเวอร์ (ไม่ใช่การยืนยันการเล่นเกม)',
+            ? 'ยังไม่สามารถตรวจสอบสถานะเซิร์ฟเวอร์ได้'
+            : 'สถานะเซิร์ฟเวอร์ล่าสุด',
           messageEn: status === 'unknown'
-            ? 'Game database connected; port probes are not configured.'
-            : 'Status reflects TCP port reachability, not full gameplay health.',
+            ? 'Server status is currently unavailable.'
+            : 'Latest server status.',
         };
       }
       return {
@@ -73,8 +73,8 @@ export async function getServerStatus(): Promise<ServerStatusDto> {
         gameServer: 'unknown',
         chronicle: 'High Five (CT 2.6)',
         region: 'Thailand (GMT+7)',
-        messageTh: 'ไม่สามารถติดต่อฐานข้อมูล GameServer ได้ในขณะนี้',
-        messageEn: 'GameServer database is currently unreachable.',
+        messageTh: 'ยังไม่สามารถตรวจสอบสถานะเซิร์ฟเวอร์ได้',
+        messageEn: 'Server status is currently unavailable.',
       };
     }
 
@@ -85,8 +85,8 @@ export async function getServerStatus(): Promise<ServerStatusDto> {
       gameServer: 'unknown',
       chronicle: 'High Five (CT 2.6)',
       region: 'Thailand (GMT+7)',
-      messageTh: 'ไม่ทราบสถานะ (รอเชื่อมต่อฐานข้อมูล L2J Mobius GameServer จริง)',
-      messageEn: 'Unknown Status (Pending live L2J Mobius GameServer connection)',
+      messageTh: 'ยังไม่สามารถตรวจสอบสถานะเซิร์ฟเวอร์ได้',
+      messageEn: 'Server status is currently unavailable.',
     };
   });
 }
@@ -381,7 +381,7 @@ export async function getClanRankings(params: {
 /**
  * Computes Grand Olympiad Rankings according to L2J Mobius CT 2.6 High Five:
  * 1. Groups Soul Hound Male (132) & Female (133) into canonical bracket 132.
- * 2. Filters out participants who have not met the minimum 15 matches & 1 win (`competitions_done >= 15 AND competitions_won >= 1`).
+ * 2. Filters out participants who have not met the minimum 9 matches & 1 win (`competitions_done >= 9 AND competitions_won >= 1`).
  * 3. Sorts internally by `olympiad_points DESC, competitions_won DESC, competitions_done ASC`.
  * 4. Strips all points, wins, and match counts before returning the public DTO (`rank`, `charName`, `clanName`, `classId`, `classNameEn`, `classNameTh`).
  */
@@ -488,7 +488,7 @@ export async function getOlympiadRankings(options: {
            FROM ${table} n
            INNER JOIN characters c ON n.charId = c.charId
            LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
-           WHERE n.competitions_done >= 15 AND n.competitions_won >= 1 ${classClause}
+           WHERE n.competitions_done >= 9 AND n.competitions_won >= 1 ${classClause}
            ORDER BY n.olympiad_points DESC, n.competitions_won DESC`
         );
 
@@ -581,7 +581,7 @@ export async function getOlympiadTopByClass(
          FROM ${table} n
          INNER JOIN characters c ON n.charId = c.charId
          LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
-         WHERE n.competitions_done >= 15 AND n.competitions_won >= 1`
+         WHERE n.competitions_done >= 9 AND n.competitions_won >= 1`
       );
       if (rows) {
         return computePublicOlympiadTopByClass(rows.map((r) => ({
@@ -704,7 +704,7 @@ export function getVerificationNotice(): string | undefined {
   const mode = getActiveDataSourceMode();
   if (mode === 'live_mysql') return undefined;
   if (mode === 'dev_fixture') {
-    return 'DEVELOPMENT PREVIEW FIXTURE MODE — Live GameServer MySQL is not connected. Do not enable USE_DEV_FIXTURES in production.';
+    return 'ข้อมูลบางส่วนยังไม่พร้อมแสดงผล';
   }
-  return 'LIVE GAMESERVER OFFLINE / UNCONFIGURED — Displaying verified High Five reference mechanics and UNKNOWN live telemetry.';
+  return 'ข้อมูลบางส่วนยังไม่พร้อมแสดงผล';
 }

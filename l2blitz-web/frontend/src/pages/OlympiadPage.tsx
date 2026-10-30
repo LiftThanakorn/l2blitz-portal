@@ -67,8 +67,8 @@ export function OlympiadPage() {
       fetchApi<{ heroes: OlympiadHeroRow[]; verified: boolean }>('/api/olympiad/heroes').then((res) => {
         if (cancelled) return;
         setSourceMode(res.source);
-        setHeroes(res.data?.heroes ?? []);
-        setHeroesVerified(res.data?.verified ?? false);
+        setHeroes(res.source === 'dev_fixture' ? [] : (res.data?.heroes ?? []));
+        setHeroesVerified(res.source !== 'dev_fixture' && (res.data?.verified ?? false));
         setLoading(false);
       });
     } else {
@@ -77,7 +77,7 @@ export function OlympiadPage() {
       ).then((res) => {
         if (cancelled) return;
         setSourceMode(res.source);
-        setDataAvailable(res.data?.dataAvailable ?? false);
+        setDataAvailable(res.source !== 'dev_fixture' && (res.data?.dataAvailable ?? false));
         // Always render every class even while the backend is unavailable.
         setClassStandings(res.data?.classes ?? OLYMPIAD_CLASSES.map((cls) => ({
           classId: cls.id,
@@ -94,7 +94,7 @@ export function OlympiadPage() {
     return () => { cancelled = true; };
   }, [viewMode, cycle]);
 
-  const rankedClassCount = classStandings.filter((cls) => cls.rows.length > 0).length;
+  const rankedClassCount = sourceMode === 'dev_fixture' ? 0 : classStandings.filter((cls) => cls.rows.length > 0).length;
 
   return (
     <div className="editorial-frame pt-10 pb-16">
@@ -102,12 +102,12 @@ export function OlympiadPage() {
       <div className="editorial-axis-grid items-end pb-12">
         <div className="col-span-12 lg:col-span-5">
           <p className="small-note text-[#E97540] font-semibold m-0">
-            {t('ทำเนียบการแข่งขันแกรนด์โอลิมเพียด (L2J Mobius CT 2.6)', 'Grand Olympiad Competitive Registry')}
+            {t('การแข่งขันแกรนด์โอลิมเพียด', 'Grand Olympiad Competitive Registry')}
           </p>
           <p className="body-copy text-[#77736C] mt-3">
             {t(
-              'จัดอันดับแยกตามคลาสตามตรรกะซอร์สโค้ด L2J Mobius High Five (รวมคลาส Soul Hound 132 และ 133 เข้าด้วยกัน) ต้องผ่านเกณฑ์แข่งขันขั้นต่ำ 15 แมตช์ และชนะอย่างน้อย 1 แมตช์ โดยไม่เปิดเผยคะแนนโอลิมเพียดต่อสาธารณะ',
-              'Ranked per class under official L2J Mobius High Five logic (Soul Hound IDs 132 & 133 unified). Requires ≥15 completed matches and ≥1 victory. Public Olympiad points are strictly withheld.'
+              'ติดตามอันดับ 1–3 ของแต่ละอาชีพ รวมถึงรายชื่อฮีโร่ประจำรอบการแข่งขัน',
+              'See the top three competitors of each class and the Heroes of the current cycle.'
             )}
           </p>
         </div>
@@ -141,12 +141,12 @@ export function OlympiadPage() {
         <div className="lg:col-span-6 surface-ink p-8 sm:p-10 flex flex-col justify-between">
           <div>
             <h2 className="section-heading text-[#F7F5F0]">
-              {t('กฎการจัดอันดับและซ่อนคะแนน', 'Ranking Calculation & Privacy')}
+              {t('อันดับโอลิมเพียด', 'Olympiad Rankings')}
             </h2>
             <p className="body-copy text-[#E8E3DB] mt-4">
               {t(
-                'เซิร์ฟเวอร์คำนวณลำดับจากคะแนนโอลิมเพียด จำนวนครั้งที่ชนะ และจำนวนแมตช์ภายในระบบหลังบ้านเท่านั้น หน้าเว็บไซต์และ API สาธารณะจะแสดงเฉพาะ อันดับ ชื่อตัวละคร และแคลน เพื่อรักษาความยุติธรรมในการชิงตำแหน่งฮีโร่ช่วงปลายรอบ',
-                'Standings are sorted server-side using internal Olympiad points, win counts, and match totals. Both the public REST API and frontend expose exclusively Rank, Character Name, and Clan.'
+                'แข่งขันแบบ 1v1 ต่างอาชีพ วันศุกร์–อาทิตย์ เวลา 20:00–23:00 น. และจัดอันดับแยกตามอาชีพ',
+                '1v1 matches against different classes, Friday to Sunday 20:00–23:00. Rankings are grouped by class.'
               )}
             </p>
           </div>
@@ -178,6 +178,30 @@ export function OlympiadPage() {
         </div>
       </div>
 
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-14" aria-label={t('กติกาโอลิมเพียด', 'Olympiad Rules')}>
+        <article className="surface-stone p-6">
+          <h2 className="text-[19px] font-semibold text-[#1A1917] m-0">{t('วันและเวลาแข่งขัน', 'Match Schedule')}</h2>
+          <p className="body-copy text-[#524E48] mt-3 mb-0">
+            {t('ศุกร์ เสาร์ อาทิตย์ · 20:00–23:00 น. · 1v1 ต่างอาชีพเท่านั้น ต้องมีผู้สมัครอย่างน้อย 4 คน',
+               'Friday, Saturday and Sunday · 20:00–23:00 · different-class 1v1 only · at least 4 registrants')}
+          </p>
+        </article>
+        <article className="surface-stone p-6">
+          <h2 className="text-[19px] font-semibold text-[#1A1917] m-0">{t('ฮีโร่ประจำสัปดาห์', 'Weekly Heroes')}</h2>
+          <p className="body-copy text-[#524E48] mt-3 mb-0">
+            {t('ปิดรอบคืนวันศุกร์ เข้าสู่วันเสาร์ · ต้องลงอย่างน้อย 9 นัด ชนะ 1 นัด และพบคู่แข่งต่างกัน 3 คนภายในรอบ',
+               'Weekly cutoff on Friday night (Saturday 00:00) · 9 matches, 1 win and 3 distinct opponents required for Hero')}
+          </p>
+        </article>
+        <article className="surface-stone p-6">
+          <h2 className="text-[19px] font-semibold text-[#1A1917] m-0">{t('อุปกรณ์ในการแข่งขัน', 'Equipment Rules')}</h2>
+          <p className="body-copy text-[#524E48] mt-3 mb-0">
+            {t('ค่าบวกอาวุธ ชุดเกราะ และเครื่องประดับมีผลสูงสุด +6 ภายในสนาม · ธาตุ สกิลบวก และถลุงยังคงเดิม',
+               'Effective enchant capped at +6 for weapons, armor and jewelry inside matches; attributes, skill enchants and augmentations remain active')}
+          </p>
+        </article>
+      </section>
+
       {/* Main Olympiad Interactive Ledger (`data-ui`) */}
       <div data-ui className="surface-white p-6 sm:p-8">
         {viewMode === 'rankings' ? (
@@ -192,8 +216,8 @@ export function OlympiadPage() {
                 </h2>
                 <p className="body-copy text-[#77736C] mt-2">
                   {t(
-                    `แสดงครบ ${classStandings.length} กลุ่มอาชีพ · มีผู้ผ่านเกณฑ์ ${rankedClassCount} อาชีพ · ไม่แสดงคะแนน`,
-                    `All ${classStandings.length} class brackets · ${rankedClassCount} with qualified competitors · Points hidden`
+                    `แสดง ${classStandings.length} กลุ่มอาชีพ · มีอันดับใน ${rankedClassCount} อาชีพ · ไม่แสดงคะแนน`,
+                    `All ${classStandings.length} class brackets · ${rankedClassCount} with standings · Points hidden`
                   )}
                 </p>
               </div>
@@ -217,9 +241,9 @@ export function OlympiadPage() {
               </div>
             </div>
 
-            {!dataAvailable && sourceMode !== 'dev_fixture' && !loading && (
+            {!dataAvailable && !loading && (
               <p className="mt-5 p-4 bg-[#F7F5F0] body-copy text-[#77736C]">
-                {t('ยังเชื่อมต่อข้อมูลโอลิมเพียดจากเซิร์ฟเวอร์ไม่ได้ จึงไม่แสดงรายชื่อที่ไม่ได้ยืนยัน', 'Live Olympiad data is unavailable. No unverified player names are displayed.')}
+                {t('ยังไม่มีผลการจัดอันดับให้แสดงในขณะนี้', 'No Olympiad standings available right now.')}
               </p>
             )}
 
@@ -255,7 +279,7 @@ export function OlympiadPage() {
                             </div>
                             <ol className="m-0 p-0 list-none">
                               {[1, 2, 3].map((rank) => {
-                                const player = cls.rows.find((entry) => entry.rank === rank);
+                                const player = sourceMode === 'dev_fixture' ? undefined : cls.rows.find((entry) => entry.rank === rank);
                                 return (
                                   <li key={rank} className="flex items-center gap-3 px-4 py-3.5 border-b last:border-b-0 border-[#F0EDE7] min-w-0">
                                     <span className={`flex items-center justify-center w-9 h-9 shrink-0 text-[14px] font-semibold tabular-nums ${rank === 1 ? 'bg-[#E97540] text-white' : 'bg-[#F0EDE7] text-[#57534E]'}`}>
@@ -266,7 +290,7 @@ export function OlympiadPage() {
                                         {player?.charName ?? '—'}
                                       </p>
                                       <p className="small-note text-[#77736C] m-0 mt-0.5 truncate" title={player?.clanName ?? undefined}>
-                                        {player ? player.clanName || t('ไม่มีแคลน', 'No clan') : (!dataAvailable && sourceMode !== 'dev_fixture') ? t('รอเชื่อมต่อ', 'Unavailable') : t('ยังไม่มีผู้ผ่านเกณฑ์', 'No qualified player')}
+                                        {player ? player.clanName || t('ไม่มีแคลน', 'No clan') : (!dataAvailable) ? t('ยังไม่มีข้อมูล', 'No standings') : t('ยังไม่มีผู้ผ่านเกณฑ์', 'No qualified player')}
                                       </p>
                                     </div>
                                   </li>
@@ -282,7 +306,7 @@ export function OlympiadPage() {
               </div>
             )}
             <p className="small-note text-[#77736C] mt-9">
-              {t('เกณฑ์จัดอันดับ: ลงแข่งขันอย่างน้อย 15 นัด และชนะอย่างน้อย 1 นัด · จัดลำดับจากข้อมูลเซิร์ฟเวอร์ · ไม่แสดงคะแนน', 'Eligibility: at least 15 matches and 1 win · Server-side ranking · Points are hidden')}
+              {t('ลงแข่งขันอย่างน้อย 9 นัดและชนะ 1 นัดเพื่อมีอันดับ · การรับตำแหน่งฮีโร่ต้องพบคู่ต่อสู้ต่างกันอย่างน้อย 3 คนในรอบสัปดาห์', 'Standings: at least 9 matches and 1 win · Hero eligibility also requires 3 distinct opponents during the weekly cycle')}
             </p>
           </div>
         ) : (
@@ -294,10 +318,10 @@ export function OlympiadPage() {
               </h2>
               <p className="small-note text-[#77736C] mt-1 m-0">
                 {heroesVerified
-                  ? t('ข้อมูลยืนยันจากตาราง heroes ของเซิร์ฟเวอร์จริง', 'Verified from live GameServer heroes table')
+                  ? t('รายชื่อฮีโร่ล่าสุด', 'Latest Heroes')
                   : t(
-                      'แสดงรายชื่อฮีโร่เมื่อมีข้อมูลที่ได้รับการยืนยันจากเซิร์ฟเวอร์จริงเท่านั้น',
-                      'Displays verified class heroes once an Olympiad cycle concludes on the live GameServer.'
+                      'รายชื่อฮีโร่ประจำรอบการแข่งขัน',
+                      'Current Olympiad Heroes.'
                     )}
               </p>
             </div>
@@ -310,8 +334,8 @@ export function OlympiadPage() {
               <div className="surface-stone p-10 text-center">
                 <p className="lead-statement mx-auto text-[#1A1917]">
                   {t(
-                    'ยังไม่มีข้อมูลฮีโร่ที่ได้รับการยืนยันในรอบปัจจุบัน · รายชื่อฮีโร่ทั้ง 34 กลุ่มอาชีพจะแสดงเมื่อสิ้นสุดรอบการแข่งขันโอลิมเพียดบนเซิร์ฟเวอร์จริง',
-                    'No verified Olympiad Heroes recorded yet · eligible class heroes will appear here once the live GameServer completes its Olympiad cycle.'
+                    'ยังไม่มีรายชื่อฮีโร่ให้แสดงในขณะนี้',
+                    'No Heroes to display right now.'
                   )}
                 </p>
               </div>

@@ -8,7 +8,7 @@
 - EXP/SP rates x1000 from `Rates.ini`; Chimera farm zone drops 1.5M–3.5M Adena.
 - Active farm zones: FARMZONE 1 Chimera Field and FARMZONE 2 Battered Lands.
 - Custom Daily Epic boss: one random Queen Ant, Baium or Zaken at 20:00 Asia/Bangkok; Zaken is a custom level-85 NPC (94081) at Parnassus.
-- TvT every two hours, registration five minutes, winning base 120M / losing base 50M Adena, subject to participation/payout rules.
+- TvT every two hours, registration five minutes, 2v2–4v4+ rewards from 25M/12.5M up to 100M/50M Adena, subject to participation/payout rules.
 
 ## Safe local/live database setup
 The website never writes character/account data. Use a dedicated database user (not the root or GameServer login):
@@ -24,7 +24,7 @@ If hosted separately on a VPS, use a private network/tunnel to the GameServer da
 - Route: `/olympiad` shows all 34 hero-eligible High Five Olympiad class brackets on one scrollable page, grouped by race, with three ranking slots per class. Empty brackets remain visible; no fabricated players.
 - API: `GET /api/olympiad/top-by-class?cycle=current|previous`. One read-only SQL query loads all eligible competitors per cycle; the 30-second cache avoids querying the game 34 times.
 - Canonical hero eligibility is taken from the GameServer `Olympiad.java` `HERO_IDS`: 88–118, 131, Soul Hound 132/133 unified, and 134. Judicator/Inspector (135/136) are not eligible hero brackets, but remain in the general class catalog for PvP/class information.
-- Olympiad minimum eligibility: 15 matches and at least one win. Soul Hound 132/133 is one bracket; Judicator has no hero bracket.
+- Olympiad minimum for standings: 9 matches and at least one win. Hero eligibility also requires 3 different opponents in the active weekly window, as checked by the GameServer. The portal standings are informational, not a Hero award certification. Soul Hound 132/133 is one bracket; Judicator has no hero bracket.
 - API outputs only rank, character name, clan, and class metadata. Points, win counts, and match counts remain server-private. `dataAvailable=false` means the read-only game query could not be completed.
 - Verified locally on 2026-10-28 against live MySQL; all 34 class brackets returned and both cycle routes respond. The database had no qualifying ranked character at verification time; empty leaderboards are expected, not placeholder fixtures.
 

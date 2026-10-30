@@ -33,13 +33,13 @@ const HIGH_FIVE_FARM_ZONES: FarmZoneSpec[] = [
     teleportTh: 'Alt+B → วาร์ป → FARMZONE 1',
     teleportEn: 'Alt+B → Teleport → FARMZONE 1',
     monsters: [
-      { nameEn: 'Chimera of Earth (22349)', nameTh: 'คิเมร่าธาตุดิน', level: 81, traits: 'Earth' },
-      { nameEn: 'Chimera of Darkness (22350)', nameTh: 'คิเมร่าธาตุมืด', level: 81, traits: 'Darkness' },
-      { nameEn: 'Chimera of Wind (22351)', nameTh: 'คิเมร่าธาตุลม', level: 81, traits: 'Wind' },
-      { nameEn: 'Chimera of Fire (22352)', nameTh: 'คิเมร่าธาตุไฟ', level: 81, traits: 'Fire' },
+      { nameEn: 'Chimera of Earth', nameTh: 'คิเมร่าธาตุดิน', level: 81, traits: 'Earth' },
+      { nameEn: 'Chimera of Darkness', nameTh: 'คิเมร่าธาตุมืด', level: 81, traits: 'Darkness' },
+      { nameEn: 'Chimera of Wind', nameTh: 'คิเมร่าธาตุลม', level: 81, traits: 'Wind' },
+      { nameEn: 'Chimera of Fire', nameTh: 'คิเมร่าธาตุไฟ', level: 81, traits: 'Fire' },
     ],
-    dropsTh: ['Adena 1,500,000–3,500,000 ต่อการกำจัด Chimera (ค่าที่กำหนดไว้ใน L2Blitz)', 'ไอเทมอื่นให้ตรวจสอบจากรายการดรอปในเกม'],
-    dropsEn: ['1,500,000–3,500,000 Adena per Chimera (L2Blitz custom configuration)', 'Check in-game monster drops for other items'],
+    dropsTh: ['อาเดน่า 1.5–3.5 ล้านต่อคิเมร่า 1 ตัว', 'ไอเทมอื่นให้ตรวจสอบจากรายการดรอปในเกม'],
+    dropsEn: ['1.5–3.5 million Adena per Chimera', 'Check in-game monster drops for other items'],
     instructionsTh: 'วาร์ปได้จาก Community Board (Alt+B) พื้นที่นี้เปิดให้ปะทะ PvP และใช้ AutoFarm ได้ตามกฎเซิร์ฟเวอร์',
     instructionsEn: 'Teleport through Community Board (Alt+B). PvP and AutoFarm are supported under L2Blitz server rules.',
   },
@@ -53,10 +53,10 @@ const HIGH_FIVE_FARM_ZONES: FarmZoneSpec[] = [
     teleportTh: 'Alt+B → วาร์ป → FARMZONE 2',
     teleportEn: 'Alt+B → Teleport → FARMZONE 2',
     monsters: [
-      { nameEn: 'Chimera of Earth (22349)', nameTh: 'คิเมร่าธาตุดิน', level: 81, traits: 'Earth' },
-      { nameEn: 'Chimera of Darkness (22350)', nameTh: 'คิเมร่าธาตุมืด', level: 81, traits: 'Darkness' },
-      { nameEn: 'Chimera of Wind (22351)', nameTh: 'คิเมร่าธาตุลม', level: 81, traits: 'Wind' },
-      { nameEn: 'Chimera of Fire (22352)', nameTh: 'คิเมร่าธาตุไฟ', level: 81, traits: 'Fire' },
+      { nameEn: 'Chimera of Earth', nameTh: 'คิเมร่าธาตุดิน', level: 81, traits: 'Earth' },
+      { nameEn: 'Chimera of Darkness', nameTh: 'คิเมร่าธาตุมืด', level: 81, traits: 'Darkness' },
+      { nameEn: 'Chimera of Wind', nameTh: 'คิเมร่าธาตุลม', level: 81, traits: 'Wind' },
+      { nameEn: 'Chimera of Fire', nameTh: 'คิเมร่าธาตุไฟ', level: 81, traits: 'Fire' },
     ],
     dropsTh: ['Adena 1,500,000–3,500,000 ต่อ Chimera เช่นเดียวกับ FARMZONE 1', 'รายการดรอปอื่นอ้างอิงข้อมูลในเกม'],
     dropsEn: ['1,500,000–3,500,000 Adena per Chimera, same as FARMZONE 1', 'See in-game drop information for other items'],
@@ -82,8 +82,8 @@ export function FarmZonesPage() {
           </p>
           <p className="body-copy text-[#77736C] mt-3">
             {t(
-              'พื้นที่ฟาร์ม FARMZONE 1 และ FARMZONE 2 ของ L2Blitz พร้อมคิเมร่า 4 ธาตุ จุดวาร์ป และข้อมูลอาเดน่าจากการตั้งค่าเซิร์ฟเวอร์',
-              'The two active L2Blitz farm zones with four Chimera elements, teleport routes and verified custom Adena range.'
+              'แนะนำพื้นที่ฟาร์มทั้งสองโซน มอนสเตอร์ที่พบ และวิธีเดินทางไปยังพื้นที่',
+              'Explore both farm zones, their monsters and how to get there.'
             )}
           </p>
         </div>
@@ -156,7 +156,7 @@ export function FarmZonesPage() {
               </div>
 
               <h3 className="text-[18px] font-semibold text-[#1A1917] mt-6">
-                {t('คำแนะนำการฟาร์มและจัดปาร์ตี้', 'Tactical Farming Instructions')}
+                {t('วิธีเดินทางและการฟาร์ม', 'Tactical Farming Instructions')}
               </h3>
               <p className="body-copy text-[#1A1917] mt-2">
                 {t(activeZone.instructionsTh, activeZone.instructionsEn)}
@@ -177,15 +177,15 @@ export function FarmZonesPage() {
           <div className="lg:col-span-7 flex flex-col justify-between gap-8">
             <div>
               <h3 className="text-[20px] font-semibold text-[#1A1917] mb-4">
-                {t('รายชื่อมอนสเตอร์หลักในพื้นที่ (L2J Mobius NPC Reference)', 'Key Zone Monsters & Weaknesses')}
+                {t('มอนสเตอร์ในพื้นที่', 'Monsters in This Zone')}
               </h3>
               <div className="overflow-x-auto">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>{t('มอนสเตอร์ (NPC ID)', 'Monster (NPC ID)')}</th>
+                      <th>{t('มอนสเตอร์', 'Monster')}</th>
                       <th className="text-right">{t('เลเวล', 'Lv.')}</th>
-                      <th>{t('คุณลักษณะและจุดอ่อน', 'Race & Weakness')}</th>
+                      <th>{t('ธาตุ', 'Element')}</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -46,12 +46,12 @@ export function EventsPage() {
       <div className="editorial-axis-grid items-end pb-12">
         <div className="col-span-12 lg:col-span-5">
           <p className="small-note text-[#E97540] font-semibold m-0">
-            {t('ระบบศึกประลองทีมอัตโนมัติ (Automated PvP Events)', 'Automated Faction Warfare & TvT')}
+            {t('กิจกรรมต่อสู้แบบทีม', 'Team vs Team (TvT)')}
           </p>
           <p className="body-copy text-[#77736C] mt-3">
             {t(
-              'กติกาการแข่งขัน การแบ่งทีมน้ำเงินและแดง ขั้นตอนการลงทะเบียน ตารางเวลาประจำวัน รางวัลผู้ชนะ และผลการแข่งขันล่าสุดเมื่อเชื่อมต่อฐานข้อมูลเซิร์ฟเวอร์',
-              'Complete Team vs Team (TvT) ruleset, faction balancing mechanics, registration workflow, daily schedule, rewards, and verified match logs.'
+              'รวมกติกา วิธีเข้าร่วม เวลาแข่งขัน และรางวัลสำหรับกิจกรรม Team vs Team',
+              'Find Team vs Team rules, registration, match times and rewards.'
             )}
           </p>
         </div>
@@ -93,8 +93,8 @@ export function EventsPage() {
               {tvtData
                 ? t(tvtData.registrationRuleTh, tvtData.registrationRuleEn)
                 : t(
-                    'ระบบเปิดรับลงทะเบียนล่วงหน้า 10 นาทีก่อนเริ่มการแข่งขันแต่ละรอบ และสุ่มแยกผู้เล่นออกเป็น 2 ฝ่ายอย่างสมดุล',
-                    'Registration opens 10 minutes prior to each match, balancing classes and healers across Blue and Red teams.'
+                    'เปิดรับสมัครก่อนเริ่มกิจกรรม 5 นาที ลงทะเบียนได้ที่ NPC กิจกรรมในเกม',
+                    'Registration opens 5 minutes before each match. Join through the event NPC.'
                   )}
             </p>
           </div>
@@ -103,12 +103,12 @@ export function EventsPage() {
             <div className="surface-stone p-5">
               <p className="small-note text-[#32846B] font-semibold m-0">TEAM BLUE VANGUARD</p>
               <p className="text-[19px] font-semibold text-[#1A1917] m-0 mt-1">
-                {t('ฝ่ายสีน้ำเงิน (Order of Eva)', 'Blue Faction (Order of Eva)')}
+                {t('ทีมสีน้ำเงิน', 'Blue Team')}
               </p>
               <p className="small-note text-[#77736C] m-0 mt-2">
                 {t(
-                  'จุดเกิดฝั่งตะวันตกของโคลอสเซียม ได้รับออร่าสีน้ำเงินและบัฟมาตรฐานเท่าเทียมกัน',
-                  'Western Colosseum spawn point with standardized tournament buff set.'
+                  'ต่อสู้ร่วมกับทีมสีน้ำเงินเพื่อเก็บคะแนน',
+                  'Fight alongside the Blue Team to earn points.'
                 )}
               </p>
             </div>
@@ -116,12 +116,12 @@ export function EventsPage() {
             <div className="surface-stone p-5">
               <p className="small-note text-[#E97540] font-semibold m-0">TEAM RED VANGUARD</p>
               <p className="text-[19px] font-semibold text-[#1A1917] m-0 mt-1">
-                {t('ฝ่ายสีแดง (Order of Gran Kain)', 'Red Faction (Order of Gran Kain)')}
+                {t('ทีมสีแดง', 'Red Team')}
               </p>
               <p className="small-note text-[#77736C] m-0 mt-2">
                 {t(
-                  'จุดเกิดฝั่งตะวันออกของโคลอสเซียม นับคะแนนรวมจากจำนวนการสังหารผู้เล่นฝั่งตรงข้าม',
-                  'Eastern Colosseum spawn point; victory awarded to highest total faction kills.'
+                  'ต่อสู้ร่วมกับทีมสีแดงเพื่อเก็บคะแนน',
+                  'Fight alongside the Red Team to earn points.'
                 )}
               </p>
             </div>
@@ -189,31 +189,53 @@ export function EventsPage() {
               {tvtData
                 ? t(tvtData.rewardsNoteTh, tvtData.rewardsNoteEn)
                 : t(
-                    'ทีมชนะรับพื้นฐาน 120M ทีมแพ้รับ 50M Adena (มีเงื่อนไขการจ่ายรางวัล)',
-                    'Base Adena rewards: 120M winning team, 50M losing team (eligibility conditions apply).'
+                    'เริ่มแข่งขันได้ตั้งแต่ 2v2 โดยรางวัลจะเพิ่มขึ้นตามจำนวนผู้เล่นต่อทีม',
+                    'Matches start from 2v2, with rewards increasing according to team size.'
                   )}
             </p>
           </div>
           <p className="small-note text-[#E97540] font-medium mt-6 m-0">
             {t(
-              'จำนวนรางวัลขึ้นอยู่กับขนาดทีม กิจกรรมจริง และเงื่อนไขป้องกันการฟาร์มรางวัล',
-              'Rewards depend on team size, valid activity and anti-abuse eligibility checks.'
+              'ต้องร่วมแข่งขันตามเงื่อนไขของกิจกรรมจึงมีสิทธิ์รับรางวัล',
+              'Players must meet participation requirements to receive rewards.'
             )}
           </p>
         </div>
       </div>
 
+      <section className="mb-16" aria-label={t('อัตรารางวัล TvT', 'TvT rewards')}>
+        <h2 className="section-heading mb-6">{t('รางวัลตามขนาดทีม', 'Rewards by Team Size')}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { size: '2v2', th: 'ชนะ 25M · แพ้ 12.5M', en: 'Win 25M · Lose 12.5M', time: 10, mvpTh: 'ไม่มีโบนัส MVP', mvpEn: 'No MVP bonus' },
+            { size: '3v3', th: 'ชนะ 50M · แพ้ 25M', en: 'Win 50M · Lose 25M', time: 15, mvpTh: 'MVP ฝ่ายชนะ 15M · ฝ่ายแพ้ 5M', mvpEn: 'MVP bonus 15M / 5M' },
+            { size: '4v4+', th: 'ชนะ 100M · แพ้ 50M', en: 'Win 100M · Lose 50M', time: 20, mvpTh: 'MVP ฝ่ายชนะ 30M · ฝ่ายแพ้ 10M', mvpEn: 'MVP bonus 30M / 10M' },
+          ].map((tier) => (
+            <article key={tier.size} className="surface-white p-6 sm:p-7">
+              <h3 className="text-[26px] font-semibold text-[#1A1917] m-0">{tier.size}</h3>
+              <p className="text-[18px] font-semibold text-[#E97540] mt-3 mb-0">{t(tier.th, tier.en)} Adena</p>
+              <p className="body-copy text-[#524E48] mt-3 mb-0">{t(tier.mvpTh, tier.mvpEn)}</p>
+              <p className="small-note text-[#77736C] mt-4 mb-0">{tier.time} {t('นาทีต่อรอบ', 'minutes per match')}</p>
+            </article>
+          ))}
+        </div>
+        <p className="body-copy text-[#77736C] mt-5 mb-0">
+          {t('ในสนาม TvT ค่าบวกอาวุธมีผลสูงสุด +8 และชุดเกราะ โล่ ซิจิล เครื่องประดับ +6 โดยไม่เปลี่ยนค่าบวกจริงของไอเทม ส่วนธาตุ สกิลบวก และถลุงยังคงเดิม',
+             'TvT uses effective enchant caps of +8 for weapons and +6 for armor, shields, sigils and jewelry. Actual item enchant, elemental attributes, skill enchant and augmentation remain unchanged.')}
+        </p>
+      </section>
+
       {/* Match Results Ledger (Honest Empty State when no live match history exists) */}
       <section className="surface-white p-8">
         <h2 className="text-[24px] font-semibold text-[#1A1917]">
-          {t('บันทึกผลการแข่งขันล่าสุด (Verified Match Results)', 'Recent TvT Match Results')}
+          {t('ผลการแข่งขันล่าสุด', 'Recent TvT Results')}
         </h2>
         {!tvtData?.resultsVerified || tvtData.recentResults.length === 0 ? (
           <div className="surface-stone p-8 mt-6 text-center">
             <p className="lead-statement mx-auto text-[#1A1917]">
               {t(
-                'ขณะนี้ยังไม่ได้เชื่อมประวัติผลการแข่งขัน TvT ที่ยืนยันจาก GameServer เข้ากับเว็บไซต์',
-                'No verified match-history integration is configured for the website yet.'
+                'ยังไม่มีผลการแข่งขันให้แสดงในขณะนี้',
+                'No recent match results available right now.'
               )}
             </p>
           </div>
