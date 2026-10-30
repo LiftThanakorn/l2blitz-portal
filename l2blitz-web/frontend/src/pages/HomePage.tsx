@@ -22,17 +22,21 @@ export function HomePage() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      fetchApi<ServerStatus>('/api/server/status'),
-      fetchApi<ServerStats>('/api/server/stats'),
-      fetchApi<RatesData>('/api/server/rates'),
-    ]).then(([s, p, r]) => {
-      if (!active) return;
-      setStatus(s.data);
-      setStats(p.data);
-      setRates(r.data?.rates.filter((item) => item.verified) ?? []);
-    });
-    return () => { active = false; };
+    const refresh = () => {
+      void Promise.all([
+        fetchApi<ServerStatus>('/api/server/status'),
+        fetchApi<ServerStats>('/api/server/stats'),
+        fetchApi<RatesData>('/api/server/rates'),
+      ]).then(([s, p, r]) => {
+        if (!active) return;
+        setStatus(s.data);
+        setStats(p.data);
+        setRates(r.data?.rates.filter((item) => item.verified) ?? []);
+      });
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 45_000);
+    return () => { active = false; window.clearInterval(timer); };
   }, []);
 
   const exp = rates.find((item) => item.key === 'exp_sp')?.value ?? '—';
