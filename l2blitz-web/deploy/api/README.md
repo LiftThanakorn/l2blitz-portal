@@ -7,7 +7,7 @@ Static React frontend stays on Cloudflare Pages (GitHub branch l2blitz-server-in
 ## Public API connectivity
 - HTTPS origin: `https://154-215-14-70.sslip.io/api/health`
 - Cloudflare Pages same-origin API: `https://l2blitz-portal.pages.dev/api/health`
-- Proxy: repo root `functions/api/[[path]].js` (GET/HEAD allowlist, no redirects)
+- Proxy: repo root `pages-worker/_worker.js`, copied to `dist/_worker.js` at build (GET/HEAD allowlist, no redirects).
 - No paid custom domain; sslip.io free DNS wildcard points at VPS IP.
 - Caddy auto-renews trusted Let's Encrypt certificate; 80/443 reachable publicly.
 - Node API listens ONLY on 127.0.0.1:4000; MySQL only 127.0.0.1:3306.
