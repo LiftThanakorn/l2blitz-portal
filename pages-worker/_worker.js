@@ -14,6 +14,18 @@ export default {
     return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
   }
   const incoming = new URL(request.url);
+  const publicLaunch = env.PUBLIC_CHARACTER_DATA_ENABLED === 'true';
+  // Fail closed during Close Beta, including direct API requests.
+  if (!publicLaunch && (/^\/api\/(rankings|olympiad)(\/|$)/.test(incoming.pathname) || incoming.pathname === '/api/castles')) {
+    return Response.json({ ok: false, source: 'unavailable', data: null, code: 'PUBLIC_LAUNCH_PENDING', error: 'Character rankings are not public before the official launch.' }, {
+      status: 403, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
+    });
+  }
+  if (!publicLaunch && incoming.pathname === '/api/server/stats') {
+    return Response.json({ ok: true, source: 'unavailable', updatedAt: new Date().toISOString(), data: {
+      playersOnline: null, totalCharacters: null, totalClans: null, activeOlympiadNobles: null, status: 'pending_launch',
+    } }, { headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
+  }
   if (!ROUTES.has(incoming.pathname)) {
     return new Response('Not found', { status: 404 });
   }
@@ -27,6 +39,16 @@ export default {
     });
     if (upstream.status >= 300 && upstream.status < 400) {
       return new Response('Unexpected upstream redirect', { status: 502 });
+    }
+    // TvT schedules stay public; individual match results and character names do not.
+    if (!publicLaunch && incoming.pathname === '/api/events/tvt' && upstream.ok) {
+      const payload = await upstream.json();
+      if (payload && payload.data) {
+        payload.data.recentResults = [];
+        payload.data.resultsVerified = false;
+        payload.data.topPlayers = [];
+      }
+      return Response.json(payload, { status: upstream.status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
     }
     const response = new Response(upstream.body, {
       status: upstream.status,
