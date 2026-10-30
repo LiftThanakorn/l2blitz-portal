@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { DOWNLOAD_RELEASE, googleDriveUrl, publicDownloadUrl } from '../config/downloads';
 
 describe('prelaunch downloads', () => {
-  it('keeps all three Google Drive slots but does not publish placeholder links', () => {
+  it('publishes only the first shared Google Drive mirror', () => {
     expect(DOWNLOAD_RELEASE.mirrors).toHaveLength(3);
     expect(DOWNLOAD_RELEASE.mirrors.map((mirror) => mirror.id)).toEqual(['01', '02', '03']);
-    expect(DOWNLOAD_RELEASE.mirrors.every((mirror) => googleDriveUrl(mirror.url) === null)).toBe(true);
+    expect(googleDriveUrl(DOWNLOAD_RELEASE.mirrors[0].url)).toBe('https://drive.google.com/file/d/1r-2T-zKwezHQo942gPfzsAkFhc3MqSr9/view?usp=sharing');
+    expect(DOWNLOAD_RELEASE.mirrors.slice(1).every((mirror) => googleDriveUrl(mirror.url) === null)).toBe(true);
     expect(publicDownloadUrl(DOWNLOAD_RELEASE.launcherUrl)).toBeNull();
   });
 

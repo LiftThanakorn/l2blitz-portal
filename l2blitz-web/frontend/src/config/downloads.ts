@@ -12,7 +12,7 @@ export const DOWNLOAD_RELEASE = {
   version: 'Close Beta',
   sha256: '',
   mirrors: [
-    { id: '01', url: '' },
+    { id: '01', url: 'https://drive.google.com/file/d/1r-2T-zKwezHQo942gPfzsAkFhc3MqSr9/view?usp=sharing' },
     { id: '02', url: '' },
     { id: '03', url: '' },
   ],
