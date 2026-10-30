@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { HIGH_FIVE_CLASSES, OLYMPIAD_CLASSES } from '../lib/api';
+import { formatCheckedAt } from '../pages/OlympiadPage';
 
 describe('L2BLITZ Frontend High Five Data & Routing Contracts', () => {
   it('1. Defines all 34 hero-eligible Olympiad class brackets with Soul Hound 132 & 133 unified', () => {
@@ -21,5 +22,13 @@ describe('L2BLITZ Frontend High Five Data & Routing Contracts', () => {
     expect(races.has('Orc')).toBe(true);
     expect(races.has('Dwarf')).toBe(true);
     expect(races.has('Kamael')).toBe(true);
+  });
+
+  it('3. Shows API check timestamps in Bangkok time without using the browser timezone', () => {
+    const apiUpdatedAt = '2026-10-30T15:33:33.099Z';
+    expect(formatCheckedAt(apiUpdatedAt, 'th-TH')).toMatch(/22:33/);
+    expect(formatCheckedAt(apiUpdatedAt, 'th-TH')).toContain('2569');
+    expect(formatCheckedAt(apiUpdatedAt, 'en-GB')).toMatch(/22:33/);
+    expect(formatCheckedAt('invalid', 'th-TH')).toBeNull();
   });
 });

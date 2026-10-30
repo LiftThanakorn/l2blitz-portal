@@ -37,6 +37,23 @@ interface OlympiadHeroRow {
   cycleVerified: boolean;
 }
 
+type OlympiadDataStatus = 'checking' | 'current' | 'empty' | 'unavailable';
+
+/** API response time, not the last time a player earned points or a Hero was awarded. */
+export function formatCheckedAt(iso: string, locale: string): string | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: 'Asia/Bangkok',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(date);
+}
+
 const RACE_SECTIONS = [
   { key: 'Human', th: 'มนุษย์', en: 'Human' },
   { key: 'Elf', th: 'เอลฟ์', en: 'Elf' },
@@ -58,40 +75,73 @@ export function OlympiadPage() {
   const [dataAvailable, setDataAvailable] = useState(false);
   const [heroes, setHeroes] = useState<OlympiadHeroRow[]>([]);
   const [heroesVerified, setHeroesVerified] = useState(false);
+  const [dataStatus, setDataStatus] = useState<OlympiadDataStatus>('checking');
+  const [lastCheckedAt, setLastCheckedAt] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
+    let lastRequestStarted = 0;
     setLoading(true);
+    setDataStatus('checking');
+    setLastCheckedAt(null);
 
-    if (viewMode === 'heroes') {
-      fetchApi<{ heroes: OlympiadHeroRow[]; verified: boolean }>('/api/olympiad/heroes').then((res) => {
-        if (cancelled) return;
-        setSourceMode(res.source);
-        setHeroes(res.source === 'dev_fixture' ? [] : (res.data?.heroes ?? []));
-        setHeroesVerified(res.source !== 'dev_fixture' && (res.data?.verified ?? false));
-        setLoading(false);
-      });
-    } else {
-      fetchApi<{ classes: OlympiadClassTopThree[]; dataAvailable: boolean }>(
-        `/api/olympiad/top-by-class?cycle=${cycle}`
-      ).then((res) => {
-        if (cancelled) return;
-        setSourceMode(res.source);
-        setDataAvailable(res.source !== 'dev_fixture' && (res.data?.dataAvailable ?? false));
-        // Always render every class even while the backend is unavailable.
-        setClassStandings(res.data?.classes ?? OLYMPIAD_CLASSES.map((cls) => ({
-          classId: cls.id,
-          classNameEn: cls.nameEn,
-          classNameTh: cls.nameTh,
-          race: cls.race,
-          raceTh: cls.raceTh,
-          rows: [],
-        })));
-        setLoading(false);
-      });
-    }
+    const refresh = async () => {
+      if (cancelled || inFlight || document.visibilityState === 'hidden') return;
+      inFlight = true;
+      lastRequestStarted = Date.now();
+      try {
+        if (viewMode === 'heroes') {
+          const res = await fetchApi<{ heroes: OlympiadHeroRow[]; verified: boolean }>('/api/olympiad/heroes');
+          if (cancelled) return;
+          const verified = res.ok && res.source === 'live_mysql' && res.data?.verified === true;
+          const visibleHeroes = verified ? (res.data?.heroes ?? []) : [];
+          setSourceMode(res.source);
+          setHeroes(visibleHeroes);
+          setHeroesVerified(verified);
+          setDataStatus(!verified ? 'unavailable' : visibleHeroes.length ? 'current' : 'empty');
+          setLastCheckedAt(verified ? res.updatedAt : null);
+        } else {
+          const res = await fetchApi<{ classes: OlympiadClassTopThree[]; dataAvailable: boolean }>(
+            `/api/olympiad/top-by-class?cycle=${cycle}`
+          );
+          if (cancelled) return;
+          const verified = res.ok && res.source === 'live_mysql' && res.data?.dataAvailable === true;
+          const standings = verified ? (res.data?.classes ?? []) : [];
+          setSourceMode(res.source);
+          setDataAvailable(verified);
+          // Always render class brackets when the backend is unavailable.
+          setClassStandings(verified ? standings : OLYMPIAD_CLASSES.map((cls) => ({
+            classId: cls.id,
+            classNameEn: cls.nameEn,
+            classNameTh: cls.nameTh,
+            race: cls.race,
+            raceTh: cls.raceTh,
+            rows: [],
+          })));
+          setDataStatus(!verified ? 'unavailable' : standings.some((cls) => cls.rows.length > 0) ? 'current' : 'empty');
+          setLastCheckedAt(verified ? res.updatedAt : null);
+        }
+      } finally {
+        inFlight = false;
+        if (!cancelled) setLoading(false);
+      }
+    };
 
-    return () => { cancelled = true; };
+    void refresh();
+    // Only one read-only API request per refresh; hidden tabs make no requests.
+    const timer = window.setInterval(() => { void refresh(); }, 120_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastRequestStarted >= 60_000) {
+        void refresh();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [viewMode, cycle]);
 
   const rankedClassCount = sourceMode === 'dev_fixture' ? 0 : classStandings.filter((cls) => cls.rows.length > 0).length;
@@ -204,6 +254,38 @@ export function OlympiadPage() {
 
       {/* Main Olympiad Interactive Ledger (`data-ui`) */}
       <div data-ui className="surface-white p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-5 mb-7 border-b border-[#E8E3DB]">
+          <div className="flex items-center gap-2" role="status" aria-live="polite">
+            <span
+              aria-hidden="true"
+              className={`inline-block w-2.5 h-2.5 shrink-0 rounded-full ${
+                dataStatus === 'current' || dataStatus === 'empty' ? 'bg-[#E97540]' : 'bg-[#9D9992]'
+              }`}
+            />
+            <span className="text-[14px] font-medium text-[#524E48]">
+              {dataStatus === 'checking'
+                ? t('กำลังตรวจสอบข้อมูล...', 'Checking data...')
+                : dataStatus === 'unavailable'
+                  ? t('ยังไม่สามารถตรวจสอบข้อมูลได้', 'Data temporarily unavailable')
+                  : dataStatus === 'empty'
+                    ? (viewMode === 'heroes'
+                      ? t('เชื่อมต่อแล้ว · ยังไม่มีรายชื่อฮีโร่', 'Connected · No Heroes yet')
+                      : t('เชื่อมต่อแล้ว · ยังไม่มีผลจัดอันดับ', 'Connected · No standings yet'))
+                    : t('ข้อมูลอันดับพร้อมใช้งาน', 'Ranking data available')}
+            </span>
+          </div>
+          <div className="text-[13px] text-[#77736C] sm:text-right" title={t('เวลาที่ API ตอบกลับ ไม่ใช่เวลาที่อันดับเปลี่ยนแปลง', 'API response time, not the moment rankings changed')}>
+            {lastCheckedAt && formatCheckedAt(lastCheckedAt, 'th-TH') ? (
+              <>
+                {t('ตรวจสอบล่าสุด', 'Last checked')}:&nbsp;
+                <time dateTime={lastCheckedAt} className="tabular-nums">
+                  {t(formatCheckedAt(lastCheckedAt, 'th-TH') ?? '—', formatCheckedAt(lastCheckedAt, 'en-GB') ?? '—')}
+                </time>
+                &nbsp;({t('เวลาไทย', 'Bangkok time')})
+              </>
+            ) : t('ยังไม่มีเวลาตรวจสอบที่ยืนยันได้', 'No verified check time yet')}
+          </div>
+        </div>
         {viewMode === 'rankings' ? (
           <div>
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 pb-7 border-b border-[#E8E3DB]">
