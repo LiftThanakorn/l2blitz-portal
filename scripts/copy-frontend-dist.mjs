@@ -8,4 +8,9 @@ if (!existsSync(source)) {
 }
 rmSync(target, { recursive: true, force: true });
 cpSync(source, target, { recursive: true });
+// Cloudflare Pages Advanced Mode: one Worker routes /api to VPS and all other
+// requests to static assets, avoiding root-directory Functions discovery issues.
+const worker = resolve('pages-worker/_worker.js');
+if (!existsSync(worker)) throw new Error('Missing Pages API Worker');
+cpSync(worker, resolve('dist/_worker.js'));
 console.log('Cloudflare Pages output ready:', target);

@@ -7,7 +7,9 @@ const ROUTES = new Set([
   '/api/olympiad/rankings', '/api/olympiad/top-by-class',
   '/api/olympiad/heroes', '/api/castles', '/api/raidbosses', '/api/events/tvt',
 ]);
-export async function onRequest({ request }) {
+export default {
+  async fetch(request, env) {
+    if (!new URL(request.url).pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
   }
@@ -41,4 +43,5 @@ export async function onRequest({ request }) {
       headers: { 'Cache-Control': 'no-store' },
     });
   }
-}
+  }
+};
