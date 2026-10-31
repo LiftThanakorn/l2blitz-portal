@@ -95,11 +95,11 @@ export function HomePage() {
               <Link to="/downloads" className="btn-ink">{t('ดาวน์โหลด / ติดตั้ง', 'Download / Install')}</Link>
             </div>
             <p className="small-note text-[#524E48] mt-5 mb-0">
-              {t('สถานะเซิร์ฟเวอร์จริง', 'Live server status')}: <strong className="text-[#1A1917]">{statusLabel}</strong>
+              {t('สถานะเซิร์ฟเวอร์', 'Server status')}: <strong className="text-[#1A1917]">{statusLabel}</strong>
               <span className="ml-3 text-[#77736C]">· Close Beta</span>
             </p>
             <p className="small-note text-[#77736C] mt-2 mb-0">
-              {checkedAt ? t('อัปเดตล่าสุด ', 'Last checked ') + checkedAt + ' (GMT+7)' : t('กำลังรอข้อมูลล่าสุดจาก VPS', 'Awaiting live VPS telemetry')}
+              {checkedAt ? t('อัปเดตล่าสุด ', 'Last checked ') + checkedAt + ' (GMT+7)' : t('กำลังตรวจสอบข้อมูลล่าสุด', 'Checking latest information')}
               {' · '}{t('ตรวจสอบทุก 45 วินาที', 'Refreshes every 45 seconds')}
             </p>
           </div>
@@ -114,23 +114,22 @@ export function HomePage() {
           <div className="col-span-12 lg:col-start-6 lg:col-span-7">
             <h2 className="section-heading">{t('ภาพรวมเซิร์ฟเวอร์', 'At a Glance')}</h2>
             <p className="body-copy text-[#77736C] mt-2">
-              {t('ข้อมูลสรุปจาก VPS ผ่าน API แบบอ่านอย่างเดียว ไม่มีตัวเลขจำลอง หากยังตรวจสอบไม่ได้จะแสดง —', 'Read-only VPS API data, never fabricated. Unavailable values display —.')}
+              {t('ข้อมูลล่าสุดของเซิร์ฟเวอร์ อัปเดตอัตโนมัติทุก 45 วินาที', 'Latest server information, updated automatically every 45 seconds.')}
             </p>
           </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
           {[
-            { key: 'online', th: 'ตัวละครออนไลน์', en: 'Characters Online', value: count(stats?.playersOnline), noteTh: 'MySQL · จำนวนจริง', noteEn: 'MySQL · Live count' },
-            { key: 'characters', th: 'ตัวละครทั้งหมด', en: 'Total Characters', value: count(stats?.totalCharacters), noteTh: 'MySQL · จำนวนจริง', noteEn: 'MySQL · Live count' },
-            { key: 'exp', th: 'EXP / SP', en: 'EXP / SP', value: exp, noteTh: 'เรตที่ยืนยันใน API', noteEn: 'API verified rates' },
-            { key: 'raid', th: 'ไอเทมดรอปจากบอส', en: 'Boss Item Drops', value: raid, noteTh: 'เรตที่ยืนยันใน API', noteEn: 'API verified rates' },
-            { key: 'tvt', th: 'TvT รอบถัดไป', en: 'Next TvT Round', value: nextTvt ? nextTvt + ' (GMT+7)' : '—', noteTh: 'จากตารางกิจกรรม API', noteEn: 'API event schedule' },
-            { key: 'boss', th: 'Daily Epic ที่มีชีวิต', en: 'Daily Epic Alive', value: bossLabel, noteTh: 'สถานะบอสที่ตรวจได้', noteEn: 'Available boss status' },
+            { key: 'online', th: 'ตัวละครออนไลน์', en: 'Characters Online', value: count(stats?.playersOnline) },
+            { key: 'characters', th: 'ตัวละครทั้งหมด', en: 'Total Characters', value: count(stats?.totalCharacters) },
+            { key: 'exp', th: 'EXP / SP', en: 'EXP / SP', value: exp },
+            { key: 'raid', th: 'ไอเทมดรอปจากบอส', en: 'Boss Item Drops', value: raid },
+            { key: 'tvt', th: 'TvT รอบถัดไป', en: 'Next TvT Round', value: nextTvt ? nextTvt + ' (GMT+7)' : '—' },
+            { key: 'boss', th: 'สถานะ Daily Epic', en: 'Daily Epic Status', value: bossLabel },
           ].map((card) => (
             <div key={card.key} className="surface-white p-5 sm:p-7 min-w-0">
               <p className="small-note text-[#77736C] m-0">{t(card.th, card.en)}</p>
               <p className="text-[25px] sm:text-[32px] font-semibold text-[#1A1917] tabular-nums mt-4 mb-0 break-words">{card.value}</p>
-              <p className="small-note text-[#77736C] mt-3 mb-0">{t(card.noteTh, card.noteEn)}</p>
             </div>
           ))}
         </div>
