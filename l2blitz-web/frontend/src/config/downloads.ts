@@ -13,8 +13,7 @@ export const DOWNLOAD_RELEASE = {
   sha256: '',
   mirrors: [
     { id: '01', url: 'https://drive.google.com/file/d/1r-2T-zKwezHQo942gPfzsAkFhc3MqSr9/view?usp=sharing' },
-    { id: '02', url: '' },
-    { id: '03', url: '' },
+    { id: '02', url: 'https://drive.google.com/file/d/1i6uNYkFKWSSzh-SDJFCNjJNk-vOCFmcx/view?usp=sharing' },
   ],
   launcherUrl: '',
 } as const;

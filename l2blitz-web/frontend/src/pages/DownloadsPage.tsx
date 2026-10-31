@@ -89,7 +89,7 @@ export function DownloadsPage() {
           <p className="inline-flex items-center gap-2 mt-6 bg-white border border-[#E8E3DB] px-3 py-2 small-note text-[#524E48]">
             <span className="w-2 h-2 bg-[#E97540]" aria-hidden="true" />
             {availableMirrors
-              ? t(`พร้อมดาวน์โหลด ${availableMirrors} จาก 3 ลิงก์`, `${availableMirrors} of 3 mirrors available`)
+              ? t(`พร้อมดาวน์โหลด ${availableMirrors} จาก ${mirrors.length} ลิงก์`, `${availableMirrors} of ${mirrors.length} mirrors available`)
               : t('กำลังเตรียมลิงก์ Close Beta', 'Preparing Close Beta download links')}
           </p>
         </div>
@@ -106,7 +106,7 @@ export function DownloadsPage() {
           </div>
           <h2 id="download-client" className="section-heading">{t('ตัวเกมหลัก', 'Full Client')}</h2>
           <p className="body-copy text-[#77736C] mt-4 mb-8">
-            {t('ดาวน์โหลดไฟล์เกมทั้งหมดจาก Google Drive เพียงลิงก์เดียว ไม่จำเป็นต้องโหลดทั้ง 3 ลิงก์', 'Download the full client from just one Google Drive mirror. You do not need all three.')}
+            {t('ดาวน์โหลดไฟล์เกมทั้งหมดจาก Google Drive เพียงลิงก์เดียว ไม่จำเป็นต้องโหลดทั้ง 2 ลิงก์', 'Download the full client from just one Google Drive mirror. You do not need both.')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 border-y border-[#E8E3DB] py-5 gap-5 sm:gap-4 mb-8">
             <div className="min-w-0">
@@ -128,10 +128,10 @@ export function DownloadsPage() {
               <h3 className="text-[23px] font-semibold">{t('เลือกช่องทางดาวน์โหลด', 'Choose a download mirror')}</h3>
             </div>
             <span className="small-note text-[#77736C] tabular-nums">
-              {availableMirrors} / 3 {t('ลิงก์พร้อม', 'mirrors ready')}
+              {availableMirrors} / {mirrors.length} {t('ลิงก์พร้อม', 'mirrors ready')}
             </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {mirrors.map(({ id, href }) => <DriveMirror key={id} id={id} href={href} />)}
           </div>
           <div className="flex items-start gap-3 border-t border-[#E8E3DB] mt-7 pt-5">
