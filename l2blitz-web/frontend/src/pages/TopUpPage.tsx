@@ -6,7 +6,7 @@ type Player = { account: string; character: string; characterId: number };
 type Tier = { package_id: number; price_thb: string; coins: number; bonus_coins: number };
 type Order = { order_id: string; price_thb: string; coins: number; status: string; verification: string | null };
 type NewOrder = { orderId: string; amount: number; coins: number; promptpayId: string; recipientName: string };
-type Health = { ok: boolean; mode: string; payments: string };
+type Health = { ok: boolean; mode: string; payments: string; integrations?: { slip2go: boolean; telegram: boolean } };
 
 async function localApi<T>(path: string, payload?: object): Promise<T> {
   const response = await fetch('/api/local/' + path, {
@@ -148,6 +148,10 @@ export function TopUpPage() {
     </header>
 
     {!health && <div role="alert" className="surface-white border-l-4 border-[#B95348] p-5 mb-6"><TriangleAlert size={20} className="inline-block text-[#B95348] mr-2"/>{t('บริการเติมเงิน Local ไม่พร้อม กรุณาเปิด API ในเครื่องก่อน', 'Local payment service is offline. Start the local API first.')}</div>}
+    {health && <div className="surface-white border border-[#E8E3DB] p-4 mb-5 flex flex-wrap gap-5 small-note text-[#524E48]">
+      <span>{t('Slip2Go','Slip2Go')}: {health.integrations?.slip2go ? t('ตั้งค่าแล้ว (รอตรวจสลิปจริง)', 'Configured (real slip not tested)') : t('รอ Secret Key — ตรวจด้วย GM เท่านั้น', 'Needs Secret Key — manual review only')}</span>
+      <span>{t('Telegram','Telegram')}: {health.integrations?.telegram ? t('ตั้งค่าแล้ว', 'Configured') : t('ยังไม่ได้ตั้งค่า', 'Not configured')}</span>
+    </div>}
     {error && <div role="alert" className="bg-[#FFF3EE] border border-[#E97540] p-4 mb-5 text-[#8F3A1D]">{error}</div>}
     {success && <div role="status" className="bg-[#E9F3EF] border border-[#32846B] p-4 mb-5 text-[#225A4B]">{success}</div>}
 

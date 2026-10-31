@@ -12,7 +12,18 @@ $env:LOCAL_TOPUP_ALLOW_ORDERS = if($EnablePilot) { '1' } else { '0' }
 $cfg = Join-Path $env:LOCALAPPDATA 'L2Blitz/telegram-worker.json'
 if (Test-Path $cfg) { $env:LOCAL_TOPUP_TELEGRAM_CONFIG = $cfg }
 Write-Host ('LOCAL WEBSITE: http://127.0.0.1:5173/topup | API: 127.0.0.1:3101 | Orders enabled: '+[bool]$EnablePilot)
-Write-Host 'Slip2Go is manual fallback until SLIP2GO_SECRET_KEY and SLIP2GO_API_URL are explicitly configured in this process.'
+$secretFile = Join-Path $env:LOCALAPPDATA 'L2Blitz/slip2go-secret.dpapi'
+$urlFile = Join-Path $env:LOCALAPPDATA 'L2Blitz/slip2go-api-url.txt'
+if ((Test-Path $secretFile) -and (Test-Path $urlFile)) {
+    $secure = Get-Content -LiteralPath $secretFile -Raw | ConvertTo-SecureString
+    $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+    try { $env:SLIP2GO_SECRET_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr) }
+    finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
+    $env:SLIP2GO_API_URL = (Get-Content -LiteralPath $urlFile -Raw).Trim()
+    Write-Host 'Slip2Go Local credential loaded securely for this process (value hidden).'
+} else {
+    Write-Host 'Slip2Go not configured: Local payments will require manual bank verification.'
+}
 Push-Location $website
 try { & node (Join-Path $PSScriptRoot 'server.mjs'); if ($LASTEXITCODE -ne 0) { throw 'Local payment server stopped with error' } }
 finally { Pop-Location }

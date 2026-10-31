@@ -46,3 +46,14 @@ CREATE TABLE IF NOT EXISTS blitz_local_browser_tickets (
   issued_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   KEY idx_blitz_local_browser_account (account_name, redeemed_at, expires_at)
 ) ENGINE=InnoDB;
+
+-- A bank transfer reference cannot be claimed by more than one Local order.
+-- This is informational only: the existing GM + item delivery gates still apply.
+CREATE TABLE IF NOT EXISTS blitz_local_provider_receipts (
+  trans_ref VARCHAR(140) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+  order_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL UNIQUE,
+  provider_code VARCHAR(20) NOT NULL,
+  transferred_at DATETIME(6) NULL,
+  recorded_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  CONSTRAINT fk_blitz_local_provider_order FOREIGN KEY(order_id) REFERENCES blitz_topup_order(order_id)
+) ENGINE=InnoDB;

@@ -47,3 +47,15 @@ The actual Cloudflare Pages site is built from `l2blitz-web/frontend`, not the o
 - Requires `node local-topup/operator.mjs init` for the new DB table and a Local GameServer script reload/restart.
 - Browser ticket tests include valid bind, expired, fake, duplicated/concurrent replay, and nonexistent characters; React StrictMode effect replay is explicitly handled without redeeming twice.
 - This change does **not** touch Slip2Go credentials, money, production payment flags, Cloudflare, VPS or client patch.
+
+## Slip2Go + Telegram bridge readiness — Local only
+- Official Slip2Go base64 REST route: `/api/verify-slip/qr-base64/info` (Bearer Secret in HTTPS request). The owner must copy the exact API URL provided in their Slip2Go account; there are NO credentials committed to Git.
+- To configure securely on the Local Windows PC, run: `powershell -NoProfile -ExecutionPolicy Bypass -File .\local-topup\Configure-LocalSlip2Go.ps1`. Paste Secret Key at the **hidden** prompt, and the dashboard API URL when requested. DPAPI encrypted credentials are written under `%LOCALAPPDATA%\L2Blitz\` for the current Windows user.
+- In the Slip2Go dashboard, select **API Connect → Authentication**, copy the Secret Key, and (if enabled) whitelist the current machine's **public outgoing IPv4**; localhost `127.0.0.1` is NOT the whitelist IP. Check the 7-day plan/remaining quota.
+- Restart **only the local Node top-up API** using `Start-LocalTopUp.ps1 -EnablePilot` after configuring the secret. No GameServer or VPS change is required to activate provider checks.
+- The adapter sends base64 image, `checkDuplicate=true`, PromptPay accountType `02001` and payee phone, and exact transfer amount expressed in THB (NOT satang). Only response `200200` with a bank `transRef`, expected amount, date and recipient information gets `API_REVIEW`. This is **still GM review**, not credit/delivery.
+- Slip mismatch/fraud/duplicate: `FLAGGED`. Missing key/expired/quota exhausted: `MANUAL_PENDING`. Network/unknown response: `RETRY_NEEDED`. A unique bank transaction reference is recorded in `blitz_local_provider_receipts` to flag duplicate claims even if the uploaded images differ.
+- Existing Local `telegram-worker.json` provides `telegramToken` and `telegramChatId`. The server sends private uploaded slip **image + order info + result status** via Telegram `sendPhoto`. A standalone test `node local-topup/telegram-photo-test.mjs <safe-PNG>` confirmed the bot can send non-payment test image.
+- The old Telegram worker's inline **Approve** buttons are NOT connected to the new verification gate, so this pilot deliberately sends a photo **without operative approval buttons**. Until the GM path is hardened, approval uses restricted local operator CLI only after a bank ledger check.
+- Do not transfer even 100 THB until Slip2Go returns verifiable real bank slip status, Telegram image receipt is checked and the payee name on the banking app matches exactly. The Local public-payment emergency stop flag remains in place.
+- Tests: `node local-topup/slip2go.test.mjs`, `node local-topup/integration-test.mjs`, `npm --prefix l2blitz-web/frontend run typecheck`.

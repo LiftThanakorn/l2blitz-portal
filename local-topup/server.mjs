@@ -5,6 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { db, sha, sessionToken, allowedPacks, assertLocalMode, getServerRoot } from './common.mjs';
+import { verifySlip2Go } from './slip2go.mjs';
 
 assertLocalMode();
 const app=express();
@@ -62,7 +63,7 @@ async function payeeConfig(){
   return {id:kv.PromptPayId,recipient:kv.RecipientName};
 }
 app.get('/api/local/health',async (_req,res)=>{
-  try{await db.query('SELECT 1');res.json({ok:true,mode:'LOCAL_ONLY',payments:purchasesAllowed?'LOCAL_OPERATOR_PILOT':'LOCKED',publicVps:false});}
+  try{await db.query('SELECT 1');res.json({ok:true,mode:'LOCAL_ONLY',payments:purchasesAllowed?'LOCAL_OPERATOR_PILOT':'LOCKED',publicVps:false,integrations:{slip2go:!!(process.env.SLIP2GO_SECRET_KEY&&process.env.SLIP2GO_API_URL),telegram:!!process.env.LOCAL_TOPUP_TELEGRAM_CONFIG}});}
   catch{fail(res,503,'Database unavailable');}
 });
 // Exchange a game-issued, single-use 256-bit browser ticket into an HttpOnly player session.
@@ -162,22 +163,6 @@ function imageType(buffer){
   if(buffer.length>=12 && buffer.toString('ascii',0,4)==='RIFF' && buffer.toString('ascii',8,12)==='WEBP')return {mime:'image/webp',ext:'webp'};
   return null;
 }
-async function checkSlip2Go(image,price,recipient){
-  const token=process.env.SLIP2GO_SECRET_KEY, endpoint=process.env.SLIP2GO_API_URL;
-  if(!token || !endpoint)return {state:'MANUAL_PENDING',code:'NOT_CONFIGURED'};
-  try{
-    const url=new URL(endpoint);
-    if(url.protocol!=='https:' || !/^(?:[a-z0-9-]+\.)*slip2go\.com$/i.test(url.hostname))return {state:'MANUAL_PENDING',code:'INVALID_ENDPOINT'};
-    const controller=AbortSignal.timeout(10000);
-    const response=await fetch(url.toString(),{method:'POST',signal:controller,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({payload:{imageBase64:'data:'+image.mime+';base64,'+image.data.toString('base64'),checkCondition:{checkDuplicate:true,checkReceiver:[{accountNumber:recipient.id}],checkAmount:{type:'eq',amount:Math.round(price*100)}}}})});
-    const data=await response.json().catch(()=>({}));
-    const code=String(data.code??data.responseCode??'UNKNOWN');
-    if(['200401','200402','200403','200404','200500','200501'].includes(code))return {state:'FLAGGED',code};
-    if(['200000','200200'].includes(code))return {state:'API_REVIEW',code};
-    if(['401004','401005','401006','200502','500500','500503'].includes(code))return {state:'MANUAL_PENDING',code};
-    return {state:'RETRY_NEEDED',code};
-  }catch{return {state:'RETRY_NEEDED',code:'API_UNAVAILABLE'};}
-}
 async function sendTelegram(image,caption){
   const cfgPath=process.env.LOCAL_TOPUP_TELEGRAM_CONFIG;
   if(!cfgPath)return 'DISABLED';
@@ -223,7 +208,16 @@ app.post('/api/local/orders/:orderId/slip',async(req,res)=>{
     await conn.commit();
   }catch(e){await conn.rollback();if(saved)await fs.unlink(full).catch(()=>{});if(e.code==='ER_DUP_ENTRY')return fail(res,409,'สลิปนี้เคยถูกส่งแล้ว');console.error('slip error',e.code||e.message);return fail(res,500,'บันทึกสลิปไม่สำเร็จ');}
   finally{conn.release();}
-  const result=await checkSlip2Go({data:buffer,mime:type.mime},price,await payeeConfig());
+  let result=await verifySlip2Go({data:buffer,mime:type.mime},price,await payeeConfig());
+  if(result.state==='API_REVIEW' && result.transRef){
+    try {
+      await db.execute('INSERT INTO blitz_local_provider_receipts(trans_ref,order_id,provider_code,transferred_at) VALUES(?,?,?,?)',
+        [result.transRef,id,result.code,new Date(result.transferredAt)]);
+    } catch(e) {
+      if(e.code==='ER_DUP_ENTRY')result={state:'FLAGGED',code:'BANK_REFERENCE_DUPLICATED'};
+      else result={state:'RETRY_NEEDED',code:'REFERENCE_STORAGE_ERROR'};
+    }
+  }
   await db.execute('UPDATE blitz_local_slips SET verification=?,provider_code=? WHERE order_id=?',[result.state,result.code,id]);
   const caption=['L2Blitz LOCAL payment review','Order: '+id,'Character: '+session.char_name,'Amount: '+price+' THB','Slip2Go: '+result.state+' ('+result.code+')','GM: verify bank transaction independently before approval','Public VPS: CLOSED'].join('\n');
   const telegram=await sendTelegram({data:buffer,mime:type.mime,ext:type.ext},caption);
