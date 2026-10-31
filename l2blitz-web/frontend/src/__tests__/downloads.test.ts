@@ -9,6 +9,8 @@ describe('prelaunch downloads', () => {
     expect(googleDriveUrl(DOWNLOAD_RELEASE.mirrors[1].url)).toBe('https://drive.google.com/file/d/1i6uNYkFKWSSzh-SDJFCNjJNk-vOCFmcx/view?usp=sharing');
     expect(DOWNLOAD_RELEASE.mirrors.every((mirror) => googleDriveUrl(mirror.url) !== null)).toBe(true);
     expect(publicDownloadUrl(DOWNLOAD_RELEASE.launcherUrl)).toBeNull();
+    expect(publicDownloadUrl(DOWNLOAD_RELEASE.launcherFixUrl)).toBe('https://l2blitz-patch.liftthanakorn-cs51.workers.dev/hotfix/L2Blitz-Launcher-Fix-740-v0.4.1.exe');
+    expect(DOWNLOAD_RELEASE.launcherFixSize).toBe('5.4 MB');
   });
 
   it('only activates mirrors with valid Google Drive HTTPS URLs', () => {

@@ -76,6 +76,7 @@ export function DownloadsPage() {
   const mirrors = DOWNLOAD_RELEASE.mirrors.map(({ id, url }) => ({ id, href: googleDriveUrl(url) }));
   const availableMirrors = mirrors.filter(({ href }) => href !== null).length;
   const launcherHref = publicDownloadUrl(DOWNLOAD_RELEASE.launcherUrl);
+  const launcherFixHref = publicDownloadUrl(DOWNLOAD_RELEASE.launcherFixUrl);
   const checksum = /^[a-f0-9]{64}$/i.test(DOWNLOAD_RELEASE.sha256) ? DOWNLOAD_RELEASE.sha256 : null;
 
   return (
@@ -175,6 +176,28 @@ export function DownloadsPage() {
             ) : (
               <div className="flex items-center justify-between gap-2 px-5 py-4 bg-[#3A3733] text-[#E8E3DB] small-note" aria-label={t('ยังไม่มีลิงก์ Launcher', 'Launcher link unavailable')}>
                 {t('รอลิงก์ Launcher', 'Launcher link coming soon')}<span aria-hidden="true">—</span>
+              </div>
+            )}
+            {launcherFixHref && (
+              <div className="mt-6 border-t border-[#57534E] pt-6" aria-labelledby="launcher-fix-title">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 id="launcher-fix-title" className="text-[17px] font-semibold text-[#F7F5F0] m-0">
+                    {t('ตัวแก้ปัญหา Launcher (Error 740)', 'Launcher Repair (Error 740)')}
+                  </h3>
+                  <span className="small-note text-[#E8E3DB] shrink-0">{DOWNLOAD_RELEASE.launcherFixSize}</span>
+                </div>
+                <p className="small-note text-[#E8E3DB] mt-3 mb-4">
+                  {t('สำหรับผู้ที่ติดตั้งเกมแล้ว แต่เปิด Launcher ไม่ได้เนื่องจากต้องใช้สิทธิ์ผู้ดูแลระบบ', 'For players who have installed the game but cannot open the Launcher because Windows requests administrator privileges.')}
+                </p>
+                <a href={launcherFixHref} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-between gap-3 px-4 py-3 border border-[#E97540] text-[#F7F5F0] no-underline font-semibold text-[14px] hover:bg-[#3A3733] transition-colors"
+                  aria-label={t('ดาวน์โหลดตัวแก้ Error 740', 'Download Error 740 repair')}>
+                  <span>{t('ดาวน์โหลดตัวแก้ Error 740', 'Download Error 740 Fix')}</span>
+                  <ArrowDownToLine size={18} className="text-[#E97540] shrink-0" aria-hidden="true" />
+                </a>
+                <p className="small-note text-[#E8E3DB] mt-3 mb-0">
+                  {t('ปิด Launcher ก่อนติดตั้งตัวแก้ลงโฟลเดอร์เกมเดิม ไม่ต้องดาวน์โหลดตัวเกมใหม่', 'Close the Launcher, install the fix into your existing game folder, and keep your current game files.')}
+                </p>
               </div>
             )}
             <p className="small-note text-[#E8E3DB] mt-4 mb-0">

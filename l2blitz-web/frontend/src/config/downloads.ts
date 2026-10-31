@@ -16,6 +16,9 @@ export const DOWNLOAD_RELEASE = {
     { id: '02', url: 'https://drive.google.com/file/d/1i6uNYkFKWSSzh-SDJFCNjJNk-vOCFmcx/view?usp=sharing' },
   ],
   launcherUrl: '',
+  launcherFixUrl: 'https://l2blitz-patch.liftthanakorn-cs51.workers.dev/hotfix/L2Blitz-Launcher-Fix-740-v0.4.1.exe',
+  launcherFixSize: '5.4 MB',
+  launcherFixVersion: 'v0.4.1',
 } as const;
 
 export function publicDownloadUrl(value: string): string | null {
