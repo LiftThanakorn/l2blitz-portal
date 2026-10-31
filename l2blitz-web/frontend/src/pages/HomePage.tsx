@@ -2,11 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchApi } from '../lib/api';
-import { PUBLIC_CHARACTER_DATA_ENABLED } from '../publicLaunch';
-
 interface ServerStatus { status: 'online' | 'offline' | 'unknown' }
-interface ServerStats { playersOnline: number | null; totalCharacters: number | null }
+interface ServerStats { playersOnline: number | null; totalCharacters: number | null; status: string }
 interface RatesData { rates: { key: string; value: string; verified: boolean }[] }
+interface DailyBoss { bossId: number; nameTh: string; nameEn: string; status: 'alive' | 'dead' | 'unknown' }
+interface TvtEvent { scheduleTimes: string[] }
+
+function nextScheduledTime(times: string[]): string | null {
+  const valid = times.filter((time) => /^([01]\d|2[0-3]):[0-5]\d$/.test(time)).sort();
+  if (!valid.length) return null;
+  const bangkokTime = new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(11, 16);
+  return valid.find((time) => time > bangkokTime) ?? valid[0];
+}
+
+function formatBangkokTime(value: string | null): string | null {
+  if (!value || Number.isNaN(Date.parse(value))) return null;
+  return new Intl.DateTimeFormat('th-TH', {
+    timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(new Date(value));
+}
 
 const DESTINATIONS = [
   { to: '/farmzones', th: 'พื้นที่ฟาร์ม', en: 'Farm Zones', descTh: 'FARMZONE 1 / FARMZONE 2 · Chimera', descEn: 'FARMZONE 1 / FARMZONE 2 · Chimera' },
@@ -20,19 +35,27 @@ export function HomePage() {
   const [status, setStatus] = useState<ServerStatus | null>(null);
   const [stats, setStats] = useState<ServerStats | null>(null);
   const [rates, setRates] = useState<RatesData['rates']>([]);
+  const [bosses, setBosses] = useState<DailyBoss[]>([]);
+  const [tvt, setTvt] = useState<TvtEvent | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     const refresh = () => {
       void Promise.all([
         fetchApi<ServerStatus>('/api/server/status'),
-        PUBLIC_CHARACTER_DATA_ENABLED ? fetchApi<ServerStats>('/api/server/stats') : Promise.resolve({ data: null }),
+        fetchApi<ServerStats>('/api/server/stats'),
         fetchApi<RatesData>('/api/server/rates'),
-      ]).then(([s, p, r]) => {
+        fetchApi<DailyBoss[]>('/api/raidbosses'),
+        fetchApi<TvtEvent>('/api/events/tvt'),
+      ]).then(([s, p, r, b, v]) => {
         if (!active) return;
-        setStatus(s.data);
-        setStats(p.data);
-        setRates(r.data?.rates.filter((item) => item.verified) ?? []);
+        setStatus(s.ok && s.source === 'live_mysql' ? s.data : null);
+        setStats(p.ok && p.source === 'live_mysql' && p.data?.status === 'verified' ? p.data : null);
+        setRates(r.ok ? r.data?.rates.filter((item) => item.verified) ?? [] : []);
+        setBosses(b.ok && b.source === 'live_mysql' && Array.isArray(b.data) ? b.data : []);
+        setTvt(v.ok && v.source === 'live_mysql' ? v.data : null);
+        setLastUpdated(p.ok && p.source === 'live_mysql' ? p.updatedAt : s.ok ? s.updatedAt : null);
       });
     };
     refresh();
@@ -42,14 +65,18 @@ export function HomePage() {
 
   const exp = rates.find((item) => item.key === 'exp_sp')?.value ?? '—';
   const raid = rates.find((item) => item.key === 'raid_drop')?.value ?? '—';
-  const statusLabel = !PUBLIC_CHARACTER_DATA_ENABLED
-    ? t('ทดสอบ Close Beta', 'Close Beta')
-    : status?.status === 'online'
+  const statusLabel = status?.status === 'online'
     ? t('ออนไลน์', 'Online')
     : status?.status === 'offline'
       ? t('ออฟไลน์', 'Offline')
-      : t('ไม่ทราบสถานะ', 'Unknown');
-  const count = (value: number | null | undefined) => value == null ? '—' : value.toLocaleString();
+      : t('ยังตรวจสอบไม่ได้', 'Unavailable');
+  const nextTvt = nextScheduledTime(tvt?.scheduleTimes ?? []);
+  const activeBoss = bosses.find((boss) => boss.status === 'alive');
+  const bossLabel = activeBoss
+    ? t(activeBoss.nameTh, activeBoss.nameEn)
+    : bosses.length ? t('ยังไม่ยืนยันสถานะ', 'Status unverified') : '—';
+  const checkedAt = formatBangkokTime(lastUpdated);
+  const count = (value: number | null | undefined) => value == null || !Number.isFinite(value) ? '—' : value.toLocaleString();
 
   return (
     <div className="pb-20">
@@ -67,7 +94,14 @@ export function HomePage() {
               <Link to="/info" className="btn-primary">{t('ข้อมูลเซิร์ฟเวอร์', 'Server Information')}</Link>
               <Link to="/downloads" className="btn-ink">{t('ดาวน์โหลด / ติดตั้ง', 'Download / Install')}</Link>
             </div>
-            <p className="small-note text-[#524E48] mt-5 mb-0">{t('สถานะเซิร์ฟเวอร์', 'Server status')}: <strong className="text-[#1A1917]">{statusLabel}</strong></p>
+            <p className="small-note text-[#524E48] mt-5 mb-0">
+              {t('สถานะเซิร์ฟเวอร์จริง', 'Live server status')}: <strong className="text-[#1A1917]">{statusLabel}</strong>
+              <span className="ml-3 text-[#77736C]">· Close Beta</span>
+            </p>
+            <p className="small-note text-[#77736C] mt-2 mb-0">
+              {checkedAt ? t('อัปเดตล่าสุด ', 'Last checked ') + checkedAt + ' (GMT+7)' : t('กำลังรอข้อมูลล่าสุดจาก VPS', 'Awaiting live VPS telemetry')}
+              {' · '}{t('ตรวจสอบทุก 45 วินาที', 'Refreshes every 45 seconds')}
+            </p>
           </div>
         </div>
         <figure className="lg:col-span-7 m-0 min-h-[420px] overflow-hidden surface-ink">
@@ -79,19 +113,24 @@ export function HomePage() {
         <div className="editorial-axis-grid mb-7">
           <div className="col-span-12 lg:col-start-6 lg:col-span-7">
             <h2 className="section-heading">{t('ภาพรวมเซิร์ฟเวอร์', 'At a Glance')}</h2>
-            <p className="body-copy text-[#77736C] mt-2">{PUBLIC_CHARACTER_DATA_ENABLED ? t('จำนวนผู้เล่นและข้อมูลสำคัญของเซิร์ฟเวอร์', 'Player activity and essential server details.') : t('จำนวนผู้เล่นจะแสดงหลังเปิดจริง โดยยังคงแสดงส่วนอื่นของเว็บไซต์ตามปกติ', 'Player counts will appear at official launch; the rest of the website remains available.')}</p>
+            <p className="body-copy text-[#77736C] mt-2">
+              {t('ข้อมูลสรุปจาก VPS ผ่าน API แบบอ่านอย่างเดียว ไม่มีตัวเลขจำลอง หากยังตรวจสอบไม่ได้จะแสดง —', 'Read-only VPS API data, never fabricated. Unavailable values display —.')}
+            </p>
           </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
           {[
-            { key: 'online', th: 'ตัวละครออนไลน์', en: 'Characters Online', value: count(stats?.playersOnline) },
-            { key: 'characters', th: 'ตัวละครทั้งหมด', en: 'Total Characters', value: count(stats?.totalCharacters) },
-            { key: 'exp', th: 'EXP / SP', en: 'EXP / SP', value: exp },
-            { key: 'raid', th: 'ไอเทมดรอปจากบอส', en: 'Boss Item Drops', value: raid },
+            { key: 'online', th: 'ตัวละครออนไลน์', en: 'Characters Online', value: count(stats?.playersOnline), noteTh: 'MySQL · จำนวนจริง', noteEn: 'MySQL · Live count' },
+            { key: 'characters', th: 'ตัวละครทั้งหมด', en: 'Total Characters', value: count(stats?.totalCharacters), noteTh: 'MySQL · จำนวนจริง', noteEn: 'MySQL · Live count' },
+            { key: 'exp', th: 'EXP / SP', en: 'EXP / SP', value: exp, noteTh: 'เรตที่ยืนยันใน API', noteEn: 'API verified rates' },
+            { key: 'raid', th: 'ไอเทมดรอปจากบอส', en: 'Boss Item Drops', value: raid, noteTh: 'เรตที่ยืนยันใน API', noteEn: 'API verified rates' },
+            { key: 'tvt', th: 'TvT รอบถัดไป', en: 'Next TvT Round', value: nextTvt ? nextTvt + ' (GMT+7)' : '—', noteTh: 'จากตารางกิจกรรม API', noteEn: 'API event schedule' },
+            { key: 'boss', th: 'Daily Epic ที่มีชีวิต', en: 'Daily Epic Alive', value: bossLabel, noteTh: 'สถานะบอสที่ตรวจได้', noteEn: 'Available boss status' },
           ].map((card) => (
             <div key={card.key} className="surface-white p-5 sm:p-7 min-w-0">
               <p className="small-note text-[#77736C] m-0">{t(card.th, card.en)}</p>
               <p className="text-[25px] sm:text-[32px] font-semibold text-[#1A1917] tabular-nums mt-4 mb-0 break-words">{card.value}</p>
+              <p className="small-note text-[#77736C] mt-3 mb-0">{t(card.noteTh, card.noteEn)}</p>
             </div>
           ))}
         </div>

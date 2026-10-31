@@ -21,11 +21,6 @@ export default {
       status: 403, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
     });
   }
-  if (!publicLaunch && incoming.pathname === '/api/server/stats') {
-    return Response.json({ ok: true, source: 'unavailable', updatedAt: new Date().toISOString(), data: {
-      playersOnline: null, totalCharacters: null, totalClans: null, activeOlympiadNobles: null, status: 'pending_launch',
-    } }, { headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
-  }
   if (!ROUTES.has(incoming.pathname)) {
     return new Response('Not found', { status: 404 });
   }
@@ -39,6 +34,24 @@ export default {
     });
     if (upstream.status >= 300 && upstream.status < 400) {
       return new Response('Unexpected upstream redirect', { status: 502 });
+    }
+    // Only non-identifying, verified aggregate counts may be public during Close Beta.
+    // Player names, PvP rankings, Olympiad and castle details stay blocked above.
+    if (!publicLaunch && incoming.pathname === '/api/server/stats' && upstream.ok) {
+      const payload = await upstream.json();
+      const verified = payload?.ok === true && payload?.source === 'live_mysql' && payload?.data?.status === 'verified';
+      const online = payload?.data?.playersOnline;
+      const total = payload?.data?.totalCharacters;
+      return Response.json({
+        ok: verified,
+        source: verified ? 'live_mysql' : 'unavailable',
+        updatedAt: payload?.updatedAt ?? new Date().toISOString(),
+        data: {
+          playersOnline: verified && Number.isSafeInteger(online) && online >= 0 ? online : null,
+          totalCharacters: verified && Number.isSafeInteger(total) && total >= 0 ? total : null,
+          status: verified ? 'verified' : 'unavailable',
+        },
+      }, { headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
     }
     // TvT schedules stay public; individual match results and character names do not.
     if (!publicLaunch && incoming.pathname === '/api/events/tvt' && upstream.ok) {
