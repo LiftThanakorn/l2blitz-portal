@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { fetchApi, HIGH_FIVE_CLASSES } from '../lib/api';
+import { fetchApi, OLYMPIAD_CLASSES } from '../lib/api';
+import { PUBLIC_CHARACTER_DATA_ENABLED } from '../publicLaunch';
 
 /**
  * STRICT COMPLIANCE:
@@ -17,6 +18,15 @@ interface OlympiadPublicRow {
   classNameTh: string;
 }
 
+interface OlympiadClassTopThree {
+  classId: number;
+  classNameEn: string;
+  classNameTh: string;
+  race: string;
+  raceTh: string;
+  rows: OlympiadPublicRow[];
+}
+
 interface OlympiadHeroRow {
   classId: number;
   classNameEn: string;
@@ -28,76 +38,128 @@ interface OlympiadHeroRow {
   cycleVerified: boolean;
 }
 
+type OlympiadDataStatus = 'checking' | 'current' | 'empty' | 'unavailable';
+
+/** API response time, not the last time a player earned points or a Hero was awarded. */
+export function formatCheckedAt(iso: string, locale: string): string | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: 'Asia/Bangkok',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(date);
+}
+
+const RACE_SECTIONS = [
+  { key: 'Human', th: 'มนุษย์', en: 'Human' },
+  { key: 'Elf', th: 'เอลฟ์', en: 'Elf' },
+  { key: 'Dark Elf', th: 'ดาร์คเอลฟ์', en: 'Dark Elf' },
+  { key: 'Orc', th: 'ออร์ค', en: 'Orc' },
+  { key: 'Dwarf', th: 'ดวอร์ฟ', en: 'Dwarf' },
+  { key: 'Kamael', th: 'คามาเอล', en: 'Kamael' },
+] as const;
+
 export function OlympiadPage() {
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const viewMode = searchParams.get('view') === 'heroes' ? 'heroes' : 'rankings';
-  const initialClassParam = Number(searchParams.get('classId') || 88);
-  const canonicalInitial = initialClassParam === 133 ? 132 : initialClassParam === 135 ? 136 : initialClassParam;
-
-  const [selectedClassId, setSelectedClassId] = useState<number>(
-    HIGH_FIVE_CLASSES.some((c) => c.id === canonicalInitial) ? canonicalInitial : 88
-  );
   const [cycle, setCycle] = useState<'current' | 'previous'>('current');
-  const [page, setPage] = useState<number>(1);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [sourceMode, setSourceMode] = useState<'live_mysql' | 'dev_fixture' | 'unavailable'>('unavailable');
-  const [rankingRows, setRankingRows] = useState<OlympiadPublicRow[]>([]);
-  const [totalRows, setTotalRows] = useState<number>(0);
+  const [classStandings, setClassStandings] = useState<OlympiadClassTopThree[]>([]);
+  const [dataAvailable, setDataAvailable] = useState(false);
   const [heroes, setHeroes] = useState<OlympiadHeroRow[]>([]);
-  const [heroesVerified, setHeroesVerified] = useState<boolean>(false);
-
-  const limit = 10; // Top 10 per page + pagination for additional pages
+  const [heroesVerified, setHeroesVerified] = useState(false);
+  const [dataStatus, setDataStatus] = useState<OlympiadDataStatus>('checking');
+  const [lastCheckedAt, setLastCheckedAt] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-
-    if (viewMode === 'heroes') {
-      fetchApi<{ heroes: OlympiadHeroRow[]; verified: boolean }>('/api/olympiad/heroes').then((res) => {
-        if (cancelled) return;
-        setSourceMode(res.source);
-        if (res.data) {
-          setHeroes(res.data.heroes);
-          setHeroesVerified(res.data.verified);
-        } else {
-          setHeroes([]);
-          setHeroesVerified(false);
-        }
-        setLoading(false);
-      });
-    } else {
-      fetchApi<{
-        items: OlympiadPublicRow[];
-        total: number;
-        page: number;
-        limit: number;
-        minimumMatchesRequired: number;
-      }>(
-        `/api/olympiad/rankings?classId=${selectedClassId}&cycle=${cycle}&page=${page}&limit=${limit}`
-      ).then((res) => {
-        if (cancelled) return;
-        setSourceMode(res.source);
-        if (res.data) {
-          setRankingRows(res.data.items);
-          setTotalRows(res.data.total);
-        } else {
-          setRankingRows([]);
-          setTotalRows(0);
-        }
-        setLoading(false);
-      });
+    if (!PUBLIC_CHARACTER_DATA_ENABLED) {
+      setClassStandings(OLYMPIAD_CLASSES.map((cls) => ({
+        classId: cls.id, classNameEn: cls.nameEn, classNameTh: cls.nameTh,
+        race: cls.race, raceTh: cls.raceTh, rows: [],
+      })));
+      setHeroes([]);
+      setHeroesVerified(false);
+      setDataAvailable(false);
+      setSourceMode('unavailable');
+      setLastCheckedAt(null);
+      setDataStatus('empty');
+      setLoading(false);
+      return;
     }
+    let cancelled = false;
+    let inFlight = false;
+    let lastRequestStarted = 0;
+    setLoading(true);
+    setDataStatus('checking');
+    setLastCheckedAt(null);
 
+    const refresh = async () => {
+      if (cancelled || inFlight || document.visibilityState === 'hidden') return;
+      inFlight = true;
+      lastRequestStarted = Date.now();
+      try {
+        if (viewMode === 'heroes') {
+          const res = await fetchApi<{ heroes: OlympiadHeroRow[]; verified: boolean }>('/api/olympiad/heroes');
+          if (cancelled) return;
+          const verified = res.ok && res.source === 'live_mysql' && res.data?.verified === true;
+          const visibleHeroes = verified ? (res.data?.heroes ?? []) : [];
+          setSourceMode(res.source);
+          setHeroes(visibleHeroes);
+          setHeroesVerified(verified);
+          setDataStatus(!verified ? 'unavailable' : visibleHeroes.length ? 'current' : 'empty');
+          setLastCheckedAt(verified ? res.updatedAt : null);
+        } else {
+          const res = await fetchApi<{ classes: OlympiadClassTopThree[]; dataAvailable: boolean }>(
+            `/api/olympiad/top-by-class?cycle=${cycle}`
+          );
+          if (cancelled) return;
+          const verified = res.ok && res.source === 'live_mysql' && res.data?.dataAvailable === true;
+          const standings = verified ? (res.data?.classes ?? []) : [];
+          setSourceMode(res.source);
+          setDataAvailable(verified);
+          // Always render class brackets when the backend is unavailable.
+          setClassStandings(verified ? standings : OLYMPIAD_CLASSES.map((cls) => ({
+            classId: cls.id,
+            classNameEn: cls.nameEn,
+            classNameTh: cls.nameTh,
+            race: cls.race,
+            raceTh: cls.raceTh,
+            rows: [],
+          })));
+          setDataStatus(!verified ? 'unavailable' : standings.some((cls) => cls.rows.length > 0) ? 'current' : 'empty');
+          setLastCheckedAt(verified ? res.updatedAt : null);
+        }
+      } finally {
+        inFlight = false;
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void refresh();
+    // Only one read-only API request per refresh; hidden tabs make no requests.
+    const timer = window.setInterval(() => { void refresh(); }, 120_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastRequestStarted >= 60_000) {
+        void refresh();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [viewMode, selectedClassId, cycle, page]);
+  }, [viewMode, cycle]);
 
-  const activeClassMeta =
-    HIGH_FIVE_CLASSES.find((c) => c.id === selectedClassId) || HIGH_FIVE_CLASSES[0];
-  const totalPages = Math.max(1, Math.ceil(totalRows / limit));
+  const rankedClassCount = sourceMode === 'dev_fixture' ? 0 : classStandings.filter((cls) => cls.rows.length > 0).length;
 
   return (
     <div className="editorial-frame pt-10 pb-16">
@@ -105,12 +167,12 @@ export function OlympiadPage() {
       <div className="editorial-axis-grid items-end pb-12">
         <div className="col-span-12 lg:col-span-5">
           <p className="small-note text-[#E97540] font-semibold m-0">
-            {t('ทำเนียบการแข่งขันแกรนด์โอลิมเพียด (L2J Mobius CT 2.6)', 'Grand Olympiad Competitive Registry')}
+            {t('การแข่งขันแกรนด์โอลิมเพียด', 'Grand Olympiad Competitive Registry')}
           </p>
           <p className="body-copy text-[#77736C] mt-3">
             {t(
-              'จัดอันดับแยกตามคลาสตามตรรกะซอร์สโค้ด L2J Mobius High Five (รวมคลาส Soul Hound 132 และ 133 เข้าด้วยกัน) ต้องผ่านเกณฑ์แข่งขันขั้นต่ำ 15 แมตช์ และชนะอย่างน้อย 1 แมตช์ โดยไม่เปิดเผยคะแนนโอลิมเพียดต่อสาธารณะ',
-              'Ranked per class under official L2J Mobius High Five logic (Soul Hound IDs 132 & 133 unified). Requires ≥15 completed matches and ≥1 victory. Public Olympiad points are strictly withheld.'
+              'ติดตามอันดับ 1–3 ของแต่ละอาชีพ รวมถึงรายชื่อฮีโร่ประจำรอบการแข่งขัน',
+              'See the top three competitors of each class and the Heroes of the current cycle.'
             )}
           </p>
         </div>
@@ -144,12 +206,12 @@ export function OlympiadPage() {
         <div className="lg:col-span-6 surface-ink p-8 sm:p-10 flex flex-col justify-between">
           <div>
             <h2 className="section-heading text-[#F7F5F0]">
-              {t('กฎการจัดอันดับและซ่อนคะแนน', 'Ranking Calculation & Privacy')}
+              {t('อันดับโอลิมเพียด', 'Olympiad Rankings')}
             </h2>
             <p className="body-copy text-[#E8E3DB] mt-4">
               {t(
-                'เซิร์ฟเวอร์คำนวณลำดับจากคะแนนโอลิมเพียด จำนวนครั้งที่ชนะ และจำนวนแมตช์ภายในระบบหลังบ้านเท่านั้น หน้าเว็บไซต์และ API สาธารณะจะแสดงเฉพาะ อันดับ ชื่อตัวละคร และแคลน เพื่อรักษาความยุติธรรมในการชิงตำแหน่งฮีโร่ช่วงปลายรอบ',
-                'Standings are sorted server-side using internal Olympiad points, win counts, and match totals. Both the public REST API and frontend expose exclusively Rank, Character Name, and Clan.'
+                'แข่งขันแบบ 1v1 ต่างอาชีพ วันศุกร์–อาทิตย์ เวลา 20:00–23:00 น. และจัดอันดับแยกตามอาชีพ',
+                '1v1 matches against different classes, Friday to Sunday 20:00–23:00. Rankings are grouped by class.'
               )}
             </p>
           </div>
@@ -157,14 +219,14 @@ export function OlympiadPage() {
           <div className="pt-6 flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => setSearchParams({ view: 'rankings', classId: String(selectedClassId) })}
+              onClick={() => setSearchParams({ view: 'rankings' })}
               className={`px-5 py-2.5 text-[15px] font-medium cursor-pointer border-0 ${
                 viewMode === 'rankings'
                   ? 'bg-[#E97540] text-white'
                   : 'bg-[#252320] text-[#F7F5F0] hover:bg-[#3A3733]'
               }`}
             >
-              {t('ตารางอันดับแยกคลาส (Top 10+)', 'Class Standings (Top 10+)')}
+              {t('อันดับทุกอาชีพ (Top 3)', 'All Class Standings (Top 3)')}
             </button>
             <button
               type="button"
@@ -181,176 +243,172 @@ export function OlympiadPage() {
         </div>
       </div>
 
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-14" aria-label={t('กติกาโอลิมเพียด', 'Olympiad Rules')}>
+        <article className="surface-stone p-6">
+          <h2 className="text-[19px] font-semibold text-[#1A1917] m-0">{t('วันและเวลาแข่งขัน', 'Match Schedule')}</h2>
+          <p className="body-copy text-[#524E48] mt-3 mb-0">
+            {t('ศุกร์ เสาร์ อาทิตย์ · 20:00–23:00 น. · 1v1 ต่างอาชีพเท่านั้น ต้องมีผู้สมัครอย่างน้อย 4 คน',
+               'Friday, Saturday and Sunday · 20:00–23:00 · different-class 1v1 only · at least 4 registrants')}
+          </p>
+        </article>
+        <article className="surface-stone p-6">
+          <h2 className="text-[19px] font-semibold text-[#1A1917] m-0">{t('ฮีโร่ประจำสัปดาห์', 'Weekly Heroes')}</h2>
+          <p className="body-copy text-[#524E48] mt-3 mb-0">
+            {t('ปิดรอบคืนวันศุกร์ เข้าสู่วันเสาร์ · ต้องลงอย่างน้อย 9 นัด ชนะ 1 นัด และพบคู่แข่งต่างกัน 3 คนภายในรอบ',
+               'Weekly cutoff on Friday night (Saturday 00:00) · 9 matches, 1 win and 3 distinct opponents required for Hero')}
+          </p>
+        </article>
+        <article className="surface-stone p-6">
+          <h2 className="text-[19px] font-semibold text-[#1A1917] m-0">{t('อุปกรณ์ในการแข่งขัน', 'Equipment Rules')}</h2>
+          <p className="body-copy text-[#524E48] mt-3 mb-0">
+            {t('ค่าบวกอาวุธ ชุดเกราะ และเครื่องประดับมีผลสูงสุด +6 ภายในสนาม · ธาตุ สกิลบวก และถลุงยังคงเดิม',
+               'Effective enchant capped at +6 for weapons, armor and jewelry inside matches; attributes, skill enchants and augmentations remain active')}
+          </p>
+        </article>
+      </section>
+
       {/* Main Olympiad Interactive Ledger (`data-ui`) */}
       <div data-ui className="surface-white p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-5 mb-7 border-b border-[#E8E3DB]">
+          <div className="flex items-center gap-2" role="status" aria-live="polite">
+            <span
+              aria-hidden="true"
+              className={`inline-block w-2.5 h-2.5 shrink-0 rounded-full ${
+                dataStatus === 'current' || dataStatus === 'empty' ? 'bg-[#E97540]' : 'bg-[#9D9992]'
+              }`}
+            />
+            <span className="text-[14px] font-medium text-[#524E48]">
+              {!PUBLIC_CHARACTER_DATA_ENABLED
+                ? t('รอเปิดเผยผลหลังเปิดเซิร์ฟเวอร์จริง', 'Results become public at official launch')
+                : dataStatus === 'checking'
+                ? t('กำลังตรวจสอบข้อมูล...', 'Checking data...')
+                : dataStatus === 'unavailable'
+                  ? t('ยังไม่สามารถตรวจสอบข้อมูลได้', 'Data temporarily unavailable')
+                  : dataStatus === 'empty'
+                    ? (viewMode === 'heroes'
+                      ? t('เชื่อมต่อแล้ว · ยังไม่มีรายชื่อฮีโร่', 'Connected · No Heroes yet')
+                      : t('เชื่อมต่อแล้ว · ยังไม่มีผลจัดอันดับ', 'Connected · No standings yet'))
+                    : t('ข้อมูลอันดับพร้อมใช้งาน', 'Ranking data available')}
+            </span>
+          </div>
+          <div className="text-[13px] text-[#77736C] sm:text-right" title={t('เวลาที่ API ตอบกลับ ไม่ใช่เวลาที่อันดับเปลี่ยนแปลง', 'API response time, not the moment rankings changed')}>
+            {lastCheckedAt && formatCheckedAt(lastCheckedAt, 'th-TH') ? (
+              <>
+                {t('ตรวจสอบล่าสุด', 'Last checked')}:&nbsp;
+                <time dateTime={lastCheckedAt} className="tabular-nums">
+                  {t(formatCheckedAt(lastCheckedAt, 'th-TH') ?? '—', formatCheckedAt(lastCheckedAt, 'en-GB') ?? '—')}
+                </time>
+                &nbsp;({t('เวลาไทย', 'Bangkok time')})
+              </>
+            ) : !PUBLIC_CHARACTER_DATA_ENABLED ? t('ช่วงทดสอบ Close Beta', 'Close Beta') : t('ยังไม่มีเวลาตรวจสอบที่ยืนยันได้', 'No verified check time yet')}
+          </div>
+        </div>
         {viewMode === 'rankings' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Sidebar: Class Filter (All 35 Eligible High Five Classes, 132/133 grouped) */}
-            <aside className="lg:col-span-4">
-              <div className="surface-stone p-4 mb-4">
-                <label
-                  htmlFor="olympiad-class-select"
-                  className="block small-note font-semibold text-[#1A1917] mb-2"
+          <div>
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 pb-7 border-b border-[#E8E3DB]">
+              <div>
+                <p className="small-note text-[#E97540] font-semibold mb-2">
+                  {t('อันดับโอลิมเพียดแยกตามอาชีพ', 'OLYMPIAD CLASS LEADERBOARD')}
+                </p>
+                <h2 className="section-heading">
+                  {t('ทุกอาชีพ · อันดับ 1–3', 'All Classes · Top 1–3')}
+                </h2>
+                <p className="body-copy text-[#77736C] mt-2">
+                  {t(
+                    `แสดง ${classStandings.length} กลุ่มอาชีพ · มีอันดับใน ${rankedClassCount} อาชีพ · ไม่แสดงคะแนน`,
+                    `All ${classStandings.length} class brackets · ${rankedClassCount} with standings · Points hidden`
+                  )}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-1.5" role="group" aria-label="Olympiad Cycle">
+                <button
+                  type="button"
+                  aria-pressed={cycle === 'current'}
+                  onClick={() => setCycle('current')}
+                  className={`px-4 py-2.5 text-[14px] font-medium cursor-pointer border-0 ${cycle === 'current' ? 'bg-[#1A1917] text-[#F7F5F0]' : 'bg-[#F0EDE7] text-[#1A1917]'}`}
                 >
-                  {t('เลือกสายอาชีพคลาส 3 (35 บรากเก็ต):', 'Select High Five Class Bracket:')}
-                </label>
-                <select
-                  id="olympiad-class-select"
-                  value={selectedClassId}
-                  onChange={(e) => {
-                    const id = Number(e.target.value);
-                    setSelectedClassId(id);
-                    setPage(1);
-                    setSearchParams({ view: 'rankings', classId: String(id) });
-                  }}
-                  className="w-full p-3 bg-white text-[#1A1917] text-[15px] font-medium border border-[#E8E3DB]"
+                  {t('รอบปัจจุบัน', 'Current Cycle')}
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={cycle === 'previous'}
+                  onClick={() => setCycle('previous')}
+                  className={`px-4 py-2.5 text-[14px] font-medium cursor-pointer border-0 ${cycle === 'previous' ? 'bg-[#1A1917] text-[#F7F5F0]' : 'bg-[#F0EDE7] text-[#1A1917]'}`}
                 >
-                  {HIGH_FIVE_CLASSES.map((cls) => (
-                    <option key={cls.id} value={cls.id}>
-                      [{cls.race}] {t(cls.nameTh, cls.nameEn)} (ID {cls.groupedIds.join('/')})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Quick Race / Class Buttons */}
-              <div className="max-h-[420px] overflow-y-auto flex flex-col gap-1 pr-1">
-                {HIGH_FIVE_CLASSES.map((cls) => (
-                  <button
-                    key={cls.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedClassId(cls.id);
-                      setPage(1);
-                      setSearchParams({ view: 'rankings', classId: String(cls.id) });
-                    }}
-                    className={`w-full text-left px-3.5 py-2.5 text-[14px] cursor-pointer border-0 flex items-center justify-between ${
-                      selectedClassId === cls.id
-                        ? 'bg-[#1A1917] text-[#F7F5F0] font-semibold'
-                        : 'bg-[#F7F5F0] text-[#1A1917] hover:bg-[#F0EDE7]'
-                    }`}
-                  >
-                    <span>{t(cls.nameTh, cls.nameEn)}</span>
-                    <span className="small-note opacity-75 tabular-nums">
-                      {cls.groupedIds.join('/')}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </aside>
-
-            {/* Right Column: Ranking Table (Rank, Character Name, Clan ONLY) */}
-            <div className="lg:col-span-8">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6">
-                <div>
-                  <h2 className="text-[24px] font-semibold text-[#1A1917]">
-                    {t(activeClassMeta.nameTh, activeClassMeta.nameEn)}
-                  </h2>
-                  <p className="small-note text-[#77736C] m-0 mt-1">
-                    Class ID: {activeClassMeta.groupedIds.join(' + ')} ·{' '}
-                    {t('เกณฑ์ขั้นต่ำ: แข่งขัน ≥15 นัด และชนะ ≥1 นัด', 'Eligibility: ≥15 matches played & ≥1 win')}
-                  </p>
-                </div>
-
-                {/* Cycle Toggle: Current vs Previous Cycle */}
-                <div className="flex gap-1.5" role="group" aria-label="Olympiad Cycle">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCycle('current');
-                      setPage(1);
-                    }}
-                    className={`px-4 py-2 text-[14px] font-medium cursor-pointer border-0 ${
-                      cycle === 'current'
-                        ? 'bg-[#1A1917] text-[#F7F5F0]'
-                        : 'bg-[#F0EDE7] text-[#1A1917]'
-                    }`}
-                  >
-                    {t('รอบปัจจุบัน (Current)', 'Current Cycle')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCycle('previous');
-                      setPage(1);
-                    }}
-                    className={`px-4 py-2 text-[14px] font-medium cursor-pointer border-0 ${
-                      cycle === 'previous'
-                        ? 'bg-[#1A1917] text-[#F7F5F0]'
-                        : 'bg-[#F0EDE7] text-[#1A1917]'
-                    }`}
-                  >
-                    {t('รอบที่ผ่านมา (Previous)', 'Previous Cycle')}
-                  </button>
-                </div>
-              </div>
-
-              {loading ? (
-                <div className="py-16 text-center text-[#77736C]">
-                  {t('กำลังประมวลผลตารางโอลิมเพียด...', 'Computing Olympiad class standings...')}
-                </div>
-              ) : rankingRows.length === 0 ? (
-                <div className="surface-stone p-10 text-center">
-                  <p className="lead-statement mx-auto text-[#1A1917]">
-                    {sourceMode === 'unavailable'
-                      ? t(
-                          'ไม่พบข้อมูลโอลิมเพียดสด (ยังไม่ได้เชื่อมต่อฐานข้อมูล L2J Mobius GameServer)',
-                          'Live Olympiad standings unavailable (Pending L2J Mobius GameServer database connection).'
-                        )
-                      : t(
-                          'ยังไม่มีตัวละครในคลาสนี้ที่ผ่านเกณฑ์แข่งขันครบ 15 แมตช์ในรอบที่เลือก',
-                          'No noble in this class bracket has completed the minimum 15 matches for the selected cycle.'
-                        )}
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th className="w-24">{t('อันดับ (Rank)', 'Rank')}</th>
-                        <th>{t('ชื่อตัวละคร (Character Name)', 'Character Name')}</th>
-                        <th>{t('แคลน (Clan)', 'Clan')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rankingRows.map((row) => (
-                        <tr key={`${row.rank}-${row.charName}`}>
-                          <td className="font-semibold text-[#E97540] tabular-nums">#{row.rank}</td>
-                          <td className="font-semibold">{row.charName}</td>
-                          <td>{row.clanName || '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Pagination (Top 10 per page + additional pages) */}
-              <div className="flex items-center justify-between pt-6 mt-4">
-                <span className="small-note text-[#77736C] tabular-nums">
-                  {t('แสดงสูงสุด 10 อันดับต่อหน้า · หน้า', 'Top 10 per page · Page')} {page} / {totalPages}
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="btn-surface py-2 px-4 text-[14px] disabled:opacity-40"
-                  >
-                    {t('← ก่อนหน้า', '← Previous')}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                    className="btn-surface py-2 px-4 text-[14px] disabled:opacity-40"
-                  >
-                    {t('ถัดไป →', 'Next →')}
-                  </button>
-                </div>
+                  {t('รอบที่ผ่านมา', 'Previous Cycle')}
+                </button>
               </div>
             </div>
+
+            {!dataAvailable && !loading && (
+              <p className="mt-5 p-4 bg-[#F7F5F0] body-copy text-[#77736C]">
+                {!PUBLIC_CHARACTER_DATA_ENABLED
+                  ? t('คงรูปแบบอันดับทุกอาชีพไว้ โดยซ่อนชื่อตัวละครและข้อมูลผลการแข่งขันจนกว่าจะเปิดเซิร์ฟเวอร์จริง', 'Class leaderboards remain visible, but player names and match results are hidden until official launch.')
+                  : t('ยังไม่มีผลการจัดอันดับให้แสดงในขณะนี้', 'No Olympiad standings available right now.')}
+              </p>
+            )}
+
+            {loading ? (
+              <div className="py-20 text-center text-[#77736C]" role="status">
+                {t('กำลังโหลดอันดับทุกอาชีพ...', 'Loading all class standings...')}
+              </div>
+            ) : (
+              <div className="space-y-12 pt-9">
+                {RACE_SECTIONS.map((race) => {
+                  const classes = classStandings.filter((cls) => cls.race === race.key);
+                  if (classes.length === 0) return null;
+                  return (
+                    <section key={race.key} aria-label={t(race.th, race.en)}>
+                      <div className="flex items-baseline gap-3 border-b border-[#E8E3DB] pb-4 mb-5">
+                        <h3 className="text-[23px] font-semibold text-[#1A1917] m-0">
+                          {t(race.th, race.en)}
+                        </h3>
+                        <span className="small-note text-[#77736C] tabular-nums">
+                          {classes.length} {t('อาชีพ', 'classes')}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {classes.map((cls) => (
+                          <article key={cls.classId} className="border border-[#E8E3DB] bg-white min-w-0">
+                            <div className="px-5 py-4 bg-[#F7F5F0] border-b border-[#E8E3DB]">
+                              <h4 className="text-[17px] font-semibold text-[#1A1917] leading-snug m-0">
+                                {t(cls.classNameTh, cls.classNameEn)}
+                              </h4>
+                              <span className="small-note text-[#77736C] mt-1 block">
+                                {t('อันดับสูงสุด 3 คน', 'TOP 3')}
+                              </span>
+                            </div>
+                            <ol className="m-0 p-0 list-none">
+                              {[1, 2, 3].map((rank) => {
+                                const player = sourceMode === 'dev_fixture' ? undefined : cls.rows.find((entry) => entry.rank === rank);
+                                return (
+                                  <li key={rank} className="flex items-center gap-3 px-4 py-3.5 border-b last:border-b-0 border-[#F0EDE7] min-w-0">
+                                    <span className={`flex items-center justify-center w-9 h-9 shrink-0 text-[14px] font-semibold tabular-nums ${rank === 1 ? 'bg-[#E97540] text-white' : 'bg-[#F0EDE7] text-[#57534E]'}`}>
+                                      {rank}
+                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                      <p className={`text-[15px] font-semibold m-0 truncate ${player ? 'text-[#1A1917]' : 'text-[#9D9992]'}`} title={player?.charName ?? undefined}>
+                                        {PUBLIC_CHARACTER_DATA_ENABLED ? player?.charName ?? '—' : '—'}
+                                      </p>
+                                      <p className="small-note text-[#77736C] m-0 mt-0.5 truncate" title={player?.clanName ?? undefined}>
+                                        {!PUBLIC_CHARACTER_DATA_ENABLED ? t('รอเปิดจริง', 'Coming at launch') : player ? player.clanName || t('ไม่มีแคลน', 'No clan') : (!dataAvailable) ? t('ยังไม่มีข้อมูล', 'No standings') : t('ยังไม่มีผู้ผ่านเกณฑ์', 'No qualified player')}
+                                      </p>
+                                    </div>
+                                  </li>
+                                );
+                              })}
+                            </ol>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
+              </div>
+            )}
+            <p className="small-note text-[#77736C] mt-9">
+              {t('ลงแข่งขันอย่างน้อย 9 นัดและชนะ 1 นัดเพื่อมีอันดับ · การรับตำแหน่งฮีโร่ต้องพบคู่ต่อสู้ต่างกันอย่างน้อย 3 คนในรอบสัปดาห์', 'Standings: at least 9 matches and 1 win · Hero eligibility also requires 3 distinct opponents during the weekly cycle')}
+            </p>
           </div>
         ) : (
           /* Heroes View */
@@ -361,10 +419,10 @@ export function OlympiadPage() {
               </h2>
               <p className="small-note text-[#77736C] mt-1 m-0">
                 {heroesVerified
-                  ? t('ข้อมูลยืนยันจากตาราง heroes ของเซิร์ฟเวอร์จริง', 'Verified from live GameServer heroes table')
+                  ? t('รายชื่อฮีโร่ล่าสุด', 'Latest Heroes')
                   : t(
-                      'แสดงรายชื่อฮีโร่เมื่อมีข้อมูลที่ได้รับการยืนยันจากเซิร์ฟเวอร์จริงเท่านั้น',
-                      'Displays verified class heroes once an Olympiad cycle concludes on the live GameServer.'
+                      'รายชื่อฮีโร่ประจำรอบการแข่งขัน',
+                      'Current Olympiad Heroes.'
                     )}
               </p>
             </div>
@@ -373,13 +431,31 @@ export function OlympiadPage() {
               <div className="py-16 text-center text-[#77736C]">
                 {t('กำลังโหลดทำเนียบฮีโร่...', 'Loading Olympiad Heroes...')}
               </div>
+            ) : heroes.length === 0 && !PUBLIC_CHARACTER_DATA_ENABLED ? (
+              <div className="overflow-x-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{t('สายอาชีพ (Class)', 'Eligible Class')}</th>
+                      <th>{t('ชื่อวีรบุรุษ (Hero Name)', 'Character Name')}</th>
+                      <th>{t('แคลน (Clan)', 'Clan')}</th>
+                      <th>{t('พันธมิตร (Alliance)', 'Alliance')}</th>
+                      <th className="text-right">{t('สมัยที่เป็นฮีโร่', 'Hero Count')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colSpan={5} className="py-14 text-center text-[#77736C]">
+                      {t('รายชื่อฮีโร่จะเปิดเผยหลังเซิร์ฟเวอร์เปิดอย่างเป็นทางการ', 'Hero names will appear after the official server launch.')}
+                    </td></tr>
+                  </tbody>
+                </table>
+              </div>
             ) : heroes.length === 0 ? (
               <div className="surface-stone p-10 text-center">
                 <p className="lead-statement mx-auto text-[#1A1917]">
-                  {t(
-                    'ยังไม่มีข้อมูลฮีโร่ที่ได้รับการยืนยันในรอบปัจจุบัน · รายชื่อฮีโร่ทั้ง 35 คลาสจะแสดงเมื่อสิ้นสุดรอบการแข่งขันโอลิมเพียดบนเซิร์ฟเวอร์จริง',
-                    'No verified Olympiad Heroes recorded yet · eligible class heroes will appear here once the live GameServer completes its Olympiad cycle.'
-                  )}
+                  {!PUBLIC_CHARACTER_DATA_ENABLED
+                    ? t('รายชื่อฮีโร่จะเปิดเผยหลังเซิร์ฟเวอร์เปิดอย่างเป็นทางการ', 'Hero names will appear after the official server launch.')
+                    : t('ยังไม่มีรายชื่อฮีโร่ให้แสดงในขณะนี้', 'No Heroes to display right now.')}
                 </p>
               </div>
             ) : (
