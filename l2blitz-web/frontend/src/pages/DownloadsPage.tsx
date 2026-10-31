@@ -172,62 +172,31 @@ export function DownloadsPage() {
           <div className="mt-10">
             {launcherHref ? (
               <a className="btn-primary w-full justify-between" href={launcherHref} target="_blank" rel="noopener noreferrer">
-                {t('ดาวน์โหลด Launcher', 'Download Launcher')}<ArrowDownToLine size={19} aria-hidden="true" />
+                {t('ดาวน์โหลด L2BlitzLauncher.exe', 'Download L2BlitzLauncher.exe')}<ArrowDownToLine size={19} aria-hidden="true" />
               </a>
             ) : (
               <div className="flex items-center justify-between gap-2 px-5 py-4 bg-[#3A3733] text-[#E8E3DB] small-note" aria-label={t('ยังไม่มีลิงก์ Launcher', 'Launcher link unavailable')}>
                 {t('รอลิงก์ Launcher', 'Launcher link coming soon')}<span aria-hidden="true">—</span>
               </div>
             )}
-            {launcherUpgradeHref && (
-              <div className="mt-6 border-t border-[#57534E] pt-6" aria-labelledby="launcher-upgrade-title">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 id="launcher-upgrade-title" className="text-[18px] font-semibold text-[#F7F5F0] m-0">
-                    {t('อัปเกรด Launcher สำหรับผู้เล่นเก่า', 'Launcher upgrade for existing players')}
-                  </h3>
-                  <span className="small-note text-[#E8E3DB] shrink-0">{DOWNLOAD_RELEASE.launcherUpgradeVersion} · {DOWNLOAD_RELEASE.launcherUpgradeSize}</span>
-                </div>
-                <p className="small-note text-[#E8E3DB] mt-3 mb-4">
-                  {t('อัปเดต Launcher รุ่นเดิมให้ตรวจอัปเดตตัวเองและแพตช์เกมอัตโนมัติ ใช้ไฟล์เกมเดิมได้ ไม่ต้องดาวน์โหลดใหม่ 7.58 GB', 'Enable automatic Launcher and game patch updates on your existing installation. No need to re-download the 7.58 GB game.')}
-                </p>
-                <a href={launcherUpgradeHref} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-between gap-3 px-4 py-3 bg-[#E97540] text-[#171717] no-underline font-semibold text-[14px] hover:bg-[#F58A58] transition-colors"
-                  aria-label={t('ดาวน์โหลดตัวอัปเกรด Launcher v1.1', 'Download Launcher upgrade v1.1')}>
-                  <span>{t('ดาวน์โหลดตัวอัปเกรด Launcher v1.1', 'Download Launcher Upgrade v1.1')}</span>
-                  <ArrowDownToLine size={18} className="shrink-0" aria-hidden="true" />
-                </a>
-                <p className="small-note text-[#E8E3DB] mt-3 mb-1">
-                  {t('วิธีติดตั้ง: ปิดเกมและ Launcher → เปิดไฟล์อัปเกรด → เลือกโฟลเดอร์เกมเดิมที่มี system\\l2.exe (ไม่ใช่โฟลเดอร์ Launcher) → ติดตั้ง แล้วเปิด Launcher ใหม่', 'How to install: Close the game and Launcher → run the upgrade → select your existing game folder containing system\\l2.exe (not its Launcher subfolder) → install, then reopen Launcher.')}
-                </p>
-                <p className="small-note text-[#AFA99F] mt-2 mb-0 break-all" title="SHA-256">
-                  SHA-256: {DOWNLOAD_RELEASE.launcherUpgradeSha256}
-                </p>
-              </div>
-            )}
-            {launcherFixHref && (
-              <div className="mt-6 border-t border-[#57534E] pt-6" aria-labelledby="launcher-fix-title">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 id="launcher-fix-title" className="text-[17px] font-semibold text-[#F7F5F0] m-0">
-                    {t('ตัวแก้ปัญหา Launcher (Error 740)', 'Launcher Repair (Error 740)')}
-                  </h3>
-                  <span className="small-note text-[#E8E3DB] shrink-0">{DOWNLOAD_RELEASE.launcherFixSize}</span>
-                </div>
-                <p className="small-note text-[#E8E3DB] mt-3 mb-4">
-                  {t('สำหรับผู้ที่ติดตั้งเกมแล้ว แต่เปิด Launcher ไม่ได้เนื่องจากต้องใช้สิทธิ์ผู้ดูแลระบบ', 'For players who have installed the game but cannot open the Launcher because Windows requests administrator privileges.')}
-                </p>
-                <a href={launcherFixHref} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-between gap-3 px-4 py-3 border border-[#E97540] text-[#F7F5F0] no-underline font-semibold text-[14px] hover:bg-[#3A3733] transition-colors"
-                  aria-label={t('ดาวน์โหลดตัวแก้ Error 740', 'Download Error 740 repair')}>
-                  <span>{t('ดาวน์โหลดตัวแก้ Error 740', 'Download Error 740 Fix')}</span>
-                  <ArrowDownToLine size={18} className="text-[#E97540] shrink-0" aria-hidden="true" />
-                </a>
-                <p className="small-note text-[#E8E3DB] mt-3 mb-0">
-                  {t('ปิด Launcher ก่อนติดตั้งตัวแก้ลงโฟลเดอร์เกมเดิม ไม่ต้องดาวน์โหลดตัวเกมใหม่', 'Close the Launcher, install the fix into your existing game folder, and keep your current game files.')}
-                </p>
-              </div>
-            )}
+            <div className="mt-6 border-t border-[#57534E] pt-6" aria-labelledby="launcher-exe-guide">
+              <h3 id="launcher-exe-guide" className="text-[17px] font-semibold text-[#F7F5F0] m-0">
+                {t('มีเกมอยู่แล้ว? วางไฟล์ทับได้เลย', 'Already have the game? Just replace the file')}
+              </h3>
+              <ol className="small-note text-[#E8E3DB] mt-3 mb-3 list-decimal pl-5 space-y-2">
+                <li>{t('ปิดเกมและ Launcher ให้เรียบร้อย', 'Close the game and Launcher first.')}</li>
+                <li>{t('ดาวน์โหลด L2BlitzLauncher.exe และวางทับไฟล์ชื่อเดียวกันในโฟลเดอร์ Launcher ของเกมเดิม', 'Download L2BlitzLauncher.exe and replace the same file in your existing game Launcher folder.')}</li>
+                <li>{t('เปิด L2BlitzLauncher.exe ใหม่ ระบบจะตรวจอัปเดต Launcher และแพตช์เกมให้', 'Open L2BlitzLauncher.exe; it will check for Launcher and game patches.')}</li>
+              </ol>
+              <p className="small-note text-[#E8E3DB] mt-3 mb-2">
+                {t('แนะนำสำรองไฟล์ Launcher เดิมก่อนวางทับ · ไม่ใช่ตัวติดตั้ง · ไม่ต้องโหลดเกมใหม่', 'Back up the existing Launcher exe before replacing it · no installer · no game re-download.')}
+              </p>
+              <p className="small-note text-[#AFA99F] mt-2 mb-0 break-all">
+                {DOWNLOAD_RELEASE.launcherUpgradeVersion} · {DOWNLOAD_RELEASE.launcherUpgradeSize} · SHA-256: {DOWNLOAD_RELEASE.launcherUpgradeSha256}
+              </p>
+            </div>
             <p className="small-note text-[#E8E3DB] mt-4 mb-0">
-              {t('ติดตั้งตัวเกมก่อน แล้วใช้ Launcher สำหรับตรวจสอบและอัปเดต', 'Install the full client first, then verify and update it with the launcher.')}
+              {t('มีเกมอยู่แล้วให้วาง EXE ทับในโฟลเดอร์ Launcher เดิมได้เลย', 'Existing players can replace the Launcher exe in their game folder.')}
             </p>
           </div>
         </aside>
@@ -291,7 +260,7 @@ export function DownloadsPage() {
       <section className="surface-white border-l-4 border-[#E97540] px-6 py-6 sm:px-8" aria-label={t('หมายเหตุ Close Beta', 'Close Beta notice')}>
         <h2 className="text-[19px] font-semibold">{t('เตรียมพร้อมสำหรับ Close Beta', 'Preparing for Close Beta')}</h2>
         <p className="small-note text-[#524E48] mt-2 mb-0">
-          {t('เมื่อเผยแพร่ไฟล์เกมและ Launcher พร้อมลิงก์จริงแล้ว ปุ่มดาวน์โหลดจะเปิดใช้งาน ตรวจสอบแพตช์ผ่าน Launcher ก่อนเข้าเล่นทุกครั้ง', 'Download links will become active when the actual client and launcher are published. Always check for patches through the launcher before playing.')}
+          {t('Launcher พร้อมดาวน์โหลดแล้ว ผู้เล่นที่มีเกมอยู่แล้วเพียงวาง EXE ทับในโฟลเดอร์ Launcher เดิม และตรวจแพตช์ก่อนเข้าเล่นทุกครั้ง', 'Launcher is available. Existing players can replace the exe in their Launcher folder and check for patches before playing.')}
         </p>
       </section>
     </div>

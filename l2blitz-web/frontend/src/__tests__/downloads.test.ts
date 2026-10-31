@@ -8,11 +8,11 @@ describe('prelaunch downloads', () => {
     expect(googleDriveUrl(DOWNLOAD_RELEASE.mirrors[0].url)).toBe('https://drive.google.com/file/d/1r-2T-zKwezHQo942gPfzsAkFhc3MqSr9/view?usp=sharing');
     expect(googleDriveUrl(DOWNLOAD_RELEASE.mirrors[1].url)).toBe('https://drive.google.com/file/d/1i6uNYkFKWSSzh-SDJFCNjJNk-vOCFmcx/view?usp=sharing');
     expect(DOWNLOAD_RELEASE.mirrors.every((mirror) => googleDriveUrl(mirror.url) !== null)).toBe(true);
-    expect(publicDownloadUrl(DOWNLOAD_RELEASE.launcherUrl)).toBeNull();
-    expect(publicDownloadUrl(DOWNLOAD_RELEASE.launcherUpgradeUrl)).toBe('https://l2blitz-patch.liftthanakorn-cs51.workers.dev/hotfix/L2Blitz-Launcher-Upgrade-v1.1.exe');
-    expect(DOWNLOAD_RELEASE.launcherUpgradeVersion).toBe('v1.1');
-    expect(DOWNLOAD_RELEASE.launcherUpgradeSize).toBe('5.44 MB');
-    expect(DOWNLOAD_RELEASE.launcherUpgradeSha256).toBe('057DF724CE64998E8D29D7A81BE0F544519D6A933C5EBCEC5650408EE4564496');
+    expect(publicDownloadUrl(DOWNLOAD_RELEASE.launcherUrl)).toBe('https://l2blitz-patch.liftthanakorn-cs51.workers.dev/hotfix/L2BlitzLauncher.exe');
+    expect(publicDownloadUrl(DOWNLOAD_RELEASE.launcherUpgradeUrl)).toBe('https://l2blitz-patch.liftthanakorn-cs51.workers.dev/hotfix/L2BlitzLauncher.exe');
+    expect(DOWNLOAD_RELEASE.launcherUpgradeVersion).toBe('v1.1.1');
+    expect(DOWNLOAD_RELEASE.launcherUpgradeSize).toBe('5.41 MB');
+    expect(DOWNLOAD_RELEASE.launcherUpgradeSha256).toBe('CDCEDAD798CFDF80B7006F1541C1C267A80E6B739A1ED0D500676E2E1B05E67B');
     expect(publicDownloadUrl(DOWNLOAD_RELEASE.launcherFixUrl)).toBe('https://l2blitz-patch.liftthanakorn-cs51.workers.dev/hotfix/L2Blitz-Launcher-Fix-740-v0.4.1.exe');
     expect(DOWNLOAD_RELEASE.launcherFixSize).toBe('5.4 MB');
   });
