@@ -76,6 +76,7 @@ export function DownloadsPage() {
   const mirrors = DOWNLOAD_RELEASE.mirrors.map(({ id, url }) => ({ id, href: googleDriveUrl(url) }));
   const availableMirrors = mirrors.filter(({ href }) => href !== null).length;
   const launcherHref = publicDownloadUrl(DOWNLOAD_RELEASE.launcherUrl);
+  const launcherUpgradeHref = publicDownloadUrl(DOWNLOAD_RELEASE.launcherUpgradeUrl);
   const launcherFixHref = publicDownloadUrl(DOWNLOAD_RELEASE.launcherFixUrl);
   const checksum = /^[a-f0-9]{64}$/i.test(DOWNLOAD_RELEASE.sha256) ? DOWNLOAD_RELEASE.sha256 : null;
 
@@ -176,6 +177,31 @@ export function DownloadsPage() {
             ) : (
               <div className="flex items-center justify-between gap-2 px-5 py-4 bg-[#3A3733] text-[#E8E3DB] small-note" aria-label={t('ยังไม่มีลิงก์ Launcher', 'Launcher link unavailable')}>
                 {t('รอลิงก์ Launcher', 'Launcher link coming soon')}<span aria-hidden="true">—</span>
+              </div>
+            )}
+            {launcherUpgradeHref && (
+              <div className="mt-6 border-t border-[#57534E] pt-6" aria-labelledby="launcher-upgrade-title">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 id="launcher-upgrade-title" className="text-[18px] font-semibold text-[#F7F5F0] m-0">
+                    {t('อัปเกรด Launcher สำหรับผู้เล่นเก่า', 'Launcher upgrade for existing players')}
+                  </h3>
+                  <span className="small-note text-[#E8E3DB] shrink-0">{DOWNLOAD_RELEASE.launcherUpgradeVersion} · {DOWNLOAD_RELEASE.launcherUpgradeSize}</span>
+                </div>
+                <p className="small-note text-[#E8E3DB] mt-3 mb-4">
+                  {t('อัปเดต Launcher รุ่นเดิมให้ตรวจอัปเดตตัวเองและแพตช์เกมอัตโนมัติ ใช้ไฟล์เกมเดิมได้ ไม่ต้องดาวน์โหลดใหม่ 7.58 GB', 'Enable automatic Launcher and game patch updates on your existing installation. No need to re-download the 7.58 GB game.')}
+                </p>
+                <a href={launcherUpgradeHref} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-between gap-3 px-4 py-3 bg-[#E97540] text-[#171717] no-underline font-semibold text-[14px] hover:bg-[#F58A58] transition-colors"
+                  aria-label={t('ดาวน์โหลดตัวอัปเกรด Launcher v1.1', 'Download Launcher upgrade v1.1')}>
+                  <span>{t('ดาวน์โหลดตัวอัปเกรด Launcher v1.1', 'Download Launcher Upgrade v1.1')}</span>
+                  <ArrowDownToLine size={18} className="shrink-0" aria-hidden="true" />
+                </a>
+                <p className="small-note text-[#E8E3DB] mt-3 mb-1">
+                  {t('วิธีติดตั้ง: ปิดเกมและ Launcher → เปิดไฟล์อัปเกรด → เลือกโฟลเดอร์เกมเดิมที่มี system\\l2.exe (ไม่ใช่โฟลเดอร์ Launcher) → ติดตั้ง แล้วเปิด Launcher ใหม่', 'How to install: Close the game and Launcher → run the upgrade → select your existing game folder containing system\\l2.exe (not its Launcher subfolder) → install, then reopen Launcher.')}
+                </p>
+                <p className="small-note text-[#AFA99F] mt-2 mb-0 break-all" title="SHA-256">
+                  SHA-256: {DOWNLOAD_RELEASE.launcherUpgradeSha256}
+                </p>
               </div>
             )}
             {launcherFixHref && (
