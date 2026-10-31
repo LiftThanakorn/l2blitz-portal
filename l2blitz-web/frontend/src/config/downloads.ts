@@ -1,20 +1,16 @@
 /**
  * Public download release configuration.
  *
- * Keep links empty until a real, shareable URL is ready.
- * Adding a URL enables its download button after the next frontend build/deploy.
- * Mirror slots are alternatives for the same complete L2Blitz-Installer.7z archive.
- * Never put credentials or private files in these URLs.
+ * The single Drive URL enables the client download button after deployment.
+ * Keep the value empty if no shareable URL is ready.
+ * Never put credentials or private files in this URL.
  */
 export const DOWNLOAD_RELEASE = {
   fileName: 'L2Blitz-Installer.7z',
   fileSize: '7.58 GB',
   version: 'Close Beta',
   sha256: '',
-  mirrors: [
-    { id: '01', url: 'https://drive.google.com/file/d/1r-2T-zKwezHQo942gPfzsAkFhc3MqSr9/view?usp=sharing' },
-    { id: '02', url: 'https://drive.google.com/file/d/1i6uNYkFKWSSzh-SDJFCNjJNk-vOCFmcx/view?usp=sharing' },
-  ],
+  driveUrl: 'https://drive.google.com/file/d/1VSUBDxNlvoBHZpwakjHBgbUG97L9Yt9E/view?usp=sharing',
   launcherUrl: '',
 } as const;
 

@@ -11,7 +11,7 @@ const installSteps = [
   {
     titleTh: 'ดาวน์โหลดไฟล์เกม', titleEn: 'Download the game',
     detailTh: 'เลือก Google Drive เพียงหนึ่งลิงก์และดาวน์โหลดไฟล์ L2Blitz-Installer.7z ให้ครบ',
-    detailEn: 'Choose one Google Drive mirror and download the complete L2Blitz-Installer.7z archive.',
+    detailEn: 'Use the Google Drive link to download the complete L2Blitz-Installer.7z archive.',
   },
   {
     titleTh: 'แตกไฟล์ด้วย 7-Zip', titleEn: 'Extract with 7-Zip',
@@ -35,7 +35,7 @@ const installSteps = [
   },
 ] as const;
 
-function DriveMirror({ id, href }: { id: string; href: string | null }) {
+function DriveDownload({ href }: { href: string | null }) {
   const { t } = useLanguage();
   const inner = (
     <>
@@ -45,11 +45,11 @@ function DriveMirror({ id, href }: { id: string; href: string | null }) {
           width={48} height={45} loading="lazy"
           className="block w-12 h-[45px] object-contain shrink-0"
         />
-        <span className="small-note tabular-nums text-[#77736C]">MIRROR {id}</span>
+        <span className="small-note text-[#77736C]">FULL CLIENT · 7.58 GB</span>
       </div>
       <h4 className="text-[19px] font-semibold m-0">Google Drive</h4>
       <p className="small-note text-[#77736C] mt-1 mb-7">
-        {t('ลิงก์ดาวน์โหลดตัวเกม', 'Full client download mirror')}
+        {t('ลิงก์ดาวน์โหลดตัวเกม', 'Full client download')}
       </p>
       <div className={`flex items-center justify-between gap-2 border-t border-[#E8E3DB] pt-4 text-[14px] font-semibold ${href ? 'text-[#C4531E]' : 'text-[#77736C]'}`}>
         <span>{href ? t('ดาวน์โหลดตัวเกม', 'Download client') : t('รอเพิ่มลิงก์', 'Link coming soon')}</span>
@@ -60,12 +60,12 @@ function DriveMirror({ id, href }: { id: string; href: string | null }) {
   const style = 'block h-full min-w-0 p-5 bg-[#F7F5F0] border border-[#E8E3DB] no-underline';
   return href ? (
     <a href={href} target="_blank" rel="noopener noreferrer"
-      aria-label={t(`ดาวน์โหลดผ่าน Google Drive ลิงก์ ${id}`, `Download from Google Drive mirror ${id}`)}
+      aria-label={t('ดาวน์โหลดตัวเกมผ่าน Google Drive', 'Download the game client from Google Drive')}
       className={style + ' hover:border-[#E97540] hover:bg-white transition-colors'}>
       {inner}
     </a>
   ) : (
-    <div className={style} aria-label={t(`Google Drive ลิงก์ ${id} ยังไม่พร้อมดาวน์โหลด`, `Google Drive mirror ${id} is not yet available`)}>
+    <div className={style} aria-label={t("Google Drive ยังไม่พร้อมดาวน์โหลด", "Google Drive download is not yet available")}>
       {inner}
     </div>
   );
@@ -73,8 +73,7 @@ function DriveMirror({ id, href }: { id: string; href: string | null }) {
 
 export function DownloadsPage() {
   const { t } = useLanguage();
-  const mirrors = DOWNLOAD_RELEASE.mirrors.map(({ id, url }) => ({ id, href: googleDriveUrl(url) }));
-  const availableMirrors = mirrors.filter(({ href }) => href !== null).length;
+  const clientDriveHref = googleDriveUrl(DOWNLOAD_RELEASE.driveUrl);
   const launcherHref = publicDownloadUrl(DOWNLOAD_RELEASE.launcherUrl);
   const checksum = /^[a-f0-9]{64}$/i.test(DOWNLOAD_RELEASE.sha256) ? DOWNLOAD_RELEASE.sha256 : null;
 
@@ -84,13 +83,13 @@ export function DownloadsPage() {
         <div className="col-span-12 lg:col-span-5">
           <p className="small-note text-[#E97540] font-semibold m-0">L2BLITZ / HIGH FIVE / DOWNLOAD CENTER</p>
           <p className="body-copy text-[#77736C] mt-4">
-            {t('ตัวเกมและ Launcher สำหรับ L2BLITZ พร้อมช่องทาง Google Drive และคู่มือติดตั้งในหน้าเดียว', 'L2BLITZ client, launcher, Google Drive mirrors, and installation guide in one place.')}
+            {t('ตัวเกมและ Launcher สำหรับ L2BLITZ พร้อมช่องทาง Google Drive และคู่มือติดตั้งในหน้าเดียว', 'L2BLITZ client, launcher, Google Drive download, and installation guide in one place.')}
           </p>
           <p className="inline-flex items-center gap-2 mt-6 bg-white border border-[#E8E3DB] px-3 py-2 small-note text-[#524E48]">
             <span className="w-2 h-2 bg-[#E97540]" aria-hidden="true" />
-            {availableMirrors
-              ? t(`พร้อมดาวน์โหลด ${availableMirrors} จาก ${mirrors.length} ลิงก์`, `${availableMirrors} of ${mirrors.length} mirrors available`)
-              : t('กำลังเตรียมลิงก์ Close Beta', 'Preparing Close Beta download links')}
+            {clientDriveHref
+              ? t('เปิดลิงก์ดาวน์โหลด Google Drive แล้ว', 'Google Drive download link available')
+              : t('กำลังเตรียมลิงก์ Close Beta', 'Preparing Close Beta download link')}
           </p>
         </div>
         <div className="col-span-12 lg:col-span-7">
@@ -106,7 +105,7 @@ export function DownloadsPage() {
           </div>
           <h2 id="download-client" className="section-heading">{t('ตัวเกมหลัก', 'Full Client')}</h2>
           <p className="body-copy text-[#77736C] mt-4 mb-8">
-            {t('ดาวน์โหลดไฟล์เกมทั้งหมดจาก Google Drive เพียงลิงก์เดียว ไม่จำเป็นต้องโหลดทั้ง 2 ลิงก์', 'Download the full client from just one Google Drive mirror. You do not need both.')}
+            {t('ดาวน์โหลดไฟล์ตัวเกม L2BLITZ จาก Google Drive ได้ที่ลิงก์ด้านล่าง', 'Download the L2BLITZ full client using the Google Drive link below.')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 border-y border-[#E8E3DB] py-5 gap-5 sm:gap-4 mb-8">
             <div className="min-w-0">
@@ -124,22 +123,19 @@ export function DownloadsPage() {
           </div>
           <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
             <div>
-              <p className="small-note text-[#E97540] font-semibold mb-1">GOOGLE DRIVE MIRRORS</p>
-              <h3 className="text-[23px] font-semibold">{t('เลือกช่องทางดาวน์โหลด', 'Choose a download mirror')}</h3>
+              <p className="small-note text-[#E97540] font-semibold mb-1">GOOGLE DRIVE</p>
+              <h3 className="text-[23px] font-semibold">{t('ดาวน์โหลดผ่าน Google Drive', 'Download from Google Drive')}</h3>
             </div>
-            <span className="small-note text-[#77736C] tabular-nums">
-              {availableMirrors} / {mirrors.length} {t('ลิงก์พร้อม', 'mirrors ready')}
-            </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {mirrors.map(({ id, href }) => <DriveMirror key={id} id={id} href={href} />)}
+          <div className="max-w-[420px]">
+            <DriveDownload href={clientDriveHref} />
           </div>
           <div className="flex items-start gap-3 border-t border-[#E8E3DB] mt-7 pt-5">
             <Info size={18} aria-hidden="true" className="text-[#C4531E] shrink-0 mt-0.5" />
             <p className="small-note text-[#524E48] m-0">
-              {availableMirrors
-                ? t('หากลิงก์หนึ่งดาวน์โหลดช้าหรือถูกจำกัด ให้เลือก Mirror อื่นที่พร้อมใช้งาน', 'If one link is slow or rate-limited, use another available mirror.')
-                : t('ช่องดาวน์โหลดเตรียมไว้แล้ว และจะเปิดใช้งานเมื่อมีลิงก์ไฟล์จริง', 'Download slots are ready and will activate once the actual file links are published.')}
+              {clientDriveHref
+                ? t('หาก Google Drive จำกัดการดาวน์โหลดชั่วคราว ให้ลองใหม่ภายหลัง', 'If Google Drive temporarily limits downloads, please try again later.')
+                : t('ปุ่มดาวน์โหลดจะเปิดใช้งานเมื่อมีลิงก์ไฟล์จริง', 'The download button will activate once the actual file link is available.')}
             </p>
           </div>
         </section>
@@ -242,7 +238,7 @@ export function DownloadsPage() {
       <section className="surface-white border-l-4 border-[#E97540] px-6 py-6 sm:px-8" aria-label={t('หมายเหตุ Close Beta', 'Close Beta notice')}>
         <h2 className="text-[19px] font-semibold">{t('เตรียมพร้อมสำหรับ Close Beta', 'Preparing for Close Beta')}</h2>
         <p className="small-note text-[#524E48] mt-2 mb-0">
-          {t('เมื่อเผยแพร่ไฟล์เกมและ Launcher พร้อมลิงก์จริงแล้ว ปุ่มดาวน์โหลดจะเปิดใช้งาน ตรวจสอบแพตช์ผ่าน Launcher ก่อนเข้าเล่นทุกครั้ง', 'Download links will become active when the actual client and launcher are published. Always check for patches through the launcher before playing.')}
+          {t('ดาวน์โหลดตัวเกมผ่าน Google Drive ด้านบน และตรวจสอบแพตช์ผ่าน Launcher ก่อนเข้าเล่นทุกครั้ง ลิงก์ดาวน์โหลด Launcher แยกจะเพิ่มภายหลัง', 'Download the client using the Google Drive link above and check for patches through the launcher before playing. A separate launcher download link will be added later.')}
         </p>
       </section>
     </div>
