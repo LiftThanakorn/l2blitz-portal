@@ -75,6 +75,8 @@ export function DownloadsPage() {
   const { t } = useLanguage();
   const clientDriveHref = googleDriveUrl(DOWNLOAD_RELEASE.driveUrl);
   const launcherHref = publicDownloadUrl(DOWNLOAD_RELEASE.launcherUrl);
+  const launcherUpgradeHref = publicDownloadUrl(DOWNLOAD_RELEASE.launcherUpgradeUrl);
+  const launcherFixHref = publicDownloadUrl(DOWNLOAD_RELEASE.launcherFixUrl);
   const checksum = /^[a-f0-9]{64}$/i.test(DOWNLOAD_RELEASE.sha256) ? DOWNLOAD_RELEASE.sha256 : null;
 
   return (
@@ -166,15 +168,31 @@ export function DownloadsPage() {
           <div className="mt-10">
             {launcherHref ? (
               <a className="btn-primary w-full justify-between" href={launcherHref} target="_blank" rel="noopener noreferrer">
-                {t('ดาวน์โหลด Launcher', 'Download Launcher')}<ArrowDownToLine size={19} aria-hidden="true" />
+                {t('ดาวน์โหลด L2BlitzLauncher.exe', 'Download L2BlitzLauncher.exe')}<ArrowDownToLine size={19} aria-hidden="true" />
               </a>
             ) : (
               <div className="flex items-center justify-between gap-2 px-5 py-4 bg-[#3A3733] text-[#E8E3DB] small-note" aria-label={t('ยังไม่มีลิงก์ Launcher', 'Launcher link unavailable')}>
                 {t('รอลิงก์ Launcher', 'Launcher link coming soon')}<span aria-hidden="true">—</span>
               </div>
             )}
+            <div className="mt-6 border-t border-[#57534E] pt-6" aria-labelledby="launcher-exe-guide">
+              <h3 id="launcher-exe-guide" className="text-[17px] font-semibold text-[#F7F5F0] m-0">
+                {t('มีเกมอยู่แล้ว? วางไฟล์ทับได้เลย', 'Already have the game? Just replace the file')}
+              </h3>
+              <ol className="small-note text-[#E8E3DB] mt-3 mb-3 list-decimal pl-5 space-y-2">
+                <li>{t('ปิดเกมและ Launcher ให้เรียบร้อย', 'Close the game and Launcher first.')}</li>
+                <li>{t('ดาวน์โหลด L2BlitzLauncher.exe และวางทับไฟล์ชื่อเดียวกันในโฟลเดอร์ Launcher ของเกมเดิม', 'Download L2BlitzLauncher.exe and replace the same file in your existing game Launcher folder.')}</li>
+                <li>{t('เปิด L2BlitzLauncher.exe ใหม่ ระบบจะตรวจอัปเดต Launcher และแพตช์เกมให้', 'Open L2BlitzLauncher.exe; it will check for Launcher and game patches.')}</li>
+              </ol>
+              <p className="small-note text-[#E8E3DB] mt-3 mb-2">
+                {t('แนะนำสำรองไฟล์ Launcher เดิมก่อนวางทับ · ไม่ใช่ตัวติดตั้ง · ไม่ต้องโหลดเกมใหม่', 'Back up the existing Launcher exe before replacing it · no installer · no game re-download.')}
+              </p>
+              <p className="small-note text-[#AFA99F] mt-2 mb-0 break-all">
+                {DOWNLOAD_RELEASE.launcherUpgradeVersion} · {DOWNLOAD_RELEASE.launcherUpgradeSize} · SHA-256: {DOWNLOAD_RELEASE.launcherUpgradeSha256}
+              </p>
+            </div>
             <p className="small-note text-[#E8E3DB] mt-4 mb-0">
-              {t('ติดตั้งตัวเกมก่อน แล้วใช้ Launcher สำหรับตรวจสอบและอัปเดต', 'Install the full client first, then verify and update it with the launcher.')}
+              {t('มีเกมอยู่แล้วให้วาง EXE ทับในโฟลเดอร์ Launcher เดิมได้เลย', 'Existing players can replace the Launcher exe in their game folder.')}
             </p>
           </div>
         </aside>
@@ -238,7 +256,7 @@ export function DownloadsPage() {
       <section className="surface-white border-l-4 border-[#E97540] px-6 py-6 sm:px-8" aria-label={t('หมายเหตุ Close Beta', 'Close Beta notice')}>
         <h2 className="text-[19px] font-semibold">{t('เตรียมพร้อมสำหรับ Close Beta', 'Preparing for Close Beta')}</h2>
         <p className="small-note text-[#524E48] mt-2 mb-0">
-          {t('ดาวน์โหลดตัวเกมผ่าน Google Drive ด้านบน และตรวจสอบแพตช์ผ่าน Launcher ก่อนเข้าเล่นทุกครั้ง ลิงก์ดาวน์โหลด Launcher แยกจะเพิ่มภายหลัง', 'Download the client using the Google Drive link above and check for patches through the launcher before playing. A separate launcher download link will be added later.')}
+          {t('Launcher พร้อมดาวน์โหลดแล้ว ผู้เล่นที่มีเกมอยู่แล้วเพียงวาง EXE ทับในโฟลเดอร์ Launcher เดิม และตรวจแพตช์ก่อนเข้าเล่นทุกครั้ง', 'Launcher is available. Existing players can replace the exe in their Launcher folder and check for patches before playing.')}
         </p>
       </section>
     </div>

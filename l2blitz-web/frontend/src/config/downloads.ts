@@ -11,7 +11,14 @@ export const DOWNLOAD_RELEASE = {
   version: 'Close Beta',
   sha256: '',
   driveUrl: 'https://drive.google.com/file/d/1VSUBDxNlvoBHZpwakjHBgbUG97L9Yt9E/view?usp=sharing',
-  launcherUrl: '',
+  launcherUrl: 'https://l2blitz-patch.liftthanakorn-cs51.workers.dev/hotfix/L2BlitzLauncher.exe',
+  launcherUpgradeUrl: 'https://l2blitz-patch.liftthanakorn-cs51.workers.dev/hotfix/L2BlitzLauncher.exe',
+  launcherUpgradeVersion: 'v1.1.1',
+  launcherUpgradeSize: '5.41 MB',
+  launcherUpgradeSha256: 'CDCEDAD798CFDF80B7006F1541C1C267A80E6B739A1ED0D500676E2E1B05E67B',
+  launcherFixUrl: 'https://l2blitz-patch.liftthanakorn-cs51.workers.dev/hotfix/L2Blitz-Launcher-Fix-740-v0.4.1.exe',
+  launcherFixSize: '5.4 MB',
+  launcherFixVersion: 'v0.4.1',
 } as const;
 
 export function publicDownloadUrl(value: string): string | null {
