@@ -9,9 +9,10 @@ export function validatedEndpoint(raw) {
   try {
     const url = new URL(raw);
     if (url.protocol !== 'https:' || url.username || url.password || url.port || url.search || url.hash) return null;
-    if (!(url.hostname === 'slip2go.com' || url.hostname.endsWith('.slip2go.com'))) return null;
+    if (!['connect.slip2go.com', 'api.slip2go.com'].includes(url.hostname)) return null;
     const route = '/api/verify-slip/qr-base64/info';
     if (url.pathname === '/' || url.pathname === '') url.pathname = route;
+    // The web form uploads a base64 string. Do not send that JSON body to the multipart qr-image endpoint.
     if (url.pathname !== route) return null;
     return url.toString();
   } catch { return null; }

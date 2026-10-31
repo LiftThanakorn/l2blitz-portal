@@ -3,7 +3,7 @@ import {buildRequestBody,validatedEndpoint,classifySlip2Go,verifySlip2Go} from '
 
 const image={mime:'image/png',data:Buffer.from('a-fake-image-for-unit-tests')};
 const payee={id:'0812345678'};
-const url='https://api.slip2go.com/api/verify-slip/qr-base64/info';
+const url='https://connect.slip2go.com/api/verify-slip/qr-base64/info';
 const details={
   transRef:'MOCKBANK12345678',amount:100,receiver:{account:{proxy:{type:'MOBILE',account:'xxxx5678'}}},
   dateTime:new Date().toISOString()
@@ -12,7 +12,10 @@ const reply=(code,data=details)=>({code,data});
 assert.equal(validatedEndpoint('http://api.slip2go.com'),null);
 assert.equal(validatedEndpoint('https://api.slip2go.com.attacker.org'),null);
 assert.equal(validatedEndpoint('https://user:pass@api.slip2go.com'),null);
-assert.equal(validatedEndpoint('https://api.slip2go.com'),url);
+assert.equal(validatedEndpoint('https://connect.slip2go.com'),url);
+assert.equal(validatedEndpoint('https://connect.slip2go.com/api/verify-slip/qr-image/info'),null,'image upload endpoint cannot receive JSON base64');
+assert.equal(validatedEndpoint('https://connect.slip2go.com/api/verify-slip/qr-code/info'),null,'QR text endpoint cannot receive JSON base64');
+assert.equal(validatedEndpoint('https://connect.slip2go.com.evil.example/api/verify-slip/qr-base64/info'),null,'hostname must be official');
 assert.equal(validatedEndpoint(url),url);
 const body=buildRequestBody(image,100,payee.id);
 assert.equal(body.payload.checkCondition.checkAmount.amount,100,'docs expect THB amount not satang');
