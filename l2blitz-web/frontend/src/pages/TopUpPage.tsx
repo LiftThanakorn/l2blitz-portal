@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CheckCircle2, CreditCard, ImageUp, LockKeyhole, ReceiptText, RefreshCw, ShieldCheck, TriangleAlert, Wallet, LogOut } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -47,6 +47,7 @@ export function TopUpPage() {
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const browserBootRef = useRef<Promise<boolean> | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -65,7 +66,31 @@ export function TopUpPage() {
       } catch { setPlayer(null); setHistory([]); }
     } catch { setHealth(null); setPlayer(null); }
   }, []);
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    // Keep a single exchange across React StrictMode's effect replay.
+    if (!browserBootRef.current) {
+      const url = new URL(window.location.href);
+      const ticket = url.searchParams.get('ticket');
+      if (ticket) {
+        url.searchParams.delete('ticket');
+        window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+        browserBootRef.current = localApi<{ ok: boolean }>('redeem', { ticket }).then(() => true);
+      } else {
+        browserBootRef.current = Promise.resolve(false);
+      }
+    }
+    let active = true;
+    void browserBootRef.current.then(async (redeemed) => {
+      if (!active) return;
+      await refresh();
+      if (active && redeemed) setSuccess(t('เชื่อมต่อจาก NPC สำเร็จ ไม่ต้องกรอกรหัส', 'Connected from NPC without entering a code'));
+    }).catch((e) => {
+      if (!active) return;
+      setError(e instanceof Error ? e.message : 'Browser login failed');
+      void refresh();
+    });
+    return () => { active = false; };
+  }, [refresh, t]);
 
   async function linkGame(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

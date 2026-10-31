@@ -46,6 +46,22 @@ try{
   assert.ok((qrResponse.headers.get('content-type')||'').includes('image/png'),'QR MIME must be PNG');
   const directOldPage=await fetch('http://127.0.0.1:3102/index.html');
   assert.equal(directOldPage.status,404,'wrong standalone UI not publicly served');
+  // GameServer-style browser tickets use 256-bit random secrets; only SHA-256 is stored in SQL.
+  assert.equal((await endpoint('redeem',{ticket:'bad'})).status,400,'short/fake browser ticket rejected');
+  const freshTicket=crypto.randomBytes(32).toString('base64url');
+  await admin.execute("INSERT INTO blitz_local_browser_tickets(ticket_hash,account_name,character_id,expires_at) VALUES(?,?,?,DATE_ADD(NOW(6),INTERVAL 60 SECOND))",[crypto.createHash('sha256').update(freshTicket).digest(),'local_test_account',41000001]);
+  const [browserA,browserB]=await Promise.all([endpoint('redeem',{ticket:freshTicket}),endpoint('redeem',{ticket:freshTicket})]);
+  assert.deepEqual([browserA.status,browserB.status].sort((a,b)=>a-b),[200,401],'one-time browser login cannot be redeemed twice, even concurrently');
+  const browserCookie=(browserA.status===200?browserA:browserB).cookie.split(';')[0];
+  const browserPerson=await endpoint('me',undefined,browserCookie);
+  assert.equal(browserPerson.body.character,'TestBlitz','browser session belongs to the game character');
+  assert.equal((await endpoint('redeem',{ticket:freshTicket})).status,401,'replay rejected after first redemption');
+  const expiredTicket=crypto.randomBytes(32).toString('base64url');
+  await admin.execute("INSERT INTO blitz_local_browser_tickets(ticket_hash,account_name,character_id,expires_at) VALUES(?,?,?,DATE_SUB(NOW(6),INTERVAL 1 SECOND))",[crypto.createHash('sha256').update(expiredTicket).digest(),'local_test_account',41000001]);
+  assert.equal((await endpoint('redeem',{ticket:expiredTicket})).status,401,'expired browser ticket rejected');
+  const forgedTicket=crypto.randomBytes(32).toString('base64url');
+  await admin.execute("INSERT INTO blitz_local_browser_tickets(ticket_hash,account_name,character_id,expires_at) VALUES(?,?,?,DATE_ADD(NOW(6),INTERVAL 60 SECOND))",[crypto.createHash('sha256').update(forgedTicket).digest(),'local_test_account',99999999]);
+  assert.equal((await endpoint('redeem',{ticket:forgedTicket})).status,401,'browser ticket with unknown character rejected');
   assert.equal((await endpoint('orders')).status,401,'unauthenticated denied');
   assert.equal((await endpoint('login',{code:'00000000'})).status,401,'fake token denied');
   const login=await endpoint('login',{code});

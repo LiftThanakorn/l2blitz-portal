@@ -35,3 +35,14 @@ CREATE TABLE IF NOT EXISTS blitz_local_bank_transfers (
   verified_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   CONSTRAINT fk_blitz_local_bank_order FOREIGN KEY (order_id) REFERENCES blitz_topup_order(order_id)
 ) ENGINE=InnoDB;
+
+-- Native game-triggered local browser login: 256-bit bearer secret, hashed in SQL, once/60s.
+CREATE TABLE IF NOT EXISTS blitz_local_browser_tickets (
+  ticket_hash BINARY(32) PRIMARY KEY,
+  account_name VARCHAR(45) NOT NULL,
+  character_id INT UNSIGNED NOT NULL,
+  expires_at DATETIME(6) NOT NULL,
+  redeemed_at DATETIME(6) NULL,
+  issued_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  KEY idx_blitz_local_browser_account (account_name, redeemed_at, expires_at)
+) ENGINE=InnoDB;

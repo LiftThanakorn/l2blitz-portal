@@ -36,3 +36,14 @@ The actual Cloudflare Pages site is built from `l2blitz-web/frontend`, not the o
 - Slip2Go real credentials/response schema and Telegram photo delivery are not yet verified end-to-end in production. Without a provider API key this pilot marks slips `MANUAL_PENDING`, never auto-credit.
 - Online/offline item 4037 delivery from approved local orders remains to be live tested by owner.
 - Local API and NPC integration are not hardened for public exposure: keep loopback-only and local feature branch unpushed.
+
+## NPC one-click login — local desktop test (2026-10-31)
+- Main NPC `900108` button **เติมเงินผ่านเว็บไซต์** now sends `Script PremiumDwarfWebPair open` directly.
+- The GameServer checks that the connected game client IP is **127.0.0.1 or ::1** and it is running on **Windows desktop**, then generates 32 cryptographically secure random bytes (256-bit browser ticket).
+- Only SHA-256 of the ticket is written to `blitz_local_browser_tickets`, bound to the actual game account and character ID, valid **60 seconds** and redeemable **once**. Previous unredeemed tickets for the same account are invalidated.
+- Java Desktop.browse opens the **local server owner's default browser** with `http://127.0.0.1:5173/topup?ticket=<opaque>`. The existing React page immediately erases the query ticket from browser history and sends it via POST `/api/local/redeem`; the API validates ownership and replay protection, and issues an HttpOnly SameSite=Strict session.
+- Works ONLY when both the GameServer and local test Client operate on the SAME Windows desktop. **This is not a solution for remote players or production VPS**; deployment requires an approved player-side launcher/client bridge and HTTPS backend.
+- Existing **8-digit** flow is retained via NPC's secondary **เชื่อมด้วยรหัส (สำรอง)** button; do not remove it until opening the real browser is demonstrated inside the running game Client.
+- Requires `node local-topup/operator.mjs init` for the new DB table and a Local GameServer script reload/restart.
+- Browser ticket tests include valid bind, expired, fake, duplicated/concurrent replay, and nonexistent characters; React StrictMode effect replay is explicitly handled without redeeming twice.
+- This change does **not** touch Slip2Go credentials, money, production payment flags, Cloudflare, VPS or client patch.
