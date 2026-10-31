@@ -6,3 +6,7 @@
 **/dist/
 portal-*.mjs
 l2blitz-web/.taste-skill/inspect/results.json
+# Private local-only payment artifacts; NEVER commit slip images or generated QR payloads
+local-topup/public/qr/
+local-topup/private-slips/
+local-topup/*.secret.json
