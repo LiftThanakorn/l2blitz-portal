@@ -1,0 +1,33 @@
+[Unit]
+Description=L2Blitz Public Read-Only Website API
+Wants=network-online.target mysql.service
+After=network-online.target mysql.service
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=l2blitz
+Group=l2blitz
+WorkingDirectory=/opt/l2blitz-api
+EnvironmentFile=/etc/l2blitz/api.env
+ExecStart=/opt/node24/bin/node /opt/l2blitz-api/dist/index.js
+Restart=on-failure
+RestartSec=10
+UMask=0077
+LimitNOFILE=8192
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectHome=yes
+ProtectSystem=strict
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+MemoryMax=384M
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

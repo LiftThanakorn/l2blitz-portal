@@ -1,0 +1,8 @@
+# Keep secrets and local integration scripts out of Git
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules/
+**/dist/
+portal-*.mjs
+l2blitz-web/.taste-skill/inspect/results.json

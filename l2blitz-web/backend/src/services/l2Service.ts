@@ -1,3 +1,4 @@
+import { probeConfiguredPort } from './portProbe.js';
 import {
   DEV_FIXTURE_CLANS,
   DEV_FIXTURE_HEROES,
@@ -11,7 +12,7 @@ import {
 } from '../data/fixtures.js';
 import {
   getClassInfoById,
-  HIGH_FIVE_OLYMPIAD_CLASSES,
+  HIGH_FIVE_HERO_ELIGIBLE_CLASSES,
   resolveCanonicalClassId,
 } from '../data/highFiveClasses.js';
 import {
@@ -26,6 +27,7 @@ import {
   ClanRankingRow,
   OlympiadHeroRow,
   OlympiadPublicRankingRow,
+  OlympiadTopByClassResponse,
   PvpPkRankingRow,
   RaidBossDto,
   ServerRatesDto,
@@ -38,7 +40,7 @@ import {
  * Official L2J Mobius CT 2.6 High Five Olympiad Minimum Requirements
  * Reference: Olympiad.java / Olympiad.properties (`AltOlyDividerClassed`, min 15 matches & 1 win for ranking/hero)
  */
-const OLYMPIAD_MIN_MATCHES = 15;
+const OLYMPIAD_MIN_MATCHES = 9;
 const OLYMPIAD_MIN_WINS = 1;
 
 export async function getServerStatus(): Promise<ServerStatusDto> {
@@ -46,24 +48,33 @@ export async function getServerStatus(): Promise<ServerStatusDto> {
     if (isDatabaseConfigured()) {
       const ping = await executeReadOnlyQuery<{ ok: number }>('SELECT 1 AS ok');
       if (ping && ping.length > 0) {
+        const [loginServer, gameServer] = await Promise.all([
+          probeConfiguredPort('LOGIN_STATUS_PORT'),
+          probeConfiguredPort('GAME_STATUS_PORT'),
+        ]);
+        const status = loginServer === 'offline' || gameServer === 'offline'
+          ? 'offline'
+          : loginServer === 'online' && gameServer === 'online' ? 'online' : 'unknown';
         return {
-          status: 'online',
-          loginServer: 'online',
-          gameServer: 'online',
+          status, loginServer, gameServer,
           chronicle: 'High Five (CT 2.6)',
           region: 'Thailand (GMT+7)',
-          messageTh: 'เซิร์ฟเวอร์ออนไลน์ เชื่อมต่อฐานข้อมูล L2J Mobius สำเร็จ',
-          messageEn: 'Server Online — Connected to L2J Mobius High Five database.',
+          messageTh: status === 'unknown'
+            ? 'ยังไม่สามารถตรวจสอบสถานะเซิร์ฟเวอร์ได้'
+            : 'สถานะเซิร์ฟเวอร์ล่าสุด',
+          messageEn: status === 'unknown'
+            ? 'Server status is currently unavailable.'
+            : 'Latest server status.',
         };
       }
       return {
-        status: 'offline',
+        status: 'unknown',
         loginServer: 'unknown',
-        gameServer: 'offline',
+        gameServer: 'unknown',
         chronicle: 'High Five (CT 2.6)',
         region: 'Thailand (GMT+7)',
-        messageTh: 'ไม่สามารถติดต่อฐานข้อมูล GameServer ได้ในขณะนี้',
-        messageEn: 'GameServer database is currently unreachable.',
+        messageTh: 'ยังไม่สามารถตรวจสอบสถานะเซิร์ฟเวอร์ได้',
+        messageEn: 'Server status is currently unavailable.',
       };
     }
 
@@ -74,8 +85,8 @@ export async function getServerStatus(): Promise<ServerStatusDto> {
       gameServer: 'unknown',
       chronicle: 'High Five (CT 2.6)',
       region: 'Thailand (GMT+7)',
-      messageTh: 'ไม่ทราบสถานะ (รอเชื่อมต่อฐานข้อมูล L2J Mobius GameServer จริง)',
-      messageEn: 'Unknown Status (Pending live L2J Mobius GameServer connection)',
+      messageTh: 'ยังไม่สามารถตรวจสอบสถานะเซิร์ฟเวอร์ได้',
+      messageEn: 'Server status is currently unavailable.',
     };
   });
 }
@@ -174,7 +185,8 @@ export async function getPvpRankings(params: {
               online: r.online === 1,
             };
           });
-          return { items, total: items.length, page: params.page, limit: params.limit };
+          const countRows = await executeReadOnlyQuery<{ total: number }>('SELECT COUNT(*) AS total FROM characters WHERE accesslevel = 0 AND char_name LIKE ?', [searchLike]);
+          return { items, total: Number(countRows?.[0]?.total ?? items.length), page: params.page, limit: params.limit };
         }
       }
 
@@ -256,7 +268,8 @@ export async function getPkRankings(params: {
               online: r.online === 1,
             };
           });
-          return { items, total: items.length, page: params.page, limit: params.limit };
+          const countRows = await executeReadOnlyQuery<{ total: number }>('SELECT COUNT(*) AS total FROM characters WHERE accesslevel = 0 AND char_name LIKE ?', [searchLike]);
+          return { items, total: Number(countRows?.[0]?.total ?? items.length), page: params.page, limit: params.limit };
         }
       }
 
@@ -336,7 +349,8 @@ export async function getClanRankings(params: {
             castleName: r.castle_name,
             allyName: r.ally_name,
           }));
-          return { items, total: items.length, page: params.page, limit: params.limit };
+          const countRows = await executeReadOnlyQuery<{ total: number }>('SELECT COUNT(*) AS total FROM clan_data WHERE clan_name LIKE ?', [searchLike]);
+          return { items, total: Number(countRows?.[0]?.total ?? items.length), page: params.page, limit: params.limit };
         }
       }
 
@@ -367,7 +381,7 @@ export async function getClanRankings(params: {
 /**
  * Computes Grand Olympiad Rankings according to L2J Mobius CT 2.6 High Five:
  * 1. Groups Soul Hound Male (132) & Female (133) into canonical bracket 132.
- * 2. Filters out participants who have not met the minimum 15 matches & 1 win (`competitions_done >= 15 AND competitions_won >= 1`).
+ * 2. Filters out participants who have not met the minimum 9 matches & 1 win (`competitions_done >= 9 AND competitions_won >= 1`).
  * 3. Sorts internally by `olympiad_points DESC, competitions_won DESC, competitions_done ASC`.
  * 4. Strips all points, wins, and match counts before returning the public DTO (`rank`, `charName`, `clanName`, `classId`, `classNameEn`, `classNameTh`).
  */
@@ -390,6 +404,7 @@ export function computePublicOlympiadRankings(
   const canonicalFilter = options.classId ? resolveCanonicalClassId(options.classId) : null;
 
   const eligible = records.filter((rec) => {
+    if (!HIGH_FIVE_HERO_ELIGIBLE_CLASSES.some((cls) => cls.id === resolveCanonicalClassId(rec.classId))) return false;
     if (rec.cycle !== options.cycle) return false;
     if (rec.competitionsDone < OLYMPIAD_MIN_MATCHES || rec.competitionsWon < OLYMPIAD_MIN_WINS) {
       return false;
@@ -473,7 +488,7 @@ export async function getOlympiadRankings(options: {
            FROM ${table} n
            INNER JOIN characters c ON n.charId = c.charId
            LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
-           WHERE n.competitions_done >= 15 AND n.competitions_won >= 1 ${classClause}
+           WHERE n.competitions_done >= 9 AND n.competitions_won >= 1 ${classClause}
            ORDER BY n.olympiad_points DESC, n.competitions_won DESC`
         );
 
@@ -491,7 +506,7 @@ export async function getOlympiadRankings(options: {
           }));
           return {
             ...computePublicOlympiadRankings(internalRecords, options),
-            classes: HIGH_FIVE_OLYMPIAD_CLASSES,
+            classes: HIGH_FIVE_HERO_ELIGIBLE_CLASSES,
           };
         }
       }
@@ -499,7 +514,7 @@ export async function getOlympiadRankings(options: {
       if (isDevFixtureEnabled()) {
         return {
           ...computePublicOlympiadRankings(DEV_FIXTURE_OLYMPIAD_NOBLES, options),
-          classes: HIGH_FIVE_OLYMPIAD_CLASSES,
+          classes: HIGH_FIVE_HERO_ELIGIBLE_CLASSES,
         };
       }
 
@@ -510,10 +525,83 @@ export async function getOlympiadRankings(options: {
         limit: options.limit,
         canonicalClassId: options.classId ? resolveCanonicalClassId(options.classId) : null,
         minimumMatchesRequired: OLYMPIAD_MIN_MATCHES,
-        classes: HIGH_FIVE_OLYMPIAD_CLASSES,
+        classes: HIGH_FIVE_HERO_ELIGIBLE_CLASSES,
       };
     }
   );
+}
+
+/**
+ * All 34 Hero-eligible High Five Olympiad brackets in ONE request: three public ranks per class.
+ * Never serialize points, wins, or match counts. Empty classes remain visible.
+ */
+export function computePublicOlympiadTopByClass(
+  records: InternalOlympiadNobleRecord[],
+  cycle: 'current' | 'previous'
+): OlympiadTopByClassResponse {
+  return {
+    dataAvailable: true,
+    cycle,
+    minimumMatchesRequired: OLYMPIAD_MIN_MATCHES,
+    classes: HIGH_FIVE_HERO_ELIGIBLE_CLASSES.map((cls) => ({
+      classId: cls.id,
+      classNameEn: cls.nameEn,
+      classNameTh: cls.nameTh,
+      race: cls.race,
+      raceTh: cls.raceTh,
+      rows: computePublicOlympiadRankings(records, {
+        classId: cls.id,
+        cycle,
+        page: 1,
+        limit: 3,
+      }).items,
+    })),
+  };
+}
+
+export async function getOlympiadTopByClass(
+  cycle: 'current' | 'previous'
+): Promise<OlympiadTopByClassResponse> {
+  return withTtlCache(`olympiad:top-by-class:${cycle}`, 30_000, async () => {
+    if (isDatabaseConfigured()) {
+      // Exactly one read-only query for all classes (not 35 API or DB requests).
+      const table = cycle === 'previous' ? 'olympiad_nobles_eom' : 'olympiad_nobles';
+      const rows = await executeReadOnlyQuery<{
+        charId: number;
+        char_name: string;
+        class_id: number;
+        olympiad_points: number;
+        competitions_done: number;
+        competitions_won: number;
+        competitions_lost: number;
+        clan_name: string | null;
+      }>(
+        `SELECT n.charId, c.char_name, n.class_id, n.olympiad_points,
+                n.competitions_done, n.competitions_won, n.competitions_lost, cd.clan_name
+         FROM ${table} n
+         INNER JOIN characters c ON n.charId = c.charId
+         LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
+         WHERE n.competitions_done >= 9 AND n.competitions_won >= 1`
+      );
+      if (rows) {
+        return computePublicOlympiadTopByClass(rows.map((r) => ({
+          charId: r.charId,
+          charName: r.char_name,
+          classId: r.class_id,
+          clanName: r.clan_name,
+          olympiadPoints: r.olympiad_points,
+          competitionsDone: r.competitions_done,
+          competitionsWon: r.competitions_won,
+          competitionsLost: r.competitions_lost,
+          cycle,
+        })), cycle);
+      }
+    }
+    if (isDevFixtureEnabled()) {
+      return computePublicOlympiadTopByClass(DEV_FIXTURE_OLYMPIAD_NOBLES, cycle);
+    }
+    return { ...computePublicOlympiadTopByClass([], cycle), dataAvailable: false };
+  });
 }
 
 export async function getOlympiadHeroes(): Promise<{
@@ -529,7 +617,7 @@ export async function getOlympiadHeroes(): Promise<{
         clan_name: string | null;
         ally_name: string | null;
       }>(
-        `SELECT h.char_name, h.class_id, h.count, cd.clan_name, cd.ally_name
+        `SELECT c.char_name, h.class_id, h.count, cd.clan_name, cd.ally_name
          FROM heroes h
          LEFT JOIN characters c ON h.charId = c.charId
          LEFT JOIN clan_data cd ON c.clanid = cd.clan_id
@@ -603,50 +691,9 @@ export async function getCastles(): Promise<CastleDto[]> {
 }
 
 export async function getRaidBosses(): Promise<RaidBossDto[]> {
-  return withTtlCache('world:raidbosses', 30_000, async () => {
-    if (isDatabaseConfigured()) {
-      const grandRows = await executeReadOnlyQuery<{
-        boss_id: number;
-        respawn_time: number;
-        status: number;
-      }>('SELECT boss_id, respawn_time, status FROM grandboss_data');
-
-      const raidRows = await executeReadOnlyQuery<{
-        boss_id: number;
-        respawn_time: number;
-      }>('SELECT boss_id, respawn_time FROM raidboss_spawnlist');
-
-      if (grandRows || raidRows) {
-        const now = Date.now();
-        return HIGH_FIVE_RAIDBOSS_CATALOG.map((boss) => {
-          const grand = grandRows?.find((g) => Number(g.boss_id) === boss.bossId);
-          if (grand) {
-            const respawnMs = Number(grand.respawn_time || 0);
-            const isDead = respawnMs > now || Number(grand.status) > 0;
-            return {
-              ...boss,
-              status: isDead ? 'dead' : 'alive',
-              nextSpawnWindow: respawnMs > now ? new Date(respawnMs).toISOString() : null,
-            };
-          }
-          const raid = raidRows?.find((r) => Number(r.boss_id) === boss.bossId);
-          if (raid) {
-            const respawnMs = Number(raid.respawn_time || 0);
-            const isDead = respawnMs > now;
-            return {
-              ...boss,
-              status: isDead ? 'dead' : 'alive',
-              nextSpawnWindow: respawnMs > now ? new Date(respawnMs).toISOString() : null,
-            };
-          }
-          return boss;
-        });
-      }
-    }
-
-    // Never invent real-time statuses or spawn times when GameServer DB is unavailable
-    return HIGH_FIVE_RAIDBOSS_CATALOG;
-  });
+  // Custom DailyEpicBoss runtime state is NOT represented reliably by
+  // Mobius grandboss_data or raidboss_spawnlist. Never invent alive/dead status.
+  return HIGH_FIVE_RAIDBOSS_CATALOG;
 }
 
 export async function getTvtEventInfo(): Promise<TvtEventDto> {
@@ -657,7 +704,7 @@ export function getVerificationNotice(): string | undefined {
   const mode = getActiveDataSourceMode();
   if (mode === 'live_mysql') return undefined;
   if (mode === 'dev_fixture') {
-    return 'DEVELOPMENT PREVIEW FIXTURE MODE — Live GameServer MySQL is not connected. Do not enable USE_DEV_FIXTURES in production.';
+    return 'ข้อมูลบางส่วนยังไม่พร้อมแสดงผล';
   }
-  return 'LIVE GAMESERVER OFFLINE / UNCONFIGURED — Displaying verified High Five reference mechanics and UNKNOWN live telemetry.';
+  return 'ข้อมูลบางส่วนยังไม่พร้อมแสดงผล';
 }

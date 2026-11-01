@@ -1,0 +1,16 @@
+154-215-14-70.sslip.io {
+    encode gzip
+    @api path /api/*
+    handle @api {
+        reverse_proxy 127.0.0.1:4000
+    }
+    handle {
+        respond "Not Found" 404
+    }
+    header {
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        X-Frame-Options "DENY"
+        -Server
+    }
+}

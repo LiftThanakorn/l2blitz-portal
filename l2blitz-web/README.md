@@ -43,7 +43,7 @@ GET /api/events/tvt
 ```
 
 ### Key Game-Logic Guarantees
-1. **Grand Olympiad Point Privacy:** `GET /api/olympiad/rankings` uses `olympiad_points`, `competitions_done` (≥15 minimum), and `competitions_won` (≥1 minimum) strictly internally to rank nobles, then strips those fields before returning the public response (`rank`, `charName`, `clanName`, `classId`, `classNameEn`, `classNameTh`).
+1. **Grand Olympiad Point Privacy:** `GET /api/olympiad/rankings` uses `olympiad_points`, `competitions_done` (≥9 minimum), and `competitions_won` (≥1 minimum) strictly internally to rank nobles, then strips those fields before returning the public response (`rank`, `charName`, `clanName`, `classId`, `classNameEn`, `classNameTh`).
 2. **Soul Hound Class Unification:** Male Soul Hound (`132`) and Female Soul Hound (`133`) are unified into a single Olympiad ranking and Hero bracket (`132/133`), matching `L2J_Mobius_CT_2.6_HighFive` logic.
 3. **Zero Fake Live Telemetry:** When `DB_ENABLE` is `false` or the GameServer MySQL instance is unreachable in production (`USE_DEV_FIXTURES=false`), `/api/server/status`, `/api/server/stats`, and `/api/raidbosses` return `unknown` / `unavailable` rather than invented numbers.
 
@@ -72,7 +72,7 @@ cd frontend && npm run dev
 
 ## 4. Remaining Live GameServer Integration Checklist
 
-When the customized L2Blitz High Five GameServer becomes available:
+Before deploying the portal publicly (the current Lift HOME GameServer has already been inspected and the local read-only integration verified):
 1. **Create a Read-Only Database User** in MariaDB/MySQL:
    ```sql
    CREATE USER 'l2blitz_ro'@'127.0.0.1' IDENTIFIED BY 'your_secure_password';
@@ -82,6 +82,6 @@ When the customized L2Blitz High Five GameServer becomes available:
 2. **Configure `/opt/l2blitz-web/backend/.env`** from `backend/.env.example`:
    - Set `DB_ENABLE=true` and `USE_DEV_FIXTURES=false`.
 3. **Verify Custom Server Multipliers** in `backend/src/data/fixtures.ts` (`HIGH_FIVE_SERVER_RATES`):
-   - Replace `"Pending Verification"` placeholders with verified EXP/SP/Adena multipliers, Max Enchant ceilings, and TvT reward item IDs from the live GameServer `config/` and `data/stats/` XML files.
+   - Publish only server-confirmed rates, current TvT rewards and weekly Olympiad rules. Do not advertise in-progress Daily Epic v2, untested balance changes or publicly closed Blitz Coin payments as fully available.
 4. **Configure Official Client Mirrors** in `frontend/src/pages/DownloadsPage.tsx`:
    - Wire the Launcher and Full Client buttons to the verified CDN / Cloudflare R2 URLs and publish the SHA-256 checksums.

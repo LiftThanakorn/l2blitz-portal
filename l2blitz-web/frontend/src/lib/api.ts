@@ -61,6 +61,9 @@ export const HIGH_FIVE_CLASSES: HighFiveClassMeta[] = [
   { id: 136, groupedIds: [135, 136], slug: 'judicator', nameEn: 'Judicator', nameTh: 'จูดิเคเตอร์ (Inspector)', race: 'Kamael', raceTh: 'คามาเอล', archetype: 'Enchanter', recommendedSet: 'Vorpal Light', weaponEn: 'Vesper Pincer (Health)', weaponTh: 'เรเปียร์เวสเปอร์ (เพิ่มเลือด)', jewelryCombo: 'Beleth + Baium + Antharas + Frintezza + Zaken', olympiadRoleTh: 'ซับพอร์ตคลาสพิเศษของคามาเอล เร่งพลังคริติคอลขั้นสุดด้วย Appetite for Destruction', olympiadRoleEn: 'Elite Kamael subclass buffer unleashing Appetite for Destruction burst windows.' },
 ];
 
+/** Hero-eligible class brackets from the L2Blitz GameServer Olympiad.java HERO_IDS. */
+export const OLYMPIAD_CLASSES = HIGH_FIVE_CLASSES.filter((cls) => cls.id !== 136);
+
 export async function fetchApi<T>(endpoint: string): Promise<{
   ok: boolean;
   source: 'live_mysql' | 'dev_fixture' | 'unavailable';

@@ -8,11 +8,34 @@ export const PaginationQuerySchema = z.object({
 });
 
 export const OlympiadRankingQuerySchema = z.object({
-  classId: z.coerce.number().int().min(88).max(136).optional(),
+  classId: z.coerce.number().int().refine(
+    (id) => (id >= 88 && id <= 118) || (id >= 131 && id <= 134),
+    { message: 'Class is not eligible for High Five Olympiad hero standings' }
+  ).optional(),
   cycle: z.enum(['current', 'previous']).default('current'),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
 });
+
+export const OlympiadCycleQuerySchema = z.object({
+  cycle: z.enum(['current', 'previous']).default('current'),
+});
+
+export interface OlympiadClassTopThree {
+  classId: number;
+  classNameEn: string;
+  classNameTh: string;
+  race: string;
+  raceTh: string;
+  rows: OlympiadPublicRankingRow[];
+}
+
+export interface OlympiadTopByClassResponse {
+  dataAvailable: boolean;
+  cycle: 'current' | 'previous';
+  minimumMatchesRequired: number;
+  classes: OlympiadClassTopThree[];
+}
 
 export type DataSourceMode = 'live_mysql' | 'dev_fixture' | 'unavailable';
 
