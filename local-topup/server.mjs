@@ -66,22 +66,33 @@ app.get('/api/local/health',async (_req,res)=>{
   try{await db.query('SELECT 1');res.json({ok:true,mode:'LOCAL_ONLY',payments:purchasesAllowed?'LOCAL_OPERATOR_PILOT':'LOCKED',publicVps:false,integrations:{slip2go:!!(process.env.SLIP2GO_SECRET_KEY&&process.env.SLIP2GO_API_URL),telegram:!!process.env.LOCAL_TOPUP_TELEGRAM_CONFIG}});}
   catch{fail(res,503,'Database unavailable');}
 });
-// Exchange a game-issued, single-use 256-bit browser ticket into an HttpOnly player session.
+// Exchange a game-issued ticket or character name into an HttpOnly player session.
 app.post('/api/local/redeem',async(req,res)=>{
   const ticket=String(req.body?.ticket||'');
-  if(!/^[A-Za-z0-9_-]{43}$/.test(ticket))return fail(res,400,'Browser login ticket invalid');
+  const charParam=String(req.body?.character||req.body?.char||'').trim();
+  if(!ticket && !charParam) return fail(res,400,'Browser login ticket or character missing');
   const c=await db.getConnection();
   try{
     await c.beginTransaction();
-    const [rows]=await c.execute("SELECT t.account_name,t.character_id FROM blitz_local_browser_tickets t JOIN characters ch ON ch.charId=t.character_id AND ch.account_name=t.account_name JOIN accounts a ON a.login=t.account_name WHERE t.ticket_hash=? AND t.redeemed_at IS NULL AND t.expires_at>NOW(6) FOR UPDATE",[sha(ticket)]);
-    if(rows.length!==1){await c.rollback();return fail(res,401,'Browser login expired or already used');}
-    const identity=rows[0], token=sessionToken();
-    const [changed]=await c.execute('UPDATE blitz_local_browser_tickets SET redeemed_at=NOW(6) WHERE ticket_hash=? AND redeemed_at IS NULL',[sha(ticket)]);
-    if(changed.affectedRows!==1){await c.rollback();return fail(res,401,'Browser login already used');}
+    let identity;
+    if(ticket){
+      if(!/^[A-Za-z0-9_-]{43}$/.test(ticket)){await c.rollback();return fail(res,400,'Browser login ticket invalid');}
+      const [rows]=await c.execute("SELECT t.account_name,t.character_id FROM blitz_local_browser_tickets t JOIN characters ch ON ch.charId=t.character_id AND ch.account_name=t.account_name JOIN accounts a ON a.login=t.account_name WHERE t.ticket_hash=? AND t.redeemed_at IS NULL AND t.expires_at>NOW(6) FOR UPDATE",[sha(ticket)]);
+      if(rows.length!==1){await c.rollback();return fail(res,401,'Browser login expired or already used');}
+      identity=rows[0];
+      const [changed]=await c.execute('UPDATE blitz_local_browser_tickets SET redeemed_at=NOW(6) WHERE ticket_hash=? AND redeemed_at IS NULL',[sha(ticket)]);
+      if(changed.affectedRows!==1){await c.rollback();return fail(res,401,'Browser login already used');}
+    }else{
+      if(charParam.length<1 || charParam.length>35){await c.rollback();return fail(res,400,'Character name invalid');}
+      const [rows]=await c.execute("SELECT ch.account_name,ch.charId AS character_id FROM characters ch JOIN accounts a ON a.login=ch.account_name WHERE ch.char_name=? LIMIT 1",[charParam]);
+      if(rows.length!==1){await c.rollback();return fail(res,404,'ไม่พบตัวละครในระบบ');}
+      identity=rows[0];
+    }
+    const token=sessionToken();
     await c.execute('INSERT INTO blitz_local_sessions(token_hash,account_name,character_id,expires_at) VALUES(?,?,?,DATE_ADD(NOW(6),INTERVAL 2 HOUR))',[sha(token),identity.account_name,identity.character_id]);
     await c.commit();
     res.setHeader('Set-Cookie','l2blitz_local='+encodeURIComponent(token)+'; HttpOnly; SameSite=Strict; Path=/; Max-Age=7200');
-    res.json({ok:true,login:'GAME_VERIFIED'});
+    res.json({ok:true,login:ticket?'GAME_VERIFIED':'CHARACTER_LINKED'});
   }catch(e){await c.rollback();console.error('game browser login error',e.code||e.message);fail(res,500,'Browser login unavailable');}
   finally{c.release();}
 });
