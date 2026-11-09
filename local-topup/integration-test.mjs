@@ -66,12 +66,29 @@ try{
   await admin.execute("INSERT INTO blitz_local_browser_tickets(ticket_hash,account_name,character_id,expires_at) VALUES(?,?,?,DATE_ADD(NOW(6),INTERVAL 60 SECOND))",[crypto.createHash('sha256').update(forgedTicket).digest(),'local_test_account',99999999]);
   assert.equal((await endpoint('redeem',{ticket:forgedTicket})).status,401,'browser ticket with unknown character rejected');
   // Character-based linking (?char=TestBlitz)
+  assert.equal((await endpoint('redeem',{})).status,400,'missing ticket or character rejected');
+  assert.equal((await endpoint('redeem',{character:''})).status,400,'empty character name rejected');
+  assert.equal((await endpoint('redeem',{character:'A'.repeat(36)})).status,400,'oversized character name rejected');
   assert.equal((await endpoint('redeem',{character:'NoSuchChar'})).status,404,'unknown character name rejected');
   const charLogin=await endpoint('redeem',{character:'TestBlitz'});
   assert.equal(charLogin.status,200,'character linking accepted');
   const charCookie=charLogin.cookie.split(';')[0];
   const charPerson=await endpoint('me',undefined,charCookie);
   assert.equal(charPerson.body.character,'TestBlitz','character session matches character name');
+  // Param alias { char: 'TestBlitz' }
+  const aliasLogin=await endpoint('redeem',{char:'TestBlitz'});
+  assert.equal(aliasLogin.status,200,'char alias parameter accepted');
+  // Trim whitespace
+  const trimLogin=await endpoint('redeem',{character:'  TestBlitz  '});
+  assert.equal(trimLogin.status,200,'character name with whitespace trimmed');
+  // Thai character name support
+  await admin.execute("INSERT INTO accounts(login) VALUES('thai_test_account')");
+  await admin.execute("INSERT INTO characters(charId,account_name,char_name,online) VALUES(41000002,'thai_test_account','จอมยุทธ์สยาม',1)");
+  const thaiLogin=await endpoint('redeem',{character:'จอมยุทธ์สยาม'});
+  assert.equal(thaiLogin.status,200,'Thai character name linking accepted');
+  const thaiPerson=await endpoint('me',undefined,thaiLogin.cookie.split(';')[0]);
+  assert.equal(thaiPerson.body.character,'จอมยุทธ์สยาม','Thai character session matches Thai name');
+
   assert.equal((await endpoint('orders')).status,401,'unauthenticated denied');
   assert.equal((await endpoint('login',{code:'00000000'})).status,401,'fake token denied');
   const login=await endpoint('login',{code});
