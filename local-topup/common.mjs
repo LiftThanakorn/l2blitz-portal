@@ -1,4 +1,7 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import mysql from 'mysql2/promise';
 
 export const db = mysql.createPool({
@@ -18,6 +21,8 @@ export function assertLocalMode() {
 }
 export function getServerRoot() {
   const candidate=process.env.LOCAL_TOPUP_GAME_ROOT;
-  if (!candidate) throw Error('LOCAL_TOPUP_GAME_ROOT required');
-  return candidate;
+  if (candidate) return candidate;
+  const fallback = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../Lineage2-H5-Solo');
+  if (fs.existsSync(fallback)) return fallback;
+  throw Error('LOCAL_TOPUP_GAME_ROOT required');
 }

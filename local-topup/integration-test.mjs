@@ -28,11 +28,11 @@ try{
   await query('CREATE DATABASE `'+name+'`');
   await query('USE `'+name+'`');
   await query("CREATE TABLE accounts(login VARCHAR(45) NOT NULL PRIMARY KEY);CREATE TABLE characters(charId INT UNSIGNED NOT NULL PRIMARY KEY,account_name VARCHAR(45),char_name VARCHAR(35),online TINYINT NOT NULL DEFAULT 0);");
-  const game=process.env.LOCAL_TOPUP_GAME_ROOT;
+  const game=process.env.LOCAL_TOPUP_GAME_ROOT || path.resolve(root, '../../Lineage2-H5-Solo');
   const migrations=[path.join(game,'docs/sql/blitz_topup.sql'),path.join(game,'docs/sql/blitz_topup_admin.sql'),path.join(game,'docs/sql/blitz_topup_character_items_v1.sql'),path.join(root,'schema.sql')];
   for(const f of migrations)await query(await fs.readFile(f,'utf8'));
   await query("INSERT INTO accounts(login) VALUES('local_test_account');INSERT INTO characters(charId,account_name,char_name,online) VALUES(41000001,'local_test_account','TestBlitz',1);INSERT INTO blitz_topup_package (package_id,name,price_thb,coins,bonus_coins,enabled,display_order) VALUES(5,'1000 Coin',1000,1000,0,1,5),(6,'1500 Coin',1500,1500,0,1,6);UPDATE blitz_topup_package SET enabled=0 WHERE package_id=1;");
-  const env={...process.env,LOCAL_TOPUP_DB_NAME:name,LOCAL_TOPUP_ENABLED:'1',LOCAL_TOPUP_ALLOW_ORDERS:'1',LOCAL_TOPUP_PORT:'3102',LOCAL_TOPUP_PRIVATE_STORAGE:tmp};
+  const env={...process.env,LOCAL_TOPUP_GAME_ROOT:game,LOCAL_TOPUP_DB_NAME:name,LOCAL_TOPUP_ENABLED:'1',LOCAL_TOPUP_ALLOW_ORDERS:'1',LOCAL_TOPUP_PORT:'3102',LOCAL_TOPUP_PRIVATE_STORAGE:tmp};
   delete env.SLIP2GO_SECRET_KEY;delete env.SLIP2GO_API_URL;delete env.LOCAL_TOPUP_TELEGRAM_CONFIG;
   const issue=execFileSync(process.execPath,[path.join(root,'operator.mjs'),'pair','41000001'],{env,encoding:'utf8'});
   const code=issue.match(/ONE_TIME_CODE: (\d{8})/)?.[1];
