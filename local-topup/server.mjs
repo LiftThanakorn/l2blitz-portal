@@ -209,19 +209,39 @@ app.post('/api/local/orders/:orderId/slip',async(req,res)=>{
   }catch(e){await conn.rollback();if(saved)await fs.unlink(full).catch(()=>{});if(e.code==='ER_DUP_ENTRY')return fail(res,409,'สลิปนี้เคยถูกส่งแล้ว');console.error('slip error',e.code||e.message);return fail(res,500,'บันทึกสลิปไม่สำเร็จ');}
   finally{conn.release();}
   let result=await verifySlip2Go({data:buffer,mime:type.mime},price,await payeeConfig());
+  let orderStatus='PENDING_REVIEW';
   if(result.state==='API_REVIEW' && result.transRef){
+    const approveConn=await db.getConnection();
     try {
-      await db.execute('INSERT INTO blitz_local_provider_receipts(trans_ref,order_id,provider_code,transferred_at) VALUES(?,?,?,?)',
+      await approveConn.beginTransaction();
+      await approveConn.execute('INSERT INTO blitz_local_provider_receipts(trans_ref,order_id,provider_code,transferred_at) VALUES(?,?,?,?)',
         [result.transRef,id,result.code,new Date(result.transferredAt)]);
+      await approveConn.execute('INSERT INTO blitz_local_bank_transfers(bank_reference,order_id,verified_amount,verified_by) VALUES(?,?,?,?)',
+        [result.transRef,id,price,'SLIP2GO:AUTO']);
+      await approveConn.execute("INSERT INTO blitz_topup_admin_action(order_id,admin_id,decision,reason) VALUES(?,?,'APPROVED',?)",
+        [id,0,'Slip2Go auto-verified: '+result.transRef]);
+      await approveConn.execute("UPDATE blitz_local_slips SET verification='API_REVIEW',provider_code=?,reviewed_at=NOW(6) WHERE order_id=?",
+        [result.code,id]);
+      const [upd]=await approveConn.execute("UPDATE blitz_topup_order SET status='APPROVED',status_changed_at=NOW(6) WHERE order_id=? AND status='PENDING_REVIEW'",
+        [id]);
+      if(upd.affectedRows!==1)throw new Error('ORDER_NOT_PENDING_REVIEW');
+      await approveConn.commit();
+      orderStatus='APPROVED';
     } catch(e) {
+      await approveConn.rollback();
       if(e.code==='ER_DUP_ENTRY')result={state:'FLAGGED',code:'BANK_REFERENCE_DUPLICATED'};
       else result={state:'RETRY_NEEDED',code:'REFERENCE_STORAGE_ERROR'};
+      await db.execute('UPDATE blitz_local_slips SET verification=?,provider_code=? WHERE order_id=?',[result.state,result.code,id]);
+    } finally {
+      approveConn.release();
     }
+  } else {
+    await db.execute('UPDATE blitz_local_slips SET verification=?,provider_code=? WHERE order_id=?',[result.state,result.code,id]);
   }
-  await db.execute('UPDATE blitz_local_slips SET verification=?,provider_code=? WHERE order_id=?',[result.state,result.code,id]);
-  const caption=['L2Blitz LOCAL payment review','Order: '+id,'Character: '+session.char_name,'Amount: '+price+' THB','Slip2Go: '+result.state+' ('+result.code+')','GM: verify bank transaction independently before approval','Public VPS: CLOSED'].join('\n');
+  const caption=['L2Blitz LOCAL payment review','Order: '+id,'Character: '+session.char_name,'Amount: '+price+' THB','Slip2Go: '+result.state+' ('+result.code+')','Status: '+orderStatus,'Public VPS: CLOSED'].join('\n');
   const telegram=await sendTelegram({data:buffer,mime:type.mime,ext:type.ext},caption);
-  res.status(202).json({ok:true,status:'PENDING_REVIEW',verification:result.state,telegram:telegram==='SENT'?'SENT':'NOT_SENT',message:'รับรูปสลิปแล้ว รอ GM ยืนยันเงินเข้าจริง ไม่แจก Coin อัตโนมัติ'});
+  const msg=orderStatus==='APPROVED'?'ตรวจสอบสลิปสำเร็จ ระบบอนุมัติและกำลังส่ง L2Blitz Coin เข้าตัวละครในเกมอัตโนมัติ':'รับรูปสลิปแล้ว รอตรวจสอบรายการโอนเงิน';
+  res.status(orderStatus==='APPROVED'?200:202).json({ok:true,status:orderStatus,verification:result.state,telegram:telegram==='SENT'?'SENT':'NOT_SENT',message:msg});
 });
 app.use('/api/local',(err,req,res,next)=>{if(err.type==='entity.too.large')return fail(res,413,'ไฟล์เกินขนาด');console.error('local API',err.code||err.message);fail(res,500,'เกิดข้อผิดพลาด');});
 await fs.mkdir(slipDirectory,{recursive:true,mode:0o700});

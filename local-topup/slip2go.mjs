@@ -8,12 +8,16 @@ export function validatedEndpoint(raw) {
   if (typeof raw !== 'string' || !raw) return null;
   try {
     const url = new URL(raw);
-    if (url.protocol !== 'https:' || url.username || url.password || url.port || url.search || url.hash) return null;
-    if (!['connect.slip2go.com', 'api.slip2go.com'].includes(url.hostname)) return null;
+    if (url.username || url.password || url.search || url.hash) return null;
     const route = '/api/verify-slip/qr-base64/info';
     if (url.pathname === '/' || url.pathname === '') url.pathname = route;
     // The web form uploads a base64 string. Do not send that JSON body to the multipart qr-image endpoint.
     if (url.pathname !== route) return null;
+    if (process.env.LOCAL_TOPUP_ALLOW_MOCK_SLIP2GO === '1' && url.protocol === 'http:' && url.hostname === '127.0.0.1' && url.port) {
+      return url.toString();
+    }
+    if (url.protocol !== 'https:' || url.port) return null;
+    if (!['connect.slip2go.com', 'api.slip2go.com'].includes(url.hostname)) return null;
     return url.toString();
   } catch { return null; }
 }

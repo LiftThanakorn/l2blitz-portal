@@ -83,7 +83,7 @@ export function TopUpPage() {
     void browserBootRef.current.then(async (redeemed) => {
       if (!active) return;
       await refresh();
-      if (active && redeemed) setSuccess(t('เชื่อมต่อจาก NPC สำเร็จ ไม่ต้องกรอกรหัส', 'Connected from NPC without entering a code'));
+      if (active && redeemed) setSuccess(t('เชื่อมต่อจากในเกมสำเร็จ ไม่ต้องกรอกรหัส', 'Connected from in-game without entering a code'));
     }).catch((e) => {
       if (!active) return;
       setError(e instanceof Error ? e.message : 'Browser login failed');
@@ -91,6 +91,14 @@ export function TopUpPage() {
     });
     return () => { active = false; };
   }, [refresh, t]);
+
+  useEffect(() => {
+    if (!player || !history.some(o => o.status === 'APPROVED' || o.status === 'PENDING_REVIEW')) return;
+    const timer = window.setInterval(() => {
+      void refresh();
+    }, 2500);
+    return () => window.clearInterval(timer);
+  }, [player, history, refresh]);
 
   async function linkGame(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -121,8 +129,11 @@ export function TopUpPage() {
     }
     setBusy(true); setError(''); setSuccess('');
     try {
-      const result = await localApi<{ verification: string; telegram: string }>('orders/' + active.orderId + '/slip',{ imageBase64: await imageData(file) });
-      setSuccess(t('ส่งหลักฐานสำเร็จ รอ GM ตรวจเงินเข้าบัญชี', 'Slip submitted. GM must confirm bank receipt') + ' · ' + result.verification + ' · Telegram: ' + result.telegram);
+      const result = await localApi<{ status?: string; verification: string; telegram: string; message?: string }>('orders/' + active.orderId + '/slip',{ imageBase64: await imageData(file) });
+      const msg = result.status === 'APPROVED'
+        ? t('ตรวจสอบสลิปสำเร็จ กำลังส่ง L2Blitz Coin เข้าตัวละครในเกมอัตโนมัติ', 'Slip verified! Automatically delivering L2Blitz Coin to your character in-game')
+        : t('ส่งหลักฐานสำเร็จ รอตรวจสอบรายการโอนเงิน', 'Slip submitted and pending verification');
+      setSuccess(msg + ' · ' + result.verification + ' · Telegram: ' + result.telegram);
       setActive(null); setFile(null);
       await refresh();
     } catch (e) { setError(e instanceof Error ? e.message : 'Slip rejected'); }
@@ -141,7 +152,7 @@ export function TopUpPage() {
     <header className="editorial-axis-grid items-end pb-12 lg:pb-16">
       <div className="col-span-12 lg:col-span-5">
         <p className="small-note text-[#C4531E] font-semibold m-0">L2BLITZ / PLAYER CENTER / LOCAL TEST</p>
-        <p className="body-copy text-[#77736C] mt-5">{t('ระบบเติมเงินระหว่างพัฒนา ทดสอบกับเซิร์ฟเวอร์ในเครื่องเท่านั้น ยังไม่เปิดบน Cloudflare หรือ VPS', 'Local payment pilot in development; not available on Cloudflare or VPS.')}</p>
+        <p className="body-copy text-[#77736C] mt-5">{t('ระบบเติมเงินเชื่อมต่อกับ Prime Shop ในเกมอัตโนมัติ เมื่อตรวจสอบสลิปสำเร็จ L2Blitz Coin จะถูกส่งเข้าตัวละครทันที', 'In-game Prime Shop top-up system. Verified slips automatically deliver L2Blitz Coin to your character.')}</p>
         <p className="small-note inline-block bg-[#F0EDE7] px-3 py-2 mt-5 text-[#524E48]">LOCAL ONLY · 127.0.0.1</p>
       </div>
       <div className="col-span-12 lg:col-span-7"><h1 className="display-title">{t('เติมเงิน', 'Top Up')}<br/>BLITZ COIN</h1></div>
@@ -149,7 +160,7 @@ export function TopUpPage() {
 
     {!health && <div role="alert" className="surface-white border-l-4 border-[#B95348] p-5 mb-6"><TriangleAlert size={20} className="inline-block text-[#B95348] mr-2"/>{t('บริการเติมเงิน Local ไม่พร้อม กรุณาเปิด API ในเครื่องก่อน', 'Local payment service is offline. Start the local API first.')}</div>}
     {health && <div className="surface-white border border-[#E8E3DB] p-4 mb-5 flex flex-wrap gap-5 small-note text-[#524E48]">
-      <span>{t('Slip2Go','Slip2Go')}: {health.integrations?.slip2go ? t('ตั้งค่าแล้ว (รอตรวจสลิปจริง)', 'Configured (real slip not tested)') : t('รอ Secret Key — ตรวจด้วย GM เท่านั้น', 'Needs Secret Key — manual review only')}</span>
+      <span>{t('Slip2Go','Slip2Go')}: {health.integrations?.slip2go ? t('ตั้งค่าแล้ว (พร้อมตรวจสลิปอัตโนมัติ)', 'Configured (auto-verification active)') : t('รอ Secret Key — ตรวจด้วย GM เท่านั้น', 'Needs Secret Key — manual review only')}</span>
       <span>{t('Telegram','Telegram')}: {health.integrations?.telegram ? t('ตั้งค่าแล้ว', 'Configured') : t('ยังไม่ได้ตั้งค่า', 'Not configured')}</span>
     </div>}
     {error && <div role="alert" className="bg-[#FFF3EE] border border-[#E97540] p-4 mb-5 text-[#8F3A1D]">{error}</div>}
@@ -158,7 +169,7 @@ export function TopUpPage() {
     {!player ? <section className={panel}>
       <p className="small-note text-[#C4531E] font-semibold mb-3">01 / GAME CONNECTION</p>
       <div className="flex items-center gap-3 mb-3"><LockKeyhole size={24} className="text-[#C4531E]"/><h2 className="section-heading">{t('เชื่อมตัวละคร', 'Link Character')}</h2></div>
-      <p className="body-copy text-[#77736C] mb-7">{t('คุยกับ NPC 900108 → เติมเงิน → ขอรหัสเชื่อมต่อ จากนั้นนำรหัส 8 หลักมาใส่ที่นี่ รหัสมีอายุ 5 นาที', 'Talk to NPC 900108 and request a single-use 8-digit login code (valid for 5 minutes).')}</p>
+      <p className="body-copy text-[#77736C] mb-7">{t('กดปุ่ม "เติมเงิน" ในหน้าต่าง Prime Shop ในเกมเพื่อเชื่อมต่ออัตโนมัติ หรือคุยกับ NPC 900108 เพื่อขอรหัสเชื่อมต่อ 8 หลัก (อายุ 5 นาที)', 'Click "เติมเงิน" in the in-game Prime Shop window for instant connection, or talk to NPC 900108 for an 8-digit login code (valid for 5 minutes).')}</p>
       <form className="grid sm:grid-cols-[1fr_auto] gap-3 max-w-xl" onSubmit={linkGame}>
         <input className={field + ' text-center tracking-widest font-semibold'} aria-label={t('รหัสเชื่อม 8 หลัก', '8 digit code')} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" maxLength={8} placeholder="00000000" required value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,'').slice(0,8))}/>
         <button type="submit" className="btn-primary justify-center" disabled={!health || busy || otp.length!==8}><ShieldCheck size={18}/>{t('เชื่อมต่อ', 'Connect')}</button>
@@ -205,8 +216,8 @@ export function TopUpPage() {
         <form onSubmit={submitSlip} className="border-t border-[#E8E3DB] mt-8 pt-7 max-w-2xl">
           <label htmlFor="slip" className="font-semibold flex items-center gap-2 mb-3"><ImageUp size={20} className="text-[#C4531E]"/>{t('แนบรูปสลิป JPG / PNG / WebP', 'Upload payment receipt')}</label>
           <input id="slip" type="file" className={field} required accept="image/png,image/jpeg,image/webp" onChange={e=>setFile(e.target.files?.[0]||null)}/>
-          <button className="btn-primary mt-5 justify-center" type="submit" disabled={busy||!file}>{t('ส่งหลักฐานให้ GM ตรวจ', 'Submit for GM Review')}</button>
-          <p className={muted+' mt-4'}>{t('ไม่เกิน 4 MB ไม่มีการแจก Coin อัตโนมัติเมื่อส่งรูป', 'Maximum 4 MB. Coins are not automatically credited on submission.')}</p>
+          <button className="btn-primary mt-5 justify-center" type="submit" disabled={busy||!file}>{t('ยืนยันการโอนและแนบสลิป', 'Verify & Submit Slip')}</button>
+          <p className={muted+' mt-4'}>{t('ไม่เกิน 4 MB เมื่อตรวจสอบสลิปผ่านแล้ว ระบบจะส่ง L2Blitz Coin เข้าตัวละครอัตโนมัติ', 'Maximum 4 MB. Once verified, L2Blitz Coin is delivered to your character automatically.')}</p>
         </form>
       </section>}
       <section className={panel}>
@@ -214,7 +225,7 @@ export function TopUpPage() {
           <button aria-label={t('โหลดรายการใหม่', 'Refresh')} className="text-[#C4531E] p-2 hover:bg-[#F0EDE7]" onClick={()=>void refresh()}><RefreshCw size={20}/></button></div>
         {history.length===0 ? <p className={muted}>{t('ยังไม่มีรายการ', 'No orders yet')}</p> : <div className="divide-y divide-[#E8E3DB]">{history.map(item=><div key={item.order_id} className="py-4 flex flex-wrap justify-between gap-3">
           <div><strong>{format(item.coins)} Coin · ฿{format(item.price_thb)}</strong><p className="small-note text-[#77736C] break-all mt-1">{item.order_id}</p></div>
-          <div className="text-right"><strong className="small-note text-[#C4531E]">{item.status}</strong><p className={muted}>{item.verification||'—'}</p></div>
+          <div className="text-right"><strong className="small-note text-[#C4531E]">{item.status === 'CREDITED' ? t('ส่งเข้าตัวละครแล้ว (CREDITED)', 'Delivered (CREDITED)') : item.status === 'APPROVED' ? t('อนุมัติแล้ว กำลังส่งเข้าเกม (APPROVED)', 'Approved, delivering (APPROVED)') : item.status}</strong><p className={muted}>{item.verification||'—'}</p></div>
         </div>)}</div>}
       </section>
       <button onClick={()=>void logout()} type="button" disabled={busy} className="flex gap-2 items-center small-note text-[#77736C] hover:text-[#C4531E]"><LogOut size={16}/>{t('ออกจากระบบเว็บไซต์', 'Log Out')}</button>
