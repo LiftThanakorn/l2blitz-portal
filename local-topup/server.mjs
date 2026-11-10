@@ -17,6 +17,8 @@ const port=Number(process.env.LOCAL_TOPUP_PORT||3101);
 if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Invalid local port');
 const allowedOrigins=new Set(['http://127.0.0.1:'+port, 'http://127.0.0.1:5173', 'http://localhost:5173']);
 const errors={};
+process.on('unhandledRejection', (reason, p) => console.error('UNHANDLED_REJECTION', p, reason));
+process.on('uncaughtException', (err) => console.error('UNCAUGHT_EXCEPTION', err));
 app.disable('x-powered-by');
 app.use((req,res,next)=>{
   res.set('X-Content-Type-Options','nosniff');
@@ -142,34 +144,38 @@ app.get('/api/local/packages',async(req,res)=>{
   res.json({packages:rows,ordersEnabled:purchasesAllowed});
 });
 app.get('/api/local/orders',async(req,res)=>{
-  const session=await userSession(req);
-  if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
-  await db.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status='PENDING_PAYMENT' AND expires_at<=NOW(6)",[session.account_name]);
-  const [rows]=await db.execute("SELECT o.order_id,o.price_thb,o.coins,o.status,o.created_at,c.char_name,s.verification FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.account_name=? ORDER BY o.created_at DESC LIMIT 15",[session.account_name]);
-  res.json({orders:rows});
+  try{
+    const session=await userSession(req);
+    if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
+    await db.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status='PENDING_PAYMENT' AND expires_at<=NOW(6)",[session.account_name]);
+    const [rows]=await db.execute("SELECT o.order_id,o.price_thb,o.coins,o.status,o.created_at,c.char_name,s.verification FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.account_name=? ORDER BY o.created_at DESC LIMIT 15",[session.account_name]);
+    res.json({orders:rows});
+  }catch(e){console.error('orders error',e.code||e.message);fail(res,500,'ดึงข้อมูลคำสั่งซื้อไม่สำเร็จ');}
 });
 app.get('/api/local/active-order',async(req,res)=>{
-  const session=await userSession(req);
-  if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
-  await db.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status='PENDING_PAYMENT' AND expires_at<=NOW(6)",[session.account_name]);
-  const [rows]=await db.execute("SELECT o.order_id,o.price_thb,o.coins,o.bonus_coins,o.status,o.created_at,o.expires_at,o.character_id,c.char_name,s.verification FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.account_name=? AND o.status IN ('CREATED','PENDING_PAYMENT','PENDING_REVIEW') ORDER BY o.created_at DESC LIMIT 1",[session.account_name]);
-  if(!rows.length)return res.json(null);
-  const row=rows[0];
-  let payee={id:'',recipient:''};
-  try{payee=await payeeConfig();}catch{}
-  res.json({
-    orderId:row.order_id,
-    amount:Number(row.price_thb),
-    coins:Number(row.coins)+Number(row.bonus_coins),
-    promptpayId:payee.id,
-    recipientName:payee.recipient,
-    status:row.status,
-    verification:row.verification||null,
-    characterId:row.character_id,
-    characterName:row.char_name,
-    createdAt:row.created_at,
-    expiresAt:row.expires_at
-  });
+  try{
+    const session=await userSession(req);
+    if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
+    await db.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status='PENDING_PAYMENT' AND expires_at<=NOW(6)",[session.account_name]);
+    const [rows]=await db.execute("SELECT o.order_id,o.price_thb,o.coins,o.bonus_coins,o.status,o.created_at,o.expires_at,o.character_id,c.char_name,s.verification FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.account_name=? AND o.status IN ('CREATED','PENDING_PAYMENT','PENDING_REVIEW') ORDER BY o.created_at DESC LIMIT 1",[session.account_name]);
+    if(!rows.length)return res.json(null);
+    const row=rows[0];
+    let payee={id:'',recipient:''};
+    try{payee=await payeeConfig();}catch{}
+    res.json({
+      orderId:row.order_id,
+      amount:Number(row.price_thb),
+      coins:Number(row.coins)+Number(row.bonus_coins),
+      promptpayId:payee.id,
+      recipientName:payee.recipient,
+      status:row.status,
+      verification:row.verification||null,
+      characterId:row.character_id,
+      characterName:row.char_name,
+      createdAt:row.created_at,
+      expiresAt:row.expires_at
+    });
+  }catch(e){console.error('active-order error',e.code||e.message);fail(res,500,'ดึงคำสั่งซื้อไม่สำเร็จ');}
 });
 app.post('/api/local/orders/:orderId/cancel',async(req,res)=>{
   const session=await userSession(req);if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
