@@ -311,7 +311,12 @@ app.post('/api/local/orders/:orderId/slip',async(req,res)=>{
   const msg=orderStatus==='APPROVED'?'ตรวจสอบสลิปสำเร็จ ระบบอนุมัติและกำลังส่ง L2Blitz Coin เข้าตัวละครในเกมอัตโนมัติ':'รับรูปสลิปแล้ว รอตรวจสอบรายการโอนเงิน';
   res.status(orderStatus==='APPROVED'?200:202).json({ok:true,status:orderStatus,verification:result.state,telegram:telegram==='SENT'?'SENT':'NOT_SENT',message:msg});
 });
-app.use('/api/local',(err,req,res,next)=>{if(err.type==='entity.too.large')return fail(res,413,'ไฟล์เกินขนาด');console.error('local API',err.code||err.message);fail(res,500,'เกิดข้อผิดพลาด');});
+app.use('/api/local',(err,req,res,next)=>{
+  if(err.type==='entity.too.large')return fail(res,413,'ไฟล์เกินขนาด');
+  if(err instanceof SyntaxError && err.status===400 && 'body' in err) return fail(res,400,'รูปแบบข้อมูล JSON ไม่ถูกต้อง');
+  console.error('local API',err.code||err.message);
+  fail(res,500,'เกิดข้อผิดพลาด');
+});
 await fs.mkdir(slipDirectory,{recursive:true,mode:0o700});
 await db.query('SELECT 1');
 app.listen(port,'127.0.0.1',()=>console.log('LOCAL_TOPUP_READY http://127.0.0.1:'+port+' only; VPS untouched; orders '+(purchasesAllowed?'pilot enabled':'disabled')));
