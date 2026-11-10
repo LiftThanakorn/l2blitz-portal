@@ -10,6 +10,7 @@ import { RaidBossPage } from './pages/RaidBossPage';
 import { FarmZonesPage } from './pages/FarmZonesPage';
 import { EventsPage } from './pages/EventsPage';
 import { DownloadsPage } from './pages/DownloadsPage';
+import { TopUpPage } from './pages/TopUpPage';
 
 export function AppRoutes() {
   return (
@@ -23,6 +24,7 @@ export function AppRoutes() {
         <Route path="/farmzones" element={<FarmZonesPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/downloads" element={<DownloadsPage />} />
+        <Route path="/topup" element={<TopUpPage />} />
       </Routes>
     </Layout>
   );
