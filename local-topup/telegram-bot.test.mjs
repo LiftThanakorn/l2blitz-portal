@@ -12,12 +12,14 @@ test('Telegram bot configuration and inline review behavior', async () => {
   assert.ok(Array.isArray(cfg.telegramAdminIds), 'Admin IDs should be an array');
   assert.ok(cfg.telegramAdminIds.includes('1132460154') || cfg.telegramAdminIds.includes(1132460154), 'Admin 1132460154 included');
 
-  // Verify sendTelegramReview form payload formatting with a mock fetch
+  // Verify sendTelegramReview JSON payload formatting with a mock fetch
   const originalFetch = globalThis.fetch;
   let capturedBody = null;
   globalThis.fetch = async (url, opts) => {
     if (url.includes('api.telegram.org')) {
-      capturedBody = opts.body;
+      if (url.includes('sendMessage')) {
+        capturedBody = JSON.parse(opts.body);
+      }
       return { ok: true, json: async () => ({ ok: true, result: { message_id: 12345 } }) };
     }
     return originalFetch(url, opts);
@@ -32,8 +34,10 @@ test('Telegram bot configuration and inline review behavior', async () => {
       isPendingReview: true
     });
     assert.equal(sentReview, 'SENT');
-    assert.ok(capturedBody instanceof FormData, 'Should be FormData');
-    const markup = JSON.parse(capturedBody.get('reply_markup'));
+    assert.ok(capturedBody, 'Should capture sendMessage JSON');
+    assert.equal(capturedBody.chat_id, '-5594368545');
+    assert.equal(capturedBody.text, 'Test Caption');
+    const markup = capturedBody.reply_markup;
     assert.ok(markup.inline_keyboard, 'Must have inline_keyboard');
     assert.equal(markup.inline_keyboard[0][0].text, '✅ อนุมัติ (Approve)');
     assert.equal(markup.inline_keyboard[0][0].callback_data, 'A:11111111-2222-3333-4444-555555555555');
@@ -47,7 +51,7 @@ test('Telegram bot configuration and inline review behavior', async () => {
       isPendingReview: false
     });
     assert.equal(sentApproved, 'SENT');
-    assert.equal(capturedBody.get('reply_markup'), null, 'Auto-approved orders should not have approval buttons');
+    assert.equal(capturedBody.reply_markup, undefined, 'Auto-approved orders should not have approval buttons');
   } finally {
     globalThis.fetch = originalFetch;
   }

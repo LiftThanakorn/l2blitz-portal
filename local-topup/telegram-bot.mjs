@@ -23,28 +23,52 @@ export async function sendTelegramReview(image, caption, options = {}) {
   const cfg = await getTelegramConfig();
   if (!cfg) return 'DISABLED';
   try {
-    const form = new FormData();
-    form.set('chat_id', String(cfg.telegramChatId));
-    form.set('caption', caption.slice(0, 1024));
-    form.set('photo', new Blob([image.data], { type: image.mime }), 'slip.' + image.ext);
+    const textPayload = {
+      chat_id: String(cfg.telegramChatId),
+      text: caption
+    };
 
     if (options.isPendingReview && options.orderId) {
-      const inlineKeyboard = [
-        [
-          { text: '✅ อนุมัติ (Approve)', callback_data: `A:${options.orderId}` },
-          { text: '❌ ปฏิเสธ (Reject)', callback_data: `R:${options.orderId}` }
+      textPayload.reply_markup = {
+        inline_keyboard: [
+          [
+            { text: '✅ อนุมัติ (Approve)', callback_data: `A:${options.orderId}` },
+            { text: '❌ ปฏิเสธ (Reject)', callback_data: `R:${options.orderId}` }
+          ]
         ]
-      ];
-      form.set('reply_markup', JSON.stringify({ inline_keyboard: inlineKeyboard }));
+      };
     }
 
-    const response = await fetch(`https://api.telegram.org/bot${cfg.telegramToken}/sendPhoto`, {
+    // 1. Send instant text alert FIRST (completes in ~1-2 seconds)
+    const textRes = await fetch(`https://api.telegram.org/bot${cfg.telegramToken}/sendMessage`, {
       method: 'POST',
-      body: form,
-      signal: AbortSignal.timeout(15000)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(textPayload),
+      signal: AbortSignal.timeout(8000)
     });
-    const reply = await response.json().catch(() => ({}));
-    return response.ok && reply.ok ? 'SENT' : 'FAILED';
+    const reply = await textRes.json().catch(() => ({}));
+    const sent = textRes.ok && reply.ok ? 'SENT' : 'FAILED';
+
+    // 2. Upload slip photo in background concurrently (does not block HTTP response)
+    if (image && image.data) {
+      (async () => {
+        try {
+          const form = new FormData();
+          form.set('chat_id', String(cfg.telegramChatId));
+          form.set('caption', `📷 รูปสลิปสำหรับคำสั่งซื้อ: ${options.orderId || ''}`);
+          form.set('photo', new Blob([image.data], { type: image.mime }), 'slip.' + image.ext);
+          await fetch(`https://api.telegram.org/bot${cfg.telegramToken}/sendPhoto`, {
+            method: 'POST',
+            body: form,
+            signal: AbortSignal.timeout(120000)
+          });
+        } catch (photoErr) {
+          console.error('Background sendPhoto error:', photoErr.message);
+        }
+      })();
+    }
+
+    return sent;
   } catch (err) {
     console.error('sendTelegram error:', err.message);
     return 'FAILED';
@@ -114,22 +138,30 @@ async function updateMessageAfterDecision(token, query, textBadge) {
   try {
     const message = query.message;
     if (!message || !message.chat?.id || !message.message_id) return;
-    const oldCaption = message.caption || '';
-    const newCaption = `${oldCaption}\n\n${textBadge}`.slice(0, 1024);
+    const isCaption = typeof message.caption === 'string';
+    const oldText = isCaption ? message.caption : (message.text || '');
+    const newText = `${oldText}\n\n${textBadge}`.slice(0, 1024);
 
-    await fetch(`https://api.telegram.org/bot${token}/editMessageCaption`, {
+    const method = isCaption ? 'editMessageCaption' : 'editMessageText';
+    const body = {
+      chat_id: message.chat.id,
+      message_id: message.message_id,
+      reply_markup: { inline_keyboard: [] }
+    };
+    if (isCaption) {
+      body.caption = newText;
+    } else {
+      body.text = newText;
+    }
+
+    await fetch(`https://api.telegram.org/bot${token}/${method}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: message.chat.id,
-        message_id: message.message_id,
-        caption: newCaption,
-        reply_markup: { inline_keyboard: [] }
-      }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(5000)
     });
   } catch (err) {
-    console.error('editMessageCaption error:', err.message);
+    console.error('updateMessageAfterDecision error:', err.message);
   }
 }
 
