@@ -50,10 +50,32 @@ async function approve(orderId,reference,confirmed){
     console.log('APPROVED_ON_LOCAL_ONLY '+orderId+'; one unique verified reference; GameServer will deliver item 4037 through existing approved-order handler');
   }catch(e){await c.rollback();return abort('APPROVAL_FAILED '+(e.code||e.message));}finally{c.release();}
 }
+async function reject(orderId,reason='Rejected by operator'){
+  if(!/^[0-9a-f-]{36}$/.test(orderId||'')){
+    return abort('Usage: node operator.mjs reject <order-uuid> [reason]');
+  }
+  const admin=Number(process.env.LOCAL_TOPUP_OPERATOR_ID||101);
+  if(!Number.isSafeInteger(admin)||admin<1) return abort('Invalid GM operator ID');
+  const c=await db.getConnection();
+  try{
+    await c.beginTransaction();
+    const [rows]=await c.execute('SELECT o.account_name,o.character_id,o.status FROM blitz_topup_order o WHERE o.order_id=? FOR UPDATE',[orderId]);
+    if(!rows.length) throw Error('Order not found');
+    if(!['CREATED','PENDING_PAYMENT','PENDING_REVIEW'].includes(rows[0].status)){
+      throw Error('Order cannot be rejected from status '+rows[0].status);
+    }
+    await c.execute("UPDATE blitz_topup_order SET status='REJECTED',status_changed_at=NOW(6) WHERE order_id=?",[orderId]);
+    await c.execute("UPDATE blitz_local_slips SET verification='MANUAL_REJECTED',reviewed_at=NOW(6) WHERE order_id=?",[orderId]);
+    await c.execute("INSERT INTO blitz_topup_admin_action(order_id,admin_id,decision,reason) VALUES(?,?,'REJECTED',?)",[orderId,admin,reason]);
+    await c.commit();
+    console.log('REJECTED_ON_LOCAL_ONLY '+orderId+'; reason: '+reason);
+  }catch(e){await c.rollback();return abort('REJECTION_FAILED '+(e.code||e.message));}finally{c.release();}
+}
 try{
   if(cmd==='init')await init();
   else if(cmd==='pair')await pairing(args[0]);
   else if(cmd==='status')await status(args[0]);
   else if(cmd==='approve')await approve(args[0],args[1],args[2]);
-  else abort('Commands: init | pair <online-character-id> | status <order-id> | approve <order-id> <bank-ref> --bank-confirmed');
+  else if(cmd==='reject')await reject(args[0],args.slice(1).join(' ') || undefined);
+  else abort('Commands: init | pair <online-character-id> | status <order-id> | approve <order-id> <bank-ref> --bank-confirmed | reject <order-id> [reason]');
 }finally{await db.end();}

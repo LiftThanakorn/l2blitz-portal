@@ -128,7 +128,7 @@ app.get('/api/local/qr/:amount.png',async(req,res)=>{
   if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
   const amount=Number(req.params.amount);
   if(!allowedPacks.has(amount))return fail(res,404,'ไม่พบ QR');
-  const [orders]=await db.execute("SELECT order_id FROM blitz_topup_order WHERE account_name=? AND character_id=? AND price_thb=? AND status IN ('PENDING_PAYMENT','PENDING_REVIEW') LIMIT 1",[session.account_name,session.character_id,amount]);
+  const [orders]=await db.execute("SELECT order_id FROM blitz_topup_order WHERE account_name=? AND price_thb=? AND status IN ('PENDING_PAYMENT','PENDING_REVIEW') LIMIT 1",[session.account_name,amount]);
   if(!orders.length)return fail(res,403,'ยังไม่มีคำสั่งซื้อแพ็กเกจนี้');
   try {
     const image=await fs.readFile(path.join(root,'public','qr',amount+'.png'));
@@ -144,8 +144,58 @@ app.get('/api/local/packages',async(req,res)=>{
 app.get('/api/local/orders',async(req,res)=>{
   const session=await userSession(req);
   if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
-  const [rows]=await db.execute("SELECT o.order_id,o.price_thb,o.coins,o.status,o.created_at,s.verification FROM blitz_topup_order o LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.account_name=? AND o.character_id=? ORDER BY o.created_at DESC LIMIT 15",[session.account_name,session.character_id]);
+  await db.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status='PENDING_PAYMENT' AND expires_at<=NOW(6)",[session.account_name]);
+  const [rows]=await db.execute("SELECT o.order_id,o.price_thb,o.coins,o.status,o.created_at,c.char_name,s.verification FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.account_name=? ORDER BY o.created_at DESC LIMIT 15",[session.account_name]);
   res.json({orders:rows});
+});
+app.get('/api/local/active-order',async(req,res)=>{
+  const session=await userSession(req);
+  if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
+  await db.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status='PENDING_PAYMENT' AND expires_at<=NOW(6)",[session.account_name]);
+  const [rows]=await db.execute("SELECT o.order_id,o.price_thb,o.coins,o.bonus_coins,o.status,o.created_at,o.expires_at,o.character_id,c.char_name,s.verification FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.account_name=? AND o.status IN ('CREATED','PENDING_PAYMENT','PENDING_REVIEW') ORDER BY o.created_at DESC LIMIT 1",[session.account_name]);
+  if(!rows.length)return res.json(null);
+  const row=rows[0];
+  let payee={id:'',recipient:''};
+  try{payee=await payeeConfig();}catch{}
+  res.json({
+    orderId:row.order_id,
+    amount:Number(row.price_thb),
+    coins:Number(row.coins)+Number(row.bonus_coins),
+    promptpayId:payee.id,
+    recipientName:payee.recipient,
+    status:row.status,
+    verification:row.verification||null,
+    characterId:row.character_id,
+    characterName:row.char_name,
+    createdAt:row.created_at,
+    expiresAt:row.expires_at
+  });
+});
+app.post('/api/local/orders/:orderId/cancel',async(req,res)=>{
+  const session=await userSession(req);if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
+  const id=String(req.params.orderId||'');
+  if(!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(id))return fail(res,400,'เลขคำสั่งซื้อไม่ถูกต้อง');
+  const c=await db.getConnection();
+  try{
+    await c.beginTransaction();
+    const [orders]=await c.execute("SELECT order_id,status FROM blitz_topup_order WHERE order_id=? AND account_name=? FOR UPDATE",[id,session.account_name]);
+    if(!orders.length){await c.rollback();return fail(res,404,'ไม่พบคำสั่งซื้อ');}
+    const currentStatus=orders[0].status;
+    if(!['CREATED','PENDING_PAYMENT','PENDING_REVIEW'].includes(currentStatus)){
+      await c.rollback();
+      return fail(res,409,'ไม่สามารถยกเลิกคำสั่งซื้อในสถานะ '+currentStatus);
+    }
+    await c.execute("UPDATE blitz_topup_order SET status='CANCELLED',status_changed_at=NOW(6) WHERE order_id=?",[id]);
+    await c.execute("UPDATE blitz_local_slips SET verification='MANUAL_REJECTED',reviewed_at=NOW(6) WHERE order_id=?",[id]);
+    await c.commit();
+    res.json({ok:true,status:'CANCELLED',message:'ยกเลิกคำสั่งซื้อแล้ว'});
+  }catch(e){
+    await c.rollback();
+    console.error('cancel order error',e.code||e.message);
+    fail(res,500,'ยกเลิกคำสั่งซื้อไม่สำเร็จ');
+  }finally{
+    c.release();
+  }
 });
 app.post('/api/local/orders',async(req,res)=>{
   if(!purchasesAllowed)return fail(res,423,'การทดสอบรับเงินยังไม่เปิด');
@@ -157,6 +207,7 @@ app.post('/api/local/orders',async(req,res)=>{
     await c.beginTransaction();
     const [owner]=await c.execute("SELECT a.login FROM accounts a JOIN characters ch ON ch.account_name=a.login WHERE a.login=? AND ch.charId=? FOR UPDATE",[session.account_name,session.character_id]);
     if(!owner.length)throw Error('Account ownership mismatch');
+    await c.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status='PENDING_PAYMENT' AND expires_at<=NOW(6)",[session.account_name]);
     const [active]=await c.execute("SELECT order_id FROM blitz_topup_order WHERE account_name=? AND status IN ('CREATED','PENDING_PAYMENT','PENDING_REVIEW','APPROVED') LIMIT 1",[session.account_name]);
     if(active.length) {await c.rollback();return fail(res,409,'มีคำสั่งซื้อที่ยังไม่เสร็จ กรุณาตรวจประวัติ');}
     const [packs]=await c.execute('SELECT package_id,name,price_thb,coins,bonus_coins FROM blitz_topup_package WHERE enabled=1 AND price_thb=? LIMIT 1',[price]);
@@ -209,7 +260,7 @@ app.post('/api/local/orders/:orderId/slip',async(req,res)=>{
   let price=0;
   try{
     await conn.beginTransaction();
-    const [orders]=await conn.execute("SELECT price_thb,status,expires_at FROM blitz_topup_order WHERE order_id=? AND account_name=? AND character_id=? FOR UPDATE",[id,session.account_name,session.character_id]);
+    const [orders]=await conn.execute("SELECT price_thb,status,expires_at FROM blitz_topup_order WHERE order_id=? AND account_name=? FOR UPDATE",[id,session.account_name]);
     if(!orders.length || orders[0].status!=='PENDING_PAYMENT') {await conn.rollback();return fail(res,409,'ไม่พบรายการที่รอแนบสลิป');}
     if(new Date(orders[0].expires_at).getTime() < Date.now()) {await conn.rollback();return fail(res,410,'คำสั่งซื้อหมดอายุ กรุณาติดต่อ GM');}
     price=Number(orders[0].price_thb);

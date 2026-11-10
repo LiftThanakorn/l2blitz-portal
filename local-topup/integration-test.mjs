@@ -97,15 +97,43 @@ try{
   assert.equal((await endpoint('login',{code})).status,401,'token replay denied');
   const me=await endpoint('me',undefined,cookie);assert.equal(me.body.character,'TestBlitz');
   const packs=await endpoint('packages',undefined,cookie);assert.equal(packs.body.packages.length,5);
+  assert.equal((await endpoint('active-order',undefined,cookie)).body,null,'active-order returns null when no order');
   const bad=await endpoint('orders',{amount:50},cookie);assert.equal(bad.status,400,'legacy tier disabled');
   const order=await endpoint('orders',{amount:100},cookie);assert.equal(order.status,201,'order created');
   assert.equal(order.body.amount,100);
   assert.equal((await endpoint('orders',{amount:300},cookie)).status,409,'duplicate active order denied');
+
+  // Verify active-order endpoint returns pending payment order
+  const active1=await endpoint('active-order',undefined,cookie);
+  assert.equal(active1.status,200);
+  assert.equal(active1.body.orderId,order.body.orderId);
+  assert.equal(active1.body.status,'PENDING_PAYMENT');
+  assert.equal(active1.body.amount,100);
+  assert.equal(active1.body.characterName,'TestBlitz');
+
+  // Scope asymmetry: second character on same account can see orders, active-order, and upload slip
+  await admin.execute("INSERT INTO characters(charId,account_name,char_name,online) VALUES(41000003,'local_test_account','TestAlt',1)");
+  const altLogin=await endpoint('redeem',{character:'TestAlt'});
+  assert.equal(altLogin.status,200,'second character on same account linked');
+  const altCookie=altLogin.cookie.split(';')[0];
+  const altOrders=await endpoint('orders',undefined,altCookie);
+  assert.equal(altOrders.body.orders.length,1,'order visible from second character on same account');
+  assert.equal(altOrders.body.orders[0].char_name,'TestBlitz','order retains original ordering character name');
+  const altActive=await endpoint('active-order',undefined,altCookie);
+  assert.equal(altActive.body.orderId,order.body.orderId,'active order visible across characters on same account');
+  const altQr=await fetch('http://127.0.0.1:3102/api/local/qr/100.png',{headers:{Cookie:altCookie}});
+  assert.equal(altQr.status,200,'QR accessible across characters on same account');
+
   const img=await fs.readFile(path.join(root,'public','qr','100.png'));
-  const upload=await endpoint('orders/'+order.body.orderId+'/slip',{imageBase64:'data:image/png;base64,'+img.toString('base64')},cookie);
-  assert.equal(upload.status,202,'simulated receipt stored');
+  const upload=await endpoint('orders/'+order.body.orderId+'/slip',{imageBase64:'data:image/png;base64,'+img.toString('base64')},altCookie);
+  assert.equal(upload.status,202,'simulated receipt stored via alternate character on same account');
   assert.equal(upload.body.verification,'MANUAL_PENDING','missing provider is not approval');
   assert.equal((await endpoint('orders/'+order.body.orderId+'/slip',{imageBase64:'data:image/png;base64,'+img.toString('base64')},cookie)).status,409,'replay denied');
+
+  // Verify active-order endpoint reflects PENDING_REVIEW
+  const activeReview=await endpoint('active-order',undefined,cookie);
+  assert.equal(activeReview.body.status,'PENDING_REVIEW','active-order reflects PENDING_REVIEW');
+
   const pending=(await query("SELECT status FROM blitz_topup_order WHERE order_id='"+order.body.orderId+"'"))[0];
   assert.equal(pending[0].status,'PENDING_REVIEW','not auto credited');
   let approved=false;
@@ -120,6 +148,61 @@ try{
   try{execFileSync(process.execPath,[path.join(root,'operator.mjs'),'approve',order.body.orderId,reference,'--bank-confirmed'],{env,stdio:'pipe'});replayApproved=true;}catch{}
   assert.equal(replayApproved,false,'replay cannot reapprove');
   assert.equal((await endpoint('approve',{orderId:order.body.orderId},cookie)).status,404,'web cannot self-approve');
+
+  // Test Order Cancellation in PENDING_PAYMENT
+  await query("UPDATE blitz_topup_order SET status='CREDITED',status_changed_at=NOW(6) WHERE order_id='"+order.body.orderId+"'");
+  const cancelTestOrder=await endpoint('orders',{amount:500},cookie);
+  assert.equal(cancelTestOrder.status,201,'new order for cancel test created');
+  const thaiCancel=await endpoint('orders/'+cancelTestOrder.body.orderId+'/cancel',{},thaiLogin.cookie.split(';')[0]);
+  assert.equal(thaiCancel.status,404,'cannot cancel order from another account');
+  assert.equal((await endpoint('orders/not-a-uuid/cancel',{},cookie)).status,400,'invalid order id format rejected');
+  assert.equal((await endpoint('orders/00000000-0000-0000-0000-000000000000/cancel',{},cookie)).status,404,'nonexistent order rejected');
+  const cancelRes=await endpoint('orders/'+cancelTestOrder.body.orderId+'/cancel',{},cookie);
+  assert.equal(cancelRes.status,200,'order cancelled successfully');
+  assert.equal(cancelRes.body.status,'CANCELLED');
+  assert.equal((await endpoint('active-order',undefined,cookie)).body,null,'active-order is null after cancel');
+  const replayCancel=await endpoint('orders/'+cancelTestOrder.body.orderId+'/cancel',{},cookie);
+  assert.equal(replayCancel.status,409,'cannot re-cancel cancelled order');
+
+  // Test Cancellation in PENDING_REVIEW
+  const cancelReviewOrder=await endpoint('orders',{amount:500},cookie);
+  assert.equal(cancelReviewOrder.status,201,'new order created after cancellation');
+  const img500=await fs.readFile(path.join(root,'public','qr','500.png'));
+  await endpoint('orders/'+cancelReviewOrder.body.orderId+'/slip',{imageBase64:'data:image/png;base64,'+img500.toString('base64')},cookie);
+  const cancelReviewRes=await endpoint('orders/'+cancelReviewOrder.body.orderId+'/cancel',{},cookie);
+  assert.equal(cancelReviewRes.status,200,'pending review order cancelled');
+  const [cancelledSlip]=await query("SELECT verification FROM blitz_local_slips WHERE order_id='"+cancelReviewOrder.body.orderId+"'");
+  assert.equal(cancelledSlip[0].verification,'MANUAL_REJECTED','cancelled slip marked MANUAL_REJECTED');
+
+  // Test auto-expiration of stale PENDING_PAYMENT orders
+  const staleOrder=await endpoint('orders',{amount:1000},cookie);
+  assert.equal(staleOrder.status,201,'order to become stale created');
+  await query("UPDATE blitz_topup_order SET expires_at=DATE_SUB(NOW(6),INTERVAL 1 MINUTE) WHERE order_id='"+staleOrder.body.orderId+"'");
+  const activeStale=await endpoint('active-order',undefined,cookie);
+  assert.equal(activeStale.body,null,'stale order auto-expired and not returned by active-order');
+  const [staleCheck]=await query("SELECT status FROM blitz_topup_order WHERE order_id='"+staleOrder.body.orderId+"'");
+  assert.equal(staleCheck[0].status,'EXPIRED','stale order transitioned to EXPIRED in database');
+  const afterExpire=await endpoint('orders',{amount:1000},cookie);
+  assert.equal(afterExpire.status,201,'new order created without conflict after stale order auto-expired');
+  await query("UPDATE blitz_topup_order SET status='CANCELLED' WHERE order_id='"+afterExpire.body.orderId+"'");
+
+  // Test operator reject command
+  const rejectOrder=await endpoint('orders',{amount:1500},cookie);
+  assert.equal(rejectOrder.status,201,'order for operator reject created');
+  const img1500=await fs.readFile(path.join(root,'public','qr','1500.png'));
+  await endpoint('orders/'+rejectOrder.body.orderId+'/slip',{imageBase64:'data:image/png;base64,'+img1500.toString('base64')},cookie);
+  const rejectOut=execFileSync(process.execPath,[path.join(root,'operator.mjs'),'reject',rejectOrder.body.orderId,'Slip blurred or invalid'],{env,encoding:'utf8'});
+  assert(rejectOut.includes('REJECTED_ON_LOCAL_ONLY'),'operator reject output confirmed');
+  const [rejectedOrder]=await query("SELECT status FROM blitz_topup_order WHERE order_id='"+rejectOrder.body.orderId+"'");
+  assert.equal(rejectedOrder[0].status,'REJECTED','order status is REJECTED');
+  const [rejectedSlip]=await query("SELECT verification FROM blitz_local_slips WHERE order_id='"+rejectOrder.body.orderId+"'");
+  assert.equal(rejectedSlip[0].verification,'MANUAL_REJECTED','slip verification is MANUAL_REJECTED');
+  const [adminAction]=await query("SELECT decision,reason FROM blitz_topup_admin_action WHERE order_id='"+rejectOrder.body.orderId+"'");
+  assert.equal(adminAction[0].decision,'REJECTED','admin action decision is REJECTED');
+  assert.equal(adminAction[0].reason,'Slip blurred or invalid');
+  let rejectReapprove=false;
+  try{execFileSync(process.execPath,[path.join(root,'operator.mjs'),'approve',rejectOrder.body.orderId,'REFBANK12345','--bank-confirmed'],{env,stdio:'pipe'});rejectReapprove=true;}catch{}
+  assert.equal(rejectReapprove,false,'cannot approve rejected order');
 
   // Verify Slip2Go auto-approval when Slip2Go returns a valid API_REVIEW (200200)
   const autoTransRef='SLIP2GOREF'+crypto.randomBytes(6).toString('hex');
