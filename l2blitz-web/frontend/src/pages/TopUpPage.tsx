@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { CheckCircle2, CreditCard, ImageUp, LockKeyhole, ReceiptText, RefreshCw, ShieldCheck, TriangleAlert, Wallet, LogOut, XCircle } from 'lucide-react';
+import { CheckCircle2, CreditCard, ImageUp, LockKeyhole, ReceiptText, RefreshCw, ShieldCheck, TriangleAlert, Wallet, LogOut, XCircle, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 type Player = { account: string; character: string; characterId: number };
@@ -7,6 +7,13 @@ type Tier = { package_id: number; price_thb: string; coins: number; bonus_coins:
 type Order = { order_id: string; price_thb: string; coins: number; status: string; verification: string | null; char_name?: string | null };
 type NewOrder = { orderId: string; amount: number; coins: number; promptpayId: string; recipientName: string; status?: string; verification?: string | null; characterName?: string | null; characterId?: number };
 type Health = { ok: boolean; mode: string; payments: string; integrations?: { slip2go: boolean; telegram: boolean } };
+type ModalData = {
+  type: 'success' | 'error' | 'info';
+  title: string;
+  message: string;
+  actionLabel?: string;
+  onAction?: () => void;
+};
 
 async function localApi<T>(path: string, payload?: object): Promise<T> {
   const response = await fetch('/api/local/' + path, {
@@ -86,6 +93,8 @@ export function TopUpPage() {
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [modal, setModal] = useState<ModalData | null>(null);
+  const prevHistoryRef = useRef<Order[]>([]);
   const browserBootRef = useRef<Promise<boolean> | null>(null);
   const sectionPromptPayRef = useRef<HTMLElement | null>(null);
 
@@ -103,7 +112,26 @@ export function TopUpPage() {
           localApi<NewOrder | null>('active-order').catch(() => null),
         ]);
         setTiers(packs.packages);
+        const oldHistory = prevHistoryRef.current;
+        prevHistoryRef.current = orders.orders;
         setHistory(orders.orders);
+        if (oldHistory.length > 0) {
+          const justCredited = orders.orders.find(newOrd =>
+            newOrd.status === 'CREDITED' &&
+            oldHistory.some(oldOrd => oldOrd.order_id === newOrd.order_id && (oldOrd.status === 'APPROVED' || oldOrd.status === 'PENDING_REVIEW'))
+          );
+          if (justCredited) {
+            setModal({
+              type: 'success',
+              title: t('🎉 Coin เข้าตัวละครแล้ว!', '🎉 Coin Delivered!'),
+              message: t(
+                `คำสั่งซื้อ #${justCredited.order_id.slice(0, 8)} ได้รับการอนุมัติและส่ง ${format(justCredited.coins)} L2Blitz Coin เข้าตัวละคร ${justCredited.char_name || person.character} ในเกมเรียบร้อยแล้ว!`,
+                `Order #${justCredited.order_id.slice(0, 8)} approved! ${format(justCredited.coins)} L2Blitz Coin delivered to ${justCredited.char_name || person.character} in-game!`
+              ),
+              actionLabel: t('ยอดเยี่ยม', 'Awesome')
+            });
+          }
+        }
         if (activeOrder && activeOrder.orderId) {
           setActive(activeOrder);
         } else {
@@ -136,10 +164,26 @@ export function TopUpPage() {
     void browserBootRef.current.then(async (redeemed) => {
       if (!activeSub) return;
       await refresh();
-      if (activeSub && redeemed) setSuccess(t('เชื่อมต่อจากในเกมสำเร็จ ไม่ต้องกรอกรหัส', 'Connected from in-game without entering a code'));
+      if (activeSub && redeemed) {
+        const msg = t('เชื่อมต่อจากในเกมสำเร็จ ไม่ต้องกรอกรหัส', 'Connected from in-game without entering a code');
+        setSuccess(msg);
+        setModal({
+          type: 'success',
+          title: t('เชื่อมต่อจากในเกมสำเร็จ', 'Connected From Game'),
+          message: t('เข้าสู่ระบบด้วยตัวละครจากในเกมเรียบร้อยแล้ว ไม่ต้องกรอกรหัสยืนยัน คุณสามารถเลือกแพ็กเกจที่ต้องการเติมเงินได้ทันที', 'Signed in directly with your in-game character without entering a code. You can now select a package to top up.'),
+          actionLabel: t('เริ่มเลือกแพ็กเกจ', 'Select Package')
+        });
+      }
     }).catch((e) => {
       if (!activeSub) return;
-      setError(e instanceof Error ? e.message : 'Browser login failed');
+      const msg = e instanceof Error ? e.message : 'Browser login failed';
+      setError(msg);
+      setModal({
+        type: 'error',
+        title: t('เชื่อมต่อไม่สำเร็จ', 'Connection Failed'),
+        message: msg,
+        actionLabel: t('ปิด', 'Close')
+      });
       void refresh();
     });
     return () => { activeSub = false; };
@@ -153,6 +197,14 @@ export function TopUpPage() {
     return () => window.clearInterval(timer);
   }, [player, active, history, refresh]);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setModal(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   async function linkGame(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true); setError(''); setSuccess('');
@@ -161,7 +213,22 @@ export function TopUpPage() {
       setOtp('');
       await refresh();
       setSuccess(t('เชื่อมต่อชื่อตัวละครแล้ว', 'Character linked to the website'));
-    } catch (e) { setError(e instanceof Error ? e.message : 'Login failed'); }
+      setModal({
+        type: 'success',
+        title: t('เชื่อมต่อตัวละครสำเร็จ', 'Character Connected'),
+        message: t('เชื่อมต่อชื่อตัวละครเข้ากับระบบเติมเงินเรียบร้อยแล้ว สามารถเริ่มทำรายการได้ทันที', 'Character successfully linked. You can now proceed to top up.'),
+        actionLabel: t('ตกลง', 'OK')
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Login failed';
+      setError(msg);
+      setModal({
+        type: 'error',
+        title: t('เชื่อมต่อไม่สำเร็จ', 'Link Failed'),
+        message: msg,
+        actionLabel: t('ลองใหม่อีกครั้ง', 'Try Again')
+      });
+    }
     finally { setBusy(false); }
   }
 
@@ -171,11 +238,34 @@ export function TopUpPage() {
       const result = await localApi<NewOrder>('orders', { amount: selected });
       setActive(result);
       setSuccess(t('สร้างรายการสำเร็จ กรุณาตรวจสอบชื่อผู้รับก่อนโอนเงิน', 'Order created. Verify bank payee before transfer.'));
+      setModal({
+        type: 'info',
+        title: t('สร้างคำสั่งซื้อสำเร็จ', 'Order Created'),
+        message: t(
+          `สร้างรายการชำระเงิน ${format(selected)} บาท เรียบร้อยแล้ว\nกรุณาสแกน QR Code PromptPay หรือตรวจสอบชื่อบัญชีผู้รับก่อนโอนเงิน`,
+          `Order created for ฿${format(selected)}.\nPlease scan PromptPay QR or verify bank payee before transfer.`
+        ),
+        actionLabel: t('ไปที่ขั้นตอนชำระเงิน', 'Proceed to Payment'),
+        onAction: () => {
+          setTimeout(() => {
+            sectionPromptPayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
+        }
+      });
       await refresh();
       setTimeout(() => {
         sectionPromptPayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
-    } catch(e) { setError(e instanceof Error ? e.message : 'Order could not be created'); }
+    } catch(e) {
+      const msg = e instanceof Error ? e.message : 'Order could not be created';
+      setError(msg);
+      setModal({
+        type: 'error',
+        title: t('สร้างคำสั่งซื้อไม่สำเร็จ', 'Order Failed'),
+        message: msg,
+        actionLabel: t('ตกลง', 'OK')
+      });
+    }
     finally { setBusy(false); }
   }
 
@@ -183,19 +273,50 @@ export function TopUpPage() {
     event.preventDefault();
     if (!active || !file) return;
     if (!['image/png','image/jpeg','image/webp'].includes(file.type) || file.size > 4 * 1024 * 1024) {
-      setError(t('รองรับรูป JPG, PNG, WebP ขนาดไม่เกิน 4 MB', 'JPG, PNG or WebP only, maximum 4MB'));return;
+      const msg = t('รองรับรูป JPG, PNG, WebP ขนาดไม่เกิน 4 MB', 'JPG, PNG or WebP only, maximum 4MB');
+      setError(msg);
+      setModal({
+        type: 'error',
+        title: t('รูปภาพไม่ถูกต้อง', 'Invalid Image'),
+        message: msg,
+        actionLabel: t('ตกลง', 'OK')
+      });
+      return;
     }
     setBusy(true); setError(''); setSuccess('');
     try {
       const result = await localApi<{ status?: string; verification: string; telegram: string; message?: string }>('orders/' + active.orderId + '/slip',{ imageBase64: await imageData(file) });
       if (result.status === 'APPROVED') {
-        setSuccess(t('ตรวจสอบสลิปสำเร็จ! ระบบกำลังส่ง L2Blitz Coin เข้าตัวละครในเกมอัตโนมัติ', 'Slip verified! Automatically delivering L2Blitz Coin to your character in-game.'));
+        const msg = t('ตรวจสอบสลิปสำเร็จ! ระบบกำลังส่ง L2Blitz Coin เข้าตัวละครในเกมอัตโนมัติ', 'Slip verified! Automatically delivering L2Blitz Coin to your character in-game.');
+        setSuccess(msg);
+        setModal({
+          type: 'success',
+          title: t('🎉 ตรวจสอบสลิปสำเร็จ!', '🎉 Slip Verified!'),
+          message: t('ระบบตรวจสอบสลิปอัตโนมัติสำเร็จแล้ว! กำลังส่ง L2Blitz Coin เข้าตัวละครของคุณในเกมทันทีแบบเรียลไทม์', 'Automated slip verification succeeded! Delivering L2Blitz Coin to your character in-game right now in real time.'),
+          actionLabel: t('ยอดเยี่ยม', 'Awesome')
+        });
       } else {
-        setSuccess(t('ส่งหลักฐานเรียบร้อยแล้ว แอดมินกำลังตรวจสอบและจะอนุมัติเหรียญเข้าตัวละครให้ทันที', 'Slip submitted successfully. Admin is reviewing and will deliver your coins shortly.'));
+        const msg = t('ส่งหลักฐานเรียบร้อยแล้ว แอดมินกำลังตรวจสอบและจะอนุมัติเหรียญเข้าตัวละครให้ทันที', 'Slip submitted successfully. Admin is reviewing and will deliver your coins shortly.');
+        setSuccess(msg);
+        setModal({
+          type: 'info',
+          title: t('ส่งหลักฐานเรียบร้อยแล้ว', 'Slip Submitted'),
+          message: t('ระบบบันทึกสลิปเรียบร้อยแล้ว แอดมินกำลังตรวจสอบและจะอนุมัติเหรียญเข้าตัวละครให้ทันที', 'Slip recorded successfully. Admin is reviewing and will approve coins to your character shortly.'),
+          actionLabel: t('รับทราบ', 'Got it')
+        });
       }
       setActive(null); setFile(null);
       await refresh();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Slip rejected'); }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Slip rejected';
+      setError(msg);
+      setModal({
+        type: 'error',
+        title: t('ไม่สามารถส่งสลิปได้', 'Slip Upload Failed'),
+        message: msg,
+        actionLabel: t('ลองใหม่อีกครั้ง', 'Try Again')
+      });
+    }
     finally { setBusy(false); }
   }
 
@@ -207,9 +328,22 @@ export function TopUpPage() {
       setActive(null);
       setFile(null);
       setSuccess(t('ยกเลิกคำสั่งซื้อแล้ว', 'Order cancelled successfully'));
+      setModal({
+        type: 'info',
+        title: t('ยกเลิกคำสั่งซื้อแล้ว', 'Order Cancelled'),
+        message: t('คำสั่งซื้อของคุณถูกยกเลิกเรียบร้อยแล้ว คุณสามารถเลือกแพ็กเกจใหม่ได้ทันที', 'Your order was cancelled successfully. You can select a new package now.'),
+        actionLabel: t('ตกลง', 'OK')
+      });
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Cancel failed');
+      const msg = e instanceof Error ? e.message : 'Cancel failed';
+      setError(msg);
+      setModal({
+        type: 'error',
+        title: t('ยกเลิกไม่สำเร็จ', 'Cancel Failed'),
+        message: msg,
+        actionLabel: t('ตกลง', 'OK')
+      });
     } finally {
       setBusy(false);
     }
