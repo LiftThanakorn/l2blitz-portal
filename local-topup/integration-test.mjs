@@ -186,6 +186,17 @@ try{
   assert.equal(afterExpire.status,201,'new order created without conflict after stale order auto-expired');
   await query("UPDATE blitz_topup_order SET status='CANCELLED' WHERE order_id='"+afterExpire.body.orderId+"'");
 
+  // Test auto-expiration of stale CREATED orders (from in-game Community Board) and bonus_coins in orders history
+  const createdUuid=crypto.randomUUID();
+  await admin.execute("INSERT INTO blitz_topup_order(order_id,account_name,character_id,package_id,package_name,price_thb,coins,bonus_coins,status,created_at,expires_at,status_changed_at) VALUES(?,?,?,5,'1000 Coin',1000,1000,50,'CREATED',DATE_SUB(NOW(6),INTERVAL 16 MINUTE),DATE_SUB(NOW(6),INTERVAL 1 MINUTE),NOW(6))",[createdUuid,'local_test_account',41000001]);
+  const activeCreated=await endpoint('active-order',undefined,cookie);
+  assert.equal(activeCreated.body,null,'stale CREATED order auto-expired and not returned by active-order');
+  const [createdCheck]=await query("SELECT status FROM blitz_topup_order WHERE order_id='"+createdUuid+"'");
+  assert.equal(createdCheck[0].status,'EXPIRED','stale CREATED order transitioned to EXPIRED');
+  const historyWithBonus=await endpoint('orders',undefined,cookie);
+  const foundOrder=historyWithBonus.body.orders.find(o=>o.order_id===createdUuid);
+  assert.equal(foundOrder.coins,1050,'orders history calculates total coins including bonus_coins (1000 + 50)');
+
   // Test operator reject command
   const rejectOrder=await endpoint('orders',{amount:1500},cookie);
   assert.equal(rejectOrder.status,201,'order for operator reject created');

@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 type Player = { account: string; character: string; characterId: number };
 type Tier = { package_id: number; price_thb: string; coins: number; bonus_coins: number };
 type Order = { order_id: string; price_thb: string; coins: number; status: string; verification: string | null; char_name?: string | null };
-type NewOrder = { orderId: string; amount: number; coins: number; promptpayId: string; recipientName: string; status?: string; verification?: string | null };
+type NewOrder = { orderId: string; amount: number; coins: number; promptpayId: string; recipientName: string; status?: string; verification?: string | null; characterName?: string | null; characterId?: number };
 type Health = { ok: boolean; mode: string; payments: string; integrations?: { slip2go: boolean; telegram: boolean } };
 
 async function localApi<T>(path: string, payload?: object): Promise<T> {
@@ -212,19 +212,25 @@ export function TopUpPage() {
       <section className={panel}>
         <p className="small-note text-[#C4531E] font-semibold mb-4">02 / PACKAGE</p>
         <h2 className="section-heading">{t('เลือกแพ็กเกจ', 'Select Package')}</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-7 mb-6">
-          {prices.map(price=>{
-            const pack=tiers.find(x=>Number(x.price_thb)===price);
-            return <button key={price} disabled={busy||!pack||!!active} type="button" aria-pressed={selected===price} onClick={()=>setSelected(price)}
-              className={'text-left border p-4 min-w-0 transition-colors disabled:opacity-40 '+(selected===price?'border-[#E97540] bg-[#FFF1E8]':'border-[#E8E3DB] bg-[#F7F5F0] hover:border-[#E97540]')}>
-              <strong className="block text-[22px] tabular-nums">{format(price)}</strong>
-              <span className="small-note text-[#77736C]">{pack?format(Number(pack.coins)+Number(pack.bonus_coins)):'—'} Coin</span>
-            </button>;
-          })}
-        </div>
-        <button className="btn-primary w-full sm:w-auto justify-center" type="button" onClick={placeOrder} disabled={!health||health.payments!=='LOCAL_OPERATOR_PILOT'||busy||!!active||!tiers.some(x=>Number(x.price_thb)===selected)}>
-          <CreditCard size={18}/>{t('สร้างคำสั่งซื้อ Local', 'Create Local Order')}
-        </button>
+        {(() => {
+          const hasPendingDelivery = history.some(o => o.status === 'APPROVED');
+          return <>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-7 mb-6">
+              {prices.map(price=>{
+                const pack=tiers.find(x=>Number(x.price_thb)===price);
+                return <button key={price} disabled={busy||!pack||!!active||hasPendingDelivery} type="button" aria-pressed={selected===price} onClick={()=>setSelected(price)}
+                  className={'text-left border p-4 min-w-0 transition-colors disabled:opacity-40 '+(selected===price?'border-[#E97540] bg-[#FFF1E8]':'border-[#E8E3DB] bg-[#F7F5F0] hover:border-[#E97540]')}>
+                  <strong className="block text-[22px] tabular-nums">{format(price)}</strong>
+                  <span className="small-note text-[#77736C]">{pack?format(Number(pack.coins)+Number(pack.bonus_coins)):'—'} Coin</span>
+                </button>;
+              })}
+            </div>
+            <button className="btn-primary w-full sm:w-auto justify-center" type="button" onClick={placeOrder} disabled={!health||health.payments!=='LOCAL_OPERATOR_PILOT'||busy||!!active||hasPendingDelivery||!tiers.some(x=>Number(x.price_thb)===selected)}>
+              <CreditCard size={18}/>{t('สร้างคำสั่งซื้อ Local', 'Create Local Order')}
+            </button>
+            {hasPendingDelivery && <p className="small-note text-[#32846B] bg-[#E9F3EF] p-3 border-l-4 border-[#32846B] mt-4">{t('มีคำสั่งซื้อที่ได้รับการอนุมัติแล้ว ระบบกำลังส่ง Coin เข้าตัวละครในเกม กรุณารอสักครู่ก่อนทำรายการใหม่', 'An approved order is currently delivering coins to your character. Please wait before creating a new order.')}</p>}
+          </>;
+        })()}
         <p className={muted+' mt-4'}>{t('การสร้างรายการยังไม่หักเงิน ต้องชำระเองในแอปธนาคารหลังตรวจชื่อผู้รับ', 'Creating an order does not charge your bank account.')}</p>
       </section>
       {active && <section className={panel}>
@@ -250,6 +256,7 @@ export function TopUpPage() {
             <div><p className={muted}>{t('ชื่อผู้รับ', 'Payee')}</p><strong className="body-copy">{active.recipientName}</strong></div>
             <div><p className={muted}>PromptPay</p><strong className="body-copy">{active.promptpayId}</strong></div>
             <div><p className={muted}>Order</p><span className="small-note break-all">{active.orderId}</span></div>
+            <div><p className={muted}>{t('ตัวละครผู้รับ', 'Recipient')}</p><strong className="body-copy">👤 {active.characterName || player.character}</strong></div>
             {active.status && <div><p className={muted}>{t('สถานะคำสั่งซื้อ', 'Status')}</p><span className="small-note font-semibold text-[#C4531E]">{active.status}</span></div>}
             <p className="small-note text-[#8F3A1D] bg-[#FFF1E8] p-3 border-l-4 border-[#E97540]">{t('ก่อนโอนเงินจริง ตรวจว่าชื่อผู้รับในแอปธนาคารตรงกัน หากไม่ตรง ห้ามโอน', 'Verify bank payee name before transferring. Do not pay if mismatched.')}</p>
           </div>

@@ -147,8 +147,8 @@ app.get('/api/local/orders',async(req,res)=>{
   try{
     const session=await userSession(req);
     if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
-    await db.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status='PENDING_PAYMENT' AND expires_at<=NOW(6)",[session.account_name]);
-    const [rows]=await db.execute("SELECT o.order_id,o.price_thb,o.coins,o.status,o.created_at,c.char_name,s.verification FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.account_name=? ORDER BY o.created_at DESC LIMIT 15",[session.account_name]);
+    await db.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status IN ('CREATED','PENDING_PAYMENT') AND expires_at<=NOW(6)",[session.account_name]);
+    const [rows]=await db.execute("SELECT o.order_id,o.price_thb,(o.coins + o.bonus_coins) AS coins,o.status,o.created_at,c.char_name,s.verification FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.account_name=? ORDER BY o.created_at DESC LIMIT 15",[session.account_name]);
     res.json({orders:rows});
   }catch(e){console.error('orders error',e.code||e.message);fail(res,500,'ดึงข้อมูลคำสั่งซื้อไม่สำเร็จ');}
 });
@@ -156,7 +156,7 @@ app.get('/api/local/active-order',async(req,res)=>{
   try{
     const session=await userSession(req);
     if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
-    await db.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status='PENDING_PAYMENT' AND expires_at<=NOW(6)",[session.account_name]);
+    await db.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status IN ('CREATED','PENDING_PAYMENT') AND expires_at<=NOW(6)",[session.account_name]);
     const [rows]=await db.execute("SELECT o.order_id,o.price_thb,o.coins,o.bonus_coins,o.status,o.created_at,o.expires_at,o.character_id,c.char_name,s.verification FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.account_name=? AND o.status IN ('CREATED','PENDING_PAYMENT','PENDING_REVIEW') ORDER BY o.created_at DESC LIMIT 1",[session.account_name]);
     if(!rows.length)return res.json(null);
     const row=rows[0];
@@ -213,7 +213,7 @@ app.post('/api/local/orders',async(req,res)=>{
     await c.beginTransaction();
     const [owner]=await c.execute("SELECT a.login FROM accounts a JOIN characters ch ON ch.account_name=a.login WHERE a.login=? AND ch.charId=? FOR UPDATE",[session.account_name,session.character_id]);
     if(!owner.length)throw Error('Account ownership mismatch');
-    await c.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status='PENDING_PAYMENT' AND expires_at<=NOW(6)",[session.account_name]);
+    await c.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status IN ('CREATED','PENDING_PAYMENT') AND expires_at<=NOW(6)",[session.account_name]);
     const [active]=await c.execute("SELECT order_id FROM blitz_topup_order WHERE account_name=? AND status IN ('CREATED','PENDING_PAYMENT','PENDING_REVIEW','APPROVED') LIMIT 1",[session.account_name]);
     if(active.length) {await c.rollback();return fail(res,409,'มีคำสั่งซื้อที่ยังไม่เสร็จ กรุณาตรวจประวัติ');}
     const [packs]=await c.execute('SELECT package_id,name,price_thb,coins,bonus_coins FROM blitz_topup_package WHERE enabled=1 AND price_thb=? LIMIT 1',[price]);
