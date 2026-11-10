@@ -74,11 +74,24 @@ function limited(req,res,next) {
 }
 app.use('/api/local',limited);
 async function payeeConfig(){
-  const file=path.join(serverRoot,'server','game','config','Custom','BlitzCoinPromptPay.ini');
-  const text=await fs.readFile(file,'utf8');
-  const kv=Object.fromEntries(text.split(/\r?\n/).map(s=>s.match(/^\s*([A-Za-z0-9]+)\s*=\s*(.*?)\s*$/)).filter(Boolean).map(m=>[m[1],m[2]]));
-  if(!kv.PromptPayId||!kv.RecipientName) throw Error('Local PromptPay missing');
-  return {id:kv.PromptPayId,recipient:kv.RecipientName};
+  if (process.env.PROMPTPAY_ID && process.env.PROMPTPAY_NAME) {
+    return { id: process.env.PROMPTPAY_ID, recipient: process.env.PROMPTPAY_NAME };
+  }
+  const candidateFiles = [
+    path.join(serverRoot, 'game', 'config', 'Custom', 'BlitzCoinPromptPay.ini'),
+    path.join(serverRoot, 'server', 'game', 'config', 'Custom', 'BlitzCoinPromptPay.ini'),
+    '/opt/l2blitz/runtime/game/config/Custom/BlitzCoinPromptPay.ini'
+  ];
+  for (const file of candidateFiles) {
+    try {
+      const text = await fs.readFile(file, 'utf8');
+      const kv = Object.fromEntries(text.split(/\r?\n/).map(s=>s.match(/^\s*([A-Za-z0-9]+)\s*=\s*(.*?)\s*$/)).filter(Boolean).map(m=>[m[1],m[2]]));
+      if (kv.PromptPayId && kv.RecipientName) {
+        return { id: kv.PromptPayId, recipient: kv.RecipientName };
+      }
+    } catch {}
+  }
+  throw Error('Local PromptPay missing: checked candidate paths');
 }
 app.get('/api/local/health',async (_req,res)=>{
   try{await db.query('SELECT 1');res.json({ok:true,mode:'LOCAL_ONLY',payments:purchasesAllowed?'LOCAL_OPERATOR_PILOT':'LOCKED',publicVps:false,integrations:{slip2go:!!(process.env.SLIP2GO_SECRET_KEY&&process.env.SLIP2GO_API_URL),telegram:!!(process.env.LOCAL_TOPUP_TELEGRAM_CONFIG || process.env.TELEGRAM_BOT_TOKEN)}});}
@@ -234,10 +247,10 @@ app.post('/api/local/orders',async(req,res)=>{
     if(active.length) {await c.rollback();return fail(res,409,'คุณมีคำสั่งซื้อที่ดำเนินการค้างอยู่ กรุณาชำระเงินหรือยกเลิกรายการเดิมก่อน');}
     const [packs]=await c.execute('SELECT package_id,name,price_thb,coins,bonus_coins FROM blitz_topup_package WHERE enabled=1 AND price_thb=? LIMIT 1',[price]);
     if(!packs.length) throw Error('Package missing');
+    const payee=await payeeConfig();
     const p=packs[0],uuid=crypto.randomUUID();
     await c.execute("INSERT INTO blitz_topup_order(order_id,account_name,character_id,package_id,package_name,price_thb,coins,bonus_coins,status,created_at,expires_at,status_changed_at) VALUES(?,?,?,?,?,?,?,?,'PENDING_PAYMENT',NOW(6),DATE_ADD(NOW(6),INTERVAL 30 MINUTE),NOW(6))",[uuid,session.account_name,session.character_id,p.package_id,p.name,p.price_thb,p.coins,p.bonus_coins]);
     await c.commit();
-    const payee=await payeeConfig();
     res.status(201).json({orderId:uuid,amount:price,coins:Number(p.coins)+Number(p.bonus_coins),promptpayId:payee.id,recipientName:payee.recipient,message:'ต้องโอนด้วยตนเองแล้วแนบสลิปภายใน 30 นาที'});
   }catch(e){await c.rollback();console.error('order error',e.code||e.message);fail(res,500,'สร้างคำสั่งซื้อไม่สำเร็จ');}finally{c.release();}
 });
