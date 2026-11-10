@@ -487,5 +487,84 @@ export function TopUpPage() {
       <button onClick={()=>void logout()} type="button" disabled={busy} className="flex gap-2 items-center small-note text-[#77736C] hover:text-[#C4531E]"><LogOut size={16}/>{t('ออกจากระบบเว็บไซต์', 'Log Out')}</button>
     </div>}
     <p className="small-note text-[#77736C] mt-8 text-center">{t('ระบบเติมเงินอัตโนมัติ L2Blitz · เมื่อยืนยันการชำระเงินแล้ว เหรียญจะเข้าตัวละครทันที', 'L2Blitz Automated Top-Up System · Coins delivered immediately after verification.')}</p>
+
+    {/* Prominent Notification Modal */}
+    {modal && (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="notification-modal-title"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setModal(null);
+        }}
+      >
+        <div
+          className={`relative w-full max-w-md surface-white border-2 p-6 sm:p-8 shadow-2xl transition-all ${
+            modal.type === 'success'
+              ? 'border-[#32846B]'
+              : modal.type === 'error'
+              ? 'border-[#B95348]'
+              : 'border-[#E97540]'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => setModal(null)}
+            className="absolute top-4 right-4 p-1.5 text-[#77736C] hover:text-[#1A1917] hover:bg-[#F0EDE7] transition-colors rounded-sm"
+            aria-label={t('ปิด', 'Close')}
+          >
+            <X size={20} />
+          </button>
+
+          <div className="text-center">
+            {modal.type === 'success' && (
+              <div className="w-16 h-16 rounded-full bg-[#E9F3EF] border-2 border-[#32846B] flex items-center justify-center mx-auto text-[#225A4B] shadow-sm mb-4">
+                <CheckCircle2 size={36} className="stroke-[2.5]" />
+              </div>
+            )}
+            {modal.type === 'error' && (
+              <div className="w-16 h-16 rounded-full bg-[#FFF1E8] border-2 border-[#B95348] flex items-center justify-center mx-auto text-[#B95348] shadow-sm mb-4">
+                <XCircle size={36} className="stroke-[2.5]" />
+              </div>
+            )}
+            {modal.type === 'info' && (
+              <div className="w-16 h-16 rounded-full bg-[#FFF1E8] border-2 border-[#E97540] flex items-center justify-center mx-auto text-[#C4531E] shadow-sm mb-4">
+                <ShieldCheck size={36} className="stroke-[2.5]" />
+              </div>
+            )}
+
+            <h3 id="notification-modal-title" className="text-[22px] sm:text-[24px] font-bold text-[#1A1917] tracking-tight">
+              {modal.title}
+            </h3>
+
+            <div className="mt-3 text-[#5C5852] text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line">
+              {modal.message}
+            </div>
+
+            <div className="mt-7">
+              <button
+                type="button"
+                autoFocus
+                onClick={() => {
+                  const action = modal.onAction;
+                  setModal(null);
+                  action?.();
+                }}
+                className={`w-full py-3.5 px-6 font-semibold text-white text-[15px] transition-colors flex items-center justify-center gap-2 shadow-sm ${
+                  modal.type === 'error'
+                    ? 'bg-[#B95348] hover:bg-[#A14339]'
+                    : modal.type === 'success'
+                    ? 'bg-[#225A4B] hover:bg-[#1A453A]'
+                    : 'bg-[#E97540] hover:bg-[#CE6333]'
+                }`}
+              >
+                {modal.actionLabel || t('ตกลง', 'OK')}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
   </div>;
 }
