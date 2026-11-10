@@ -28,11 +28,50 @@ function imageData(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
 const prices = [100, 300, 500, 1000, 1500] as const;
 const format = (n: string | number) => Number(n).toLocaleString('th-TH');
 const panel = 'surface-white border border-[#E8E3DB] px-6 py-7 sm:p-9';
 const field = 'w-full min-w-0 border border-[#D9D3C9] bg-[#F7F5F0] text-[#1A1917] px-4 py-3 outline-none focus:border-[#E97540]';
 const muted = 'small-note text-[#77736C]';
+
+function getOrderStatus(status: string, t: (th: string, en: string) => string): { label: string; badgeClass: string } {
+  switch (status) {
+    case 'CREDITED':
+      return { label: t('สำเร็จ (ได้รับ Coin แล้ว)', 'Completed (Delivered)'), badgeClass: 'text-[#225A4B] bg-[#E9F3EF]' };
+    case 'APPROVED':
+      return { label: t('อนุมัติแล้ว (กำลังส่งเข้าตัวละคร)', 'Approved (Delivering)'), badgeClass: 'text-[#225A4B] bg-[#E9F3EF]' };
+    case 'PENDING_REVIEW':
+      return { label: t('รอตรวจสอบสลิป', 'Awaiting Verification'), badgeClass: 'text-[#C4531E] bg-[#FFF1E8]' };
+    case 'PENDING_PAYMENT':
+    case 'CREATED':
+      return { label: t('รอการชำระเงิน', 'Awaiting Payment'), badgeClass: 'text-[#8F6B1D] bg-[#FFF9E6]' };
+    case 'CANCELLED':
+      return { label: t('ยกเลิกรายการ', 'Cancelled'), badgeClass: 'text-[#77736C] bg-[#F0EDE7]' };
+    case 'REJECTED':
+      return { label: t('ปฏิเสธการชำระเงิน', 'Rejected'), badgeClass: 'text-[#B95348] bg-[#FDF0EE]' };
+    case 'EXPIRED':
+      return { label: t('หมดเวลาทำรายการ', 'Expired'), badgeClass: 'text-[#77736C] bg-[#F0EDE7]' };
+    default:
+      return { label: status, badgeClass: 'text-[#77736C] bg-[#F0EDE7]' };
+  }
+}
+
+function getVerificationText(verification: string | null | undefined, t: (th: string, en: string) => string): string {
+  if (!verification) return '';
+  switch (verification) {
+    case 'SLIP2GO_VERIFIED':
+      return t('ตรวจสลิปอัตโนมัติ', 'Auto Verified');
+    case 'MANUAL_VERIFIED':
+      return t('แอดมินตรวจสอบแล้ว', 'Admin Verified');
+    case 'MANUAL_REJECTED':
+      return t('แอดมินปฏิเสธ', 'Admin Rejected');
+    case 'PENDING_REVIEW':
+      return t('รอตรวจสอบสลิป', 'Awaiting Review');
+    default:
+      return '';
+  }
+}
 
 export function TopUpPage() {
   const { t } = useLanguage();
@@ -48,6 +87,7 @@ export function TopUpPage() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const browserBootRef = useRef<Promise<boolean> | null>(null);
+  const sectionPromptPayRef = useRef<HTMLElement | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -72,6 +112,7 @@ export function TopUpPage() {
       } catch { setPlayer(null); setHistory([]); setActive(null); }
     } catch { setHealth(null); setPlayer(null); setActive(null); }
   }, []);
+
   useEffect(() => {
     // Keep a single exchange across React StrictMode's effect replay.
     if (!browserBootRef.current) {
@@ -91,17 +132,17 @@ export function TopUpPage() {
         browserBootRef.current = Promise.resolve(false);
       }
     }
-    let active = true;
+    let activeSub = true;
     void browserBootRef.current.then(async (redeemed) => {
-      if (!active) return;
+      if (!activeSub) return;
       await refresh();
-      if (active && redeemed) setSuccess(t('เชื่อมต่อจากในเกมสำเร็จ ไม่ต้องกรอกรหัส', 'Connected from in-game without entering a code'));
+      if (activeSub && redeemed) setSuccess(t('เชื่อมต่อจากในเกมสำเร็จ ไม่ต้องกรอกรหัส', 'Connected from in-game without entering a code'));
     }).catch((e) => {
-      if (!active) return;
+      if (!activeSub) return;
       setError(e instanceof Error ? e.message : 'Browser login failed');
       void refresh();
     });
-    return () => { active = false; };
+    return () => { activeSub = false; };
   }, [refresh, t]);
 
   useEffect(() => {
@@ -123,16 +164,21 @@ export function TopUpPage() {
     } catch (e) { setError(e instanceof Error ? e.message : 'Login failed'); }
     finally { setBusy(false); }
   }
+
   async function placeOrder() {
     setBusy(true); setError(''); setSuccess('');
     try {
       const result = await localApi<NewOrder>('orders', { amount: selected });
       setActive(result);
-      setSuccess(t('สร้างรายการแล้ว กรุณาตรวจชื่อผู้รับก่อนโอนเงินจริง', 'Order created. Verify bank payee before transfer.'));
+      setSuccess(t('สร้างรายการสำเร็จ กรุณาตรวจสอบชื่อผู้รับก่อนโอนเงิน', 'Order created. Verify bank payee before transfer.'));
       await refresh();
+      setTimeout(() => {
+        sectionPromptPayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     } catch(e) { setError(e instanceof Error ? e.message : 'Order could not be created'); }
     finally { setBusy(false); }
   }
+
   async function submitSlip(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!active || !file) return;
@@ -142,15 +188,17 @@ export function TopUpPage() {
     setBusy(true); setError(''); setSuccess('');
     try {
       const result = await localApi<{ status?: string; verification: string; telegram: string; message?: string }>('orders/' + active.orderId + '/slip',{ imageBase64: await imageData(file) });
-      const msg = result.status === 'APPROVED'
-        ? t('ตรวจสอบสลิปสำเร็จ กำลังส่ง L2Blitz Coin เข้าตัวละครในเกมอัตโนมัติ', 'Slip verified! Automatically delivering L2Blitz Coin to your character in-game')
-        : t('ส่งหลักฐานสำเร็จ รอตรวจสอบรายการโอนเงิน', 'Slip submitted and pending verification');
-      setSuccess(msg + ' · ' + result.verification + ' · Telegram: ' + result.telegram);
+      if (result.status === 'APPROVED') {
+        setSuccess(t('ตรวจสอบสลิปสำเร็จ! ระบบกำลังส่ง L2Blitz Coin เข้าตัวละครในเกมอัตโนมัติ', 'Slip verified! Automatically delivering L2Blitz Coin to your character in-game.'));
+      } else {
+        setSuccess(t('ส่งหลักฐานเรียบร้อยแล้ว แอดมินกำลังตรวจสอบและจะอนุมัติเหรียญเข้าตัวละครให้ทันที', 'Slip submitted successfully. Admin is reviewing and will deliver your coins shortly.'));
+      }
       setActive(null); setFile(null);
       await refresh();
     } catch (e) { setError(e instanceof Error ? e.message : 'Slip rejected'); }
     finally { setBusy(false); }
   }
+
   async function cancelOrder() {
     if (!active) return;
     setBusy(true); setError(''); setSuccess('');
@@ -166,6 +214,7 @@ export function TopUpPage() {
       setBusy(false);
     }
   }
+
   async function logout() {
     setBusy(true);
     try {
@@ -178,18 +227,13 @@ export function TopUpPage() {
   return <div className="editorial-frame pt-10 pb-20">
     <header className="editorial-axis-grid items-end pb-12 lg:pb-16">
       <div className="col-span-12 lg:col-span-5">
-        <p className="small-note text-[#C4531E] font-semibold m-0">L2BLITZ / PLAYER CENTER / LOCAL TEST</p>
+        <p className="small-note text-[#C4531E] font-semibold m-0">L2BLITZ / PLAYER CENTER</p>
         <p className="body-copy text-[#77736C] mt-5">{t('ระบบเติมเงินเชื่อมต่อกับ Prime Shop ในเกมอัตโนมัติ เมื่อตรวจสอบสลิปสำเร็จ L2Blitz Coin จะถูกส่งเข้าตัวละครทันที', 'In-game Prime Shop top-up system. Verified slips automatically deliver L2Blitz Coin to your character.')}</p>
-        <p className="small-note inline-block bg-[#F0EDE7] px-3 py-2 mt-5 text-[#524E48]">LOCAL ONLY · 127.0.0.1</p>
       </div>
       <div className="col-span-12 lg:col-span-7"><h1 className="display-title">{t('เติมเงิน', 'Top Up')}<br/>BLITZ COIN</h1></div>
     </header>
 
-    {!health && <div role="alert" className="surface-white border-l-4 border-[#B95348] p-5 mb-6"><TriangleAlert size={20} className="inline-block text-[#B95348] mr-2"/>{t('บริการเติมเงิน Local ไม่พร้อม กรุณาเปิด API ในเครื่องก่อน', 'Local payment service is offline. Start the local API first.')}</div>}
-    {health && <div className="surface-white border border-[#E8E3DB] p-4 mb-5 flex flex-wrap gap-5 small-note text-[#524E48]">
-      <span>{t('Slip2Go','Slip2Go')}: {health.integrations?.slip2go ? t('ตั้งค่าแล้ว (พร้อมตรวจสลิปอัตโนมัติ)', 'Configured (auto-verification active)') : t('รอ Secret Key — ตรวจด้วย GM เท่านั้น', 'Needs Secret Key — manual review only')}</span>
-      <span>{t('Telegram','Telegram')}: {health.integrations?.telegram ? t('ตั้งค่าแล้ว', 'Configured') : t('ยังไม่ได้ตั้งค่า', 'Not configured')}</span>
-    </div>}
+    {!health && <div role="alert" className="surface-white border-l-4 border-[#B95348] p-5 mb-6"><TriangleAlert size={20} className="inline-block text-[#B95348] mr-2"/>{t('ระบบเติมเงินไม่พร้อมให้บริการชั่วคราว กรุณาติดต่อแอดมิน', 'Payment service is temporarily offline. Please contact admin.')}</div>}
     {error && <div role="alert" className="bg-[#FFF3EE] border border-[#E97540] p-4 mb-5 text-[#8F3A1D]">{error}</div>}
     {success && <div role="status" className="bg-[#E9F3EF] border border-[#32846B] p-4 mb-5 text-[#225A4B]">{success}</div>}
 
@@ -209,6 +253,7 @@ export function TopUpPage() {
           <span className="inline-flex items-center gap-2 text-[#32846B] small-note font-semibold"><CheckCircle2 size={20}/>{t('เชื่อมต่อสำเร็จ', 'Verified')}</span>
         </div>
       </section>
+
       <section className={panel}>
         <p className="small-note text-[#C4531E] font-semibold mb-4">02 / PACKAGE</p>
         <h2 className="section-heading">{t('เลือกแพ็กเกจ', 'Select Package')}</h2>
@@ -226,14 +271,15 @@ export function TopUpPage() {
               })}
             </div>
             <button className="btn-primary w-full sm:w-auto justify-center" type="button" onClick={placeOrder} disabled={!health||health.payments!=='LOCAL_OPERATOR_PILOT'||busy||!!active||hasPendingDelivery||!tiers.some(x=>Number(x.price_thb)===selected)}>
-              <CreditCard size={18}/>{t('สร้างคำสั่งซื้อ Local', 'Create Local Order')}
+              <CreditCard size={18}/>{t('สร้างคำสั่งซื้อ', 'Create Order')}
             </button>
             {hasPendingDelivery && <p className="small-note text-[#32846B] bg-[#E9F3EF] p-3 border-l-4 border-[#32846B] mt-4">{t('มีคำสั่งซื้อที่ได้รับการอนุมัติแล้ว ระบบกำลังส่ง Coin เข้าตัวละครในเกม กรุณารอสักครู่ก่อนทำรายการใหม่', 'An approved order is currently delivering coins to your character. Please wait before creating a new order.')}</p>}
           </>;
         })()}
         <p className={muted+' mt-4'}>{t('การสร้างรายการยังไม่หักเงิน ต้องชำระเองในแอปธนาคารหลังตรวจชื่อผู้รับ', 'Creating an order does not charge your bank account.')}</p>
       </section>
-      {active && <section className={panel}>
+
+      {active && <section ref={sectionPromptPayRef} className={panel}>
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
           <div>
             <p className="small-note text-[#C4531E] font-semibold mb-1">03 / PROMPTPAY & RECEIPT</p>
@@ -255,16 +301,19 @@ export function TopUpPage() {
             <div><p className={muted}>{t('ยอดที่ต้องชำระ', 'Amount')}</p><strong className="text-[32px] font-semibold text-[#C4531E] tabular-nums">฿{format(active.amount)}</strong></div>
             <div><p className={muted}>{t('ชื่อผู้รับ', 'Payee')}</p><strong className="body-copy">{active.recipientName}</strong></div>
             <div><p className={muted}>PromptPay</p><strong className="body-copy">{active.promptpayId}</strong></div>
-            <div><p className={muted}>Order</p><span className="small-note break-all">{active.orderId}</span></div>
+            <div><p className={muted}>{t('เลขอ้างอิงคำสั่งซื้อ', 'Order Reference')}</p><span className="small-note break-all font-mono text-[#524E48]">#{active.orderId}</span></div>
             <div><p className={muted}>{t('ตัวละครผู้รับ', 'Recipient')}</p><strong className="body-copy">👤 {active.characterName || player.character}</strong></div>
-            {active.status && <div><p className={muted}>{t('สถานะคำสั่งซื้อ', 'Status')}</p><span className="small-note font-semibold text-[#C4531E]">{active.status}</span></div>}
+            {active.status && (() => {
+              const s = getOrderStatus(active.status, t);
+              return <div><p className={muted}>{t('สถานะคำสั่งซื้อ', 'Status')}</p><span className={`inline-block px-2.5 py-1 text-xs font-semibold rounded ${s.badgeClass}`}>{s.label}</span></div>;
+            })()}
             <p className="small-note text-[#8F3A1D] bg-[#FFF1E8] p-3 border-l-4 border-[#E97540]">{t('ก่อนโอนเงินจริง ตรวจว่าชื่อผู้รับในแอปธนาคารตรงกัน หากไม่ตรง ห้ามโอน', 'Verify bank payee name before transferring. Do not pay if mismatched.')}</p>
           </div>
         </div>
         {active.status === 'PENDING_REVIEW' ? (
           <div className="border-t border-[#E8E3DB] mt-8 pt-7">
             <div className="bg-[#E9F3EF] border border-[#32846B] p-4 text-[#225A4B] small-note">
-              {t('ส่งสลิปแล้ว กำลังรอตรวจสอบรายการโอนเงิน (PENDING_REVIEW)', 'Slip submitted. Awaiting payment verification (PENDING_REVIEW).')}
+              {t('ส่งสลิปเรียบร้อยแล้ว แอดมินกำลังตรวจสอบและจะอนุมัติเหรียญเข้าตัวละครให้ทันที', 'Slip submitted successfully. Awaiting payment verification.')}
             </div>
           </div>
         ) : (
@@ -276,20 +325,33 @@ export function TopUpPage() {
           </form>
         )}
       </section>}
+
       <section className={panel}>
-        <div className="flex justify-between gap-3 items-center mb-5"><h2 className="flex gap-2 items-center text-[22px] font-semibold"><ReceiptText className="text-[#C4531E]" size={24}/>{t('ประวัติเติมเงิน', 'Payment History')}</h2>
-          <button aria-label={t('โหลดรายการใหม่', 'Refresh')} className="text-[#C4531E] p-2 hover:bg-[#F0EDE7]" onClick={()=>void refresh()}><RefreshCw size={20}/></button></div>
-        {history.length===0 ? <p className={muted}>{t('ยังไม่มีรายการ', 'No orders yet')}</p> : <div className="divide-y divide-[#E8E3DB]">{history.map(item=><div key={item.order_id} className="py-4 flex flex-wrap justify-between gap-3">
-          <div>
-            <strong>{format(item.coins)} Coin · ฿{format(item.price_thb)}</strong>
-            {item.char_name && <span className="small-note ml-2 text-[#C4531E] bg-[#F7F5F0] border border-[#E8E3DB] px-2 py-0.5 rounded-sm">👤 {item.char_name}</span>}
-            <p className="small-note text-[#77736C] break-all mt-1">{item.order_id}</p>
-          </div>
-          <div className="text-right"><strong className="small-note text-[#C4531E]">{item.status === 'CREDITED' ? t('ส่งเข้าตัวละครแล้ว (CREDITED)', 'Delivered (CREDITED)') : item.status === 'APPROVED' ? t('อนุมัติแล้ว กำลังส่งเข้าเกม (APPROVED)', 'Approved, delivering (APPROVED)') : item.status === 'CANCELLED' ? t('ยกเลิกแล้ว (CANCELLED)', 'Cancelled') : item.status === 'REJECTED' ? t('ปฏิเสธ (REJECTED)', 'Rejected') : item.status === 'EXPIRED' ? t('หมดอายุ (EXPIRED)', 'Expired') : item.status}</strong><p className={muted}>{item.verification||'—'}</p></div>
-        </div>)}</div>}
+        <div className="flex justify-between gap-3 items-center mb-5">
+          <h2 className="flex gap-2 items-center text-[22px] font-semibold"><ReceiptText className="text-[#C4531E]" size={24}/>{t('ประวัติเติมเงิน', 'Payment History')}</h2>
+          <button aria-label={t('โหลดรายการใหม่', 'Refresh')} className="text-[#C4531E] p-2 hover:bg-[#F0EDE7]" onClick={()=>void refresh()}><RefreshCw size={20}/></button>
+        </div>
+        {history.length===0 ? <p className={muted}>{t('ยังไม่มีรายการ', 'No orders yet')}</p> : <div className="divide-y divide-[#E8E3DB]">{history.map(item=>{
+          const st = getOrderStatus(item.status, t);
+          const ver = getVerificationText(item.verification, t);
+          return (
+            <div key={item.order_id} className="py-4 flex flex-wrap justify-between items-center gap-3">
+              <div>
+                <strong className="text-[16px]">{format(item.coins)} Coin · ฿{format(item.price_thb)}</strong>
+                {item.char_name && <span className="small-note ml-2 text-[#C4531E] bg-[#F7F5F0] border border-[#E8E3DB] px-2 py-0.5 rounded-sm">👤 {item.char_name}</span>}
+                <p className="small-note text-[#77736C] font-mono mt-1">{t('เลขอ้างอิง', 'Ref')}: #{item.order_id.slice(0, 8)}...{item.order_id.slice(-4)}</p>
+              </div>
+              <div className="text-right">
+                <span className={`inline-block px-2.5 py-1 text-xs font-semibold rounded ${st.badgeClass}`}>{st.label}</span>
+                {item.verification && ver && <p className={muted + ' mt-1'}>{ver}</p>}
+              </div>
+            </div>
+          );
+        })}</div>}
       </section>
+
       <button onClick={()=>void logout()} type="button" disabled={busy} className="flex gap-2 items-center small-note text-[#77736C] hover:text-[#C4531E]"><LogOut size={16}/>{t('ออกจากระบบเว็บไซต์', 'Log Out')}</button>
     </div>}
-    <p className="small-note text-[#77736C] mt-8 text-center">{t('เฉพาะการทดสอบใน Local — ยังไม่เชื่อมต่อระบบชำระเงินบนเว็บไซต์สาธารณะ', 'LOCAL ONLY. Public payment service remains disabled.')}</p>
+    <p className="small-note text-[#77736C] mt-8 text-center">{t('ระบบเติมเงินอัตโนมัติ L2Blitz · เมื่อยืนยันการชำระเงินแล้ว เหรียญจะเข้าตัวละครทันที', 'L2Blitz Automated Top-Up System · Coins delivered immediately after verification.')}</p>
   </div>;
 }

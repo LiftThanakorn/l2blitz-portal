@@ -191,7 +191,7 @@ app.post('/api/local/orders/:orderId/cancel',async(req,res)=>{
     const currentStatus=orders[0].status;
     if(!['CREATED','PENDING_PAYMENT','PENDING_REVIEW'].includes(currentStatus)){
       await c.rollback();
-      return fail(res,409,'ไม่สามารถยกเลิกคำสั่งซื้อในสถานะ '+currentStatus);
+      return fail(res,409,'ไม่สามารถยกเลิกคำสั่งซื้อนี้ได้');
     }
     await c.execute("UPDATE blitz_topup_order SET status='CANCELLED',status_changed_at=NOW(6) WHERE order_id=?",[id]);
     await c.execute("UPDATE blitz_local_slips SET verification='MANUAL_REJECTED',reviewed_at=NOW(6) WHERE order_id=?",[id]);
@@ -217,7 +217,7 @@ app.post('/api/local/orders',async(req,res)=>{
     if(!owner.length)throw Error('Account ownership mismatch');
     await c.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status IN ('CREATED','PENDING_PAYMENT') AND expires_at<=NOW(6)",[session.account_name]);
     const [active]=await c.execute("SELECT order_id FROM blitz_topup_order WHERE account_name=? AND status IN ('CREATED','PENDING_PAYMENT','PENDING_REVIEW','APPROVED') LIMIT 1",[session.account_name]);
-    if(active.length) {await c.rollback();return fail(res,409,'มีคำสั่งซื้อที่ยังไม่เสร็จ กรุณาตรวจประวัติ');}
+    if(active.length) {await c.rollback();return fail(res,409,'คุณมีคำสั่งซื้อที่ดำเนินการค้างอยู่ กรุณาชำระเงินหรือยกเลิกรายการเดิมก่อน');}
     const [packs]=await c.execute('SELECT package_id,name,price_thb,coins,bonus_coins FROM blitz_topup_package WHERE enabled=1 AND price_thb=? LIMIT 1',[price]);
     if(!packs.length) throw Error('Package missing');
     const p=packs[0],uuid=crypto.randomUUID();
