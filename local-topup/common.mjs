@@ -10,7 +10,8 @@ export const db = mysql.createPool({
   password:process.env.LOCAL_TOPUP_DB_PASSWORD || '',
   database:process.env.LOCAL_TOPUP_DB_NAME || 'l2jmobiush5',
   connectionLimit:3, waitForConnections:true, queueLimit:8,
-  multipleStatements:false, decimalNumbers:false
+  multipleStatements:false, decimalNumbers:false,
+  timezone:'Z'
 });
 export const sha = value => crypto.createHash('sha256').update(value).digest();
 export const sessionToken = () => crypto.randomBytes(32).toString('base64url');

@@ -295,9 +295,9 @@ app.post('/api/local/orders/:orderId/slip',async(req,res)=>{
   let price=0;
   try{
     await conn.beginTransaction();
-    const [orders]=await conn.execute("SELECT price_thb,status,expires_at FROM blitz_topup_order WHERE order_id=? AND account_name=? FOR UPDATE",[id,session.account_name]);
+    const [orders]=await conn.execute("SELECT price_thb,status,expires_at,(expires_at<=NOW(6)) AS is_expired FROM blitz_topup_order WHERE order_id=? AND account_name=? FOR UPDATE",[id,session.account_name]);
     if(!orders.length || orders[0].status!=='PENDING_PAYMENT') {await conn.rollback();return fail(res,409,'ไม่พบรายการที่รอแนบสลิป');}
-    if(new Date(orders[0].expires_at).getTime() < Date.now()) {await conn.rollback();return fail(res,410,'คำสั่งซื้อหมดอายุ กรุณาติดต่อ GM');}
+    if(orders[0].is_expired) {await conn.rollback();return fail(res,410,'คำสั่งซื้อหมดอายุ กรุณาติดต่อ GM');}
     price=Number(orders[0].price_thb);
     await fs.writeFile(full,buffer,{flag:'wx',mode:0o600});saved=true;
     await conn.execute("INSERT INTO blitz_local_slips(order_id,image_sha,private_file,mime) VALUES(?,?,?,?)",[id,checksum,filename,type.mime]);
