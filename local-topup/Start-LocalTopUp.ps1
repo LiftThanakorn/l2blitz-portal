@@ -25,5 +25,12 @@ if ((Test-Path $secretFile) -and (Test-Path $urlFile)) {
     Write-Host 'Slip2Go not configured: Local payments will require manual bank verification.'
 }
 Push-Location $website
-try { & node (Join-Path $PSScriptRoot 'server.mjs'); if ($LASTEXITCODE -ne 0) { throw 'Local payment server stopped with error' } }
+try {
+    while ($true) {
+        & node (Join-Path $PSScriptRoot 'server.mjs')
+        $exit = $LASTEXITCODE
+        Write-Warning "Local payment server exited with code $exit. Auto-restarting in 2 seconds..."
+        Start-Sleep -Seconds 2
+    }
+}
 finally { Pop-Location }

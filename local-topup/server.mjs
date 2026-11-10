@@ -19,6 +19,7 @@ const allowedOrigins=new Set(['http://127.0.0.1:'+port, 'http://127.0.0.1:5173',
 const errors={};
 process.on('unhandledRejection', (reason, p) => console.error('UNHANDLED_REJECTION', p, reason));
 process.on('uncaughtException', (err) => console.error('UNCAUGHT_EXCEPTION', err));
+db.on?.('error', (err) => console.error('[DB POOL ERROR]', err.code || err.message));
 app.disable('x-powered-by');
 app.use((req,res,next)=>{
   res.set('X-Content-Type-Options','nosniff');
@@ -313,7 +314,8 @@ app.post('/api/local/orders/:orderId/slip',async(req,res)=>{
 });
 app.use('/api/local',(err,req,res,next)=>{
   if(err.type==='entity.too.large')return fail(res,413,'ไฟล์เกินขนาด');
-  if(err instanceof SyntaxError && err.status===400 && 'body' in err) return fail(res,400,'รูปแบบข้อมูล JSON ไม่ถูกต้อง');
+  if(res.headersSent) return next(err);
+  if((err instanceof SyntaxError || err.name==='SyntaxError') && (err.status===400 || err.statusCode===400)) return fail(res,400,'รูปแบบข้อมูล JSON ไม่ถูกต้อง');
   console.error('local API',err.code||err.message);
   fail(res,500,'เกิดข้อผิดพลาด');
 });
