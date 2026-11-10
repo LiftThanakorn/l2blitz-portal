@@ -6,6 +6,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { db, sha, sessionToken, allowedPacks, assertLocalMode, getServerRoot } from './common.mjs';
 import { verifySlip2Go } from './slip2go.mjs';
+import { sendTelegramReview, startTelegramBotListener } from './telegram-bot.mjs';
 
 assertLocalMode();
 const app=express();
@@ -308,7 +309,7 @@ app.post('/api/local/orders/:orderId/slip',async(req,res)=>{
     await db.execute('UPDATE blitz_local_slips SET verification=?,provider_code=? WHERE order_id=?',[result.state,result.code,id]);
   }
   const caption=['L2Blitz LOCAL payment review','Order: '+id,'Character: '+session.char_name,'Amount: '+price+' THB','Slip2Go: '+result.state+' ('+result.code+')','Status: '+orderStatus,'Public VPS: CLOSED'].join('\n');
-  const telegram=await sendTelegram({data:buffer,mime:type.mime,ext:type.ext},caption);
+  const telegram=await sendTelegramReview({data:buffer,mime:type.mime,ext:type.ext},caption,{orderId:id,isPendingReview:orderStatus==='PENDING_REVIEW'});
   const msg=orderStatus==='APPROVED'?'ตรวจสอบสลิปสำเร็จ ระบบอนุมัติและกำลังส่ง L2Blitz Coin เข้าตัวละครในเกมอัตโนมัติ':'รับรูปสลิปแล้ว รอตรวจสอบรายการโอนเงิน';
   res.status(orderStatus==='APPROVED'?200:202).json({ok:true,status:orderStatus,verification:result.state,telegram:telegram==='SENT'?'SENT':'NOT_SENT',message:msg});
 });
@@ -321,4 +322,7 @@ app.use('/api/local',(err,req,res,next)=>{
 });
 await fs.mkdir(slipDirectory,{recursive:true,mode:0o700});
 await db.query('SELECT 1');
-app.listen(port,'127.0.0.1',()=>console.log('LOCAL_TOPUP_READY http://127.0.0.1:'+port+' only; VPS untouched; orders '+(purchasesAllowed?'pilot enabled':'disabled')));
+app.listen(port,'127.0.0.1',()=>{
+  console.log('LOCAL_TOPUP_READY http://127.0.0.1:'+port+' only; VPS untouched; orders '+(purchasesAllowed?'pilot enabled':'disabled'));
+  startTelegramBotListener();
+});
