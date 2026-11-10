@@ -6,6 +6,15 @@ let pollerActive = false;
 let pollerAbort = null;
 
 export async function getTelegramConfig() {
+  if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
+    const adminIds = (process.env.TELEGRAM_ADMIN_IDS || '1132460154').split(',').map(s => s.trim()).filter(Boolean);
+    return {
+      telegramToken: process.env.TELEGRAM_BOT_TOKEN,
+      telegramChatId: process.env.TELEGRAM_CHAT_ID,
+      telegramAdminIds: adminIds,
+      enabled: true,
+    };
+  }
   const cfgPath = process.env.LOCAL_TOPUP_TELEGRAM_CONFIG ||
     (process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'L2Blitz', 'telegram-worker.json') : null);
   if (!cfgPath) return null;

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import mysql from 'mysql2/promise';
 
 export const db = mysql.createPool({
-  host:'127.0.0.1', port:3306,
+  host:process.env.LOCAL_TOPUP_DB_HOST || '127.0.0.1', port:Number(process.env.LOCAL_TOPUP_DB_PORT || 3306),
   user:process.env.LOCAL_TOPUP_DB_USER || 'root',
   password:process.env.LOCAL_TOPUP_DB_PASSWORD || '',
   database:process.env.LOCAL_TOPUP_DB_NAME || 'l2jmobiush5',

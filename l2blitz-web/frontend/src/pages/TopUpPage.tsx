@@ -92,7 +92,7 @@ export function TopUpPage() {
   const refresh = useCallback(async () => {
     try {
       const h = await localApi<Health>('health');
-      if (h.mode !== 'LOCAL_ONLY') throw new Error('Not local');
+      if (!h.ok) throw new Error('Payment service is offline');
       setHealth(h);
       try {
         const person = await localApi<Player>('me');
@@ -270,7 +270,7 @@ export function TopUpPage() {
                 </button>;
               })}
             </div>
-            <button className="btn-primary w-full sm:w-auto justify-center" type="button" onClick={placeOrder} disabled={!health||health.payments!=='LOCAL_OPERATOR_PILOT'||busy||!!active||hasPendingDelivery||!tiers.some(x=>Number(x.price_thb)===selected)}>
+            <button className="btn-primary w-full sm:w-auto justify-center" type="button" onClick={placeOrder} disabled={!health||!['LOCAL_OPERATOR_PILOT','ACTIVE','ENABLED','PRODUCTION'].includes(health.payments)||busy||!!active||hasPendingDelivery||!tiers.some(x=>Number(x.price_thb)===selected)}>
               <CreditCard size={18}/>{t('สร้างคำสั่งซื้อ', 'Create Order')}
             </button>
             {hasPendingDelivery && <p className="small-note text-[#32846B] bg-[#E9F3EF] p-3 border-l-4 border-[#32846B] mt-4">{t('มีคำสั่งซื้อที่ได้รับการอนุมัติแล้ว ระบบกำลังส่ง Coin เข้าตัวละครในเกม กรุณารอสักครู่ก่อนทำรายการใหม่', 'An approved order is currently delivering coins to your character. Please wait before creating a new order.')}</p>}

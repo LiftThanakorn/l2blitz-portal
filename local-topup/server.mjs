@@ -16,7 +16,16 @@ const serverRoot=getServerRoot();
 const purchasesAllowed=process.env.LOCAL_TOPUP_ALLOW_ORDERS==='1';
 const port=Number(process.env.LOCAL_TOPUP_PORT||3101);
 if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Invalid local port');
-const allowedOrigins=new Set(['http://127.0.0.1:'+port, 'http://127.0.0.1:5173', 'http://localhost:5173']);
+const defaultOrigins = [
+  'http://127.0.0.1:' + port,
+  'http://127.0.0.1:5173',
+  'http://localhost:5173',
+  'https://l2blitz.pages.dev',
+  'https://l2blitz-portal.pages.dev',
+  'https://154-215-14-70.sslip.io'
+];
+const envOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
 const errors={};
 process.on('unhandledRejection', (reason, p) => console.error('UNHANDLED_REJECTION', p, reason));
 process.on('uncaughtException', (err) => console.error('UNCAUGHT_EXCEPTION', err));
@@ -38,6 +47,11 @@ app.get('/api/local/qr/:tier.png',(req,res)=>{
   return res.sendFile(path.join(root,'public','qr',tier+'.png'),{headers:{'Cache-Control':'private, no-store'}});
 });
 const fail=(res,code,msg)=>res.status(code).json({error:msg});
+function sendSessionCookie(req, res, token, maxAgeSec = 7200) {
+  const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+  const flags = '; HttpOnly; SameSite=Lax; Path=/; Max-Age=' + maxAgeSec + (isHttps ? '; Secure' : '');
+  res.setHeader('Set-Cookie', 'l2blitz_local=' + encodeURIComponent(token) + flags);
+}
 function extractCookie(req,name){
   const m=(req.headers.cookie||'').split(';').map(v=>v.trim()).find(v=>v.startsWith(name+'='));
   return m?decodeURIComponent(m.slice(name.length+1)):'';
@@ -95,7 +109,7 @@ app.post('/api/local/redeem',async(req,res)=>{
     const token=sessionToken();
     await c.execute('INSERT INTO blitz_local_sessions(token_hash,account_name,character_id,expires_at) VALUES(?,?,?,DATE_ADD(NOW(6),INTERVAL 2 HOUR))',[sha(token),identity.account_name,identity.character_id]);
     await c.commit();
-    res.setHeader('Set-Cookie','l2blitz_local='+encodeURIComponent(token)+'; HttpOnly; SameSite=Strict; Path=/; Max-Age=7200');
+    sendSessionCookie(req, res, token, 7200);
     res.json({ok:true,login:ticket?'GAME_VERIFIED':'CHARACTER_LINKED'});
   }catch(e){await c.rollback();console.error('game browser login error',e.code||e.message);fail(res,500,'Browser login unavailable');}
   finally{c.release();}
@@ -112,14 +126,14 @@ app.post('/api/local/login',async(req,res)=>{
     await c.execute('UPDATE blitz_local_pairing SET used_at=NOW(6) WHERE code_hash=?',[sha(code)]);
     await c.execute('INSERT INTO blitz_local_sessions(token_hash,account_name,character_id,expires_at) VALUES(?,?,?,DATE_ADD(NOW(6),INTERVAL 2 HOUR))',[sha(token),identity.account_name,identity.character_id]);
     await c.commit();
-    res.setHeader('Set-Cookie','l2blitz_local='+encodeURIComponent(token)+'; HttpOnly; SameSite=Strict; Path=/; Max-Age=7200');
+    sendSessionCookie(req, res, token, 7200);
     res.json({ok:true});
   }catch(e){await c.rollback();console.error('login error',e.code||e.message);fail(res,500,'เข้าสู่ระบบไม่สำเร็จ');}finally{c.release();}
 });
 app.post('/api/local/logout',async(req,res)=>{
   const token=extractCookie(req,'l2blitz_local');
   if(token) await db.execute('DELETE FROM blitz_local_sessions WHERE token_hash=?',[sha(token)]);
-  res.setHeader('Set-Cookie','l2blitz_local=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');
+  sendSessionCookie(req, res, '', 0);
   res.json({ok:true});
 });
 app.get('/api/local/me',async(req,res)=>{

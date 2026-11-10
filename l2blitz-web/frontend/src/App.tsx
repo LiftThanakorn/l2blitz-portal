@@ -24,7 +24,7 @@ export function AppRoutes() {
         <Route path="/farmzones" element={<FarmZonesPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/downloads" element={<DownloadsPage />} />
-        {import.meta.env.DEV && <Route path="/topup" element={<TopUpPage />} />}
+        <Route path="/topup" element={<TopUpPage />} />
       </Routes>
     </Layout>
   );
