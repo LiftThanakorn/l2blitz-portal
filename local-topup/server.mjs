@@ -81,7 +81,7 @@ async function payeeConfig(){
   return {id:kv.PromptPayId,recipient:kv.RecipientName};
 }
 app.get('/api/local/health',async (_req,res)=>{
-  try{await db.query('SELECT 1');res.json({ok:true,mode:'LOCAL_ONLY',payments:purchasesAllowed?'LOCAL_OPERATOR_PILOT':'LOCKED',publicVps:false,integrations:{slip2go:!!(process.env.SLIP2GO_SECRET_KEY&&process.env.SLIP2GO_API_URL),telegram:!!process.env.LOCAL_TOPUP_TELEGRAM_CONFIG}});}
+  try{await db.query('SELECT 1');res.json({ok:true,mode:'LOCAL_ONLY',payments:purchasesAllowed?'LOCAL_OPERATOR_PILOT':'LOCKED',publicVps:false,integrations:{slip2go:!!(process.env.SLIP2GO_SECRET_KEY&&process.env.SLIP2GO_API_URL),telegram:!!(process.env.LOCAL_TOPUP_TELEGRAM_CONFIG || process.env.TELEGRAM_BOT_TOKEN)}});}
   catch{fail(res,503,'Database unavailable');}
 });
 // Exchange a game-issued ticket or character name into an HttpOnly player session.
