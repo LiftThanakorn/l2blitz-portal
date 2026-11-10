@@ -85,6 +85,10 @@ export async function sendTelegramReview(image, caption, options = {}) {
 }
 
 export function startTelegramBotListener() {
+  if (process.platform === 'win32' && process.env.ALLOW_LOCAL_TELEGRAM_POLL !== 'true') {
+    console.log('[TELEGRAM BOT] Windows dev machine detected; skipping Telegram poller to avoid production callback race condition.');
+    return;
+  }
   if (pollerActive) return;
   pollerActive = true;
   const abortController = new AbortController();
