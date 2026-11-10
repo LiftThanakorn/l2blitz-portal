@@ -15,6 +15,92 @@ const DESTINATIONS = [
   { to: '/olympiad', th: 'แกรนด์โอลิมเพียด', en: 'Grand Olympiad', descTh: 'แข่งทุกสุดสัปดาห์ · อันดับ 1–3', descEn: 'Weekly competition · Top 3 by class' },
 ];
 
+// The opening time is fixed to Thailand (UTC+7) for visitors in every time zone.
+const SERVER_LAUNCH_AT = Date.parse('2026-11-14T18:19:00+07:00');
+
+function getTimeUntilLaunch() {
+  const secondsLeft = Math.max(0, Math.ceil((SERVER_LAUNCH_AT - Date.now()) / 1000));
+  return {
+    days: Math.floor(secondsLeft / 86_400),
+    hours: Math.floor((secondsLeft % 86_400) / 3_600),
+    minutes: Math.floor((secondsLeft % 3_600) / 60),
+    seconds: secondsLeft % 60,
+    reached: secondsLeft === 0,
+  };
+}
+
+function LaunchCountdown() {
+  const { t } = useLanguage();
+  const [remaining, setRemaining] = useState(getTimeUntilLaunch);
+
+  useEffect(() => {
+    const update = () => setRemaining(getTimeUntilLaunch());
+    update();
+    const interval = window.setInterval(update, 1_000);
+    document.addEventListener('visibilitychange', update);
+    window.addEventListener('focus', update);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', update);
+      window.removeEventListener('focus', update);
+    };
+  }, []);
+
+  const units = [
+    { key: 'days', value: remaining.days, th: 'วัน', en: 'Days' },
+    { key: 'hours', value: remaining.hours, th: 'ชั่วโมง', en: 'Hours' },
+    { key: 'minutes', value: remaining.minutes, th: 'นาที', en: 'Minutes' },
+    { key: 'seconds', value: remaining.seconds, th: 'วินาที', en: 'Seconds' },
+  ];
+
+  return (
+    <section className="editorial-frame mt-5" aria-labelledby="server-launch-heading">
+      <div className="surface-ink px-6 py-8 sm:px-10 sm:py-10 lg:px-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+          <div className="lg:col-span-5">
+            <p className="small-note font-semibold text-[#E97540] mb-3">OFFICIAL LAUNCH · THAILAND UTC+7</p>
+            <h2 id="server-launch-heading" className="section-heading text-[#F7F5F0]">
+              {t('นับถอยหลังเปิดเซิร์ฟเวอร์', 'Countdown to Server Launch')}
+            </h2>
+            <p className="body-copy text-[#E8E3DB] mt-4">
+              {t('วันเสาร์ที่ 14 พฤศจิกายน 2569 เวลา 18:19 น.', 'Saturday, 14 November 2026 at 18:19')}
+            </p>
+            <p className="small-note text-[#BAB3AA] mt-2 mb-0">
+              {t('เวลาประเทศไทย (GMT+7)', 'Thailand time (GMT+7)')}
+            </p>
+          </div>
+          <div className="lg:col-span-7">
+            {remaining.reached ? (
+              <div className="surface-stone p-6 sm:p-8">
+                <p className="small-note font-semibold text-[#C4531E] mb-2">LAUNCH TIME REACHED</p>
+                <p className="lead-statement text-[#1A1917]">
+                  {t('ถึงกำหนดเวลาเปิดเซิร์ฟเวอร์แล้ว!', 'The scheduled launch time has arrived!')}
+                </p>
+                <Link to="/downloads" className="btn-primary mt-5">
+                  {t('ดาวน์โหลดเพื่อเข้าเกม', 'Download to Play')}
+                </Link>
+              </div>
+            ) : (
+              <div role="timer" aria-live="off" aria-label={t('เวลาคงเหลือก่อนเปิดเซิร์ฟเวอร์', 'Time until server launch')} className="grid grid-cols-4 gap-2 sm:gap-3">
+                {units.map((unit) => (
+                  <div key={unit.key} className="surface-stone min-w-0 px-1 py-4 sm:p-5 text-center">
+                    <span className="section-heading text-[#1A1917] tabular-nums block">
+                      {String(unit.value).padStart(2, '0')}
+                    </span>
+                    <span className="small-note text-[#524E48] block mt-2">
+                      {t(unit.th, unit.en)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function HomePage() {
   const { t } = useLanguage();
   const [status, setStatus] = useState<ServerStatus | null>(null);
@@ -74,6 +160,8 @@ export function HomePage() {
           <img src="/assets/images/hero-pvp.webp" width={1920} height={1080} fetchPriority="high" alt={t('ภาพประกอบสนามรบ L2Blitz', 'L2Blitz battle artwork')} className="w-full h-full object-cover block" />
         </figure>
       </section>
+
+      <LaunchCountdown />
 
       <section className="editorial-frame mt-20">
         <div className="editorial-axis-grid mb-7">
