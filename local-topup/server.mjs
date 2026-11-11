@@ -22,11 +22,9 @@ const defaultOrigins = [
   'http://localhost:5173',
   'https://l2blitz.pages.dev',
   'https://l2blitz-portal.pages.dev',
-  'https://154-215-14-70.sslip.io'
 ];
 const envOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
-const errors={};
 process.on('unhandledRejection', (reason, p) => console.error('UNHANDLED_REJECTION', p, reason));
 process.on('uncaughtException', (err) => console.error('UNCAUGHT_EXCEPTION', err));
 db.on?.('error', (err) => console.error('[DB POOL ERROR]', err.code || err.message));
@@ -35,7 +33,12 @@ app.use((req,res,next)=>{
   res.set('X-Content-Type-Options','nosniff');
   res.set('Cache-Control','no-store');
   res.set('Content-Security-Policy',"default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'");
-  if(req.method==='POST' && req.get('origin') && !allowedOrigins.has(req.get('origin'))) return res.status(403).json({error:'Origin rejected'});
+  if (req.method === 'POST') {
+    const origin = req.get('origin');
+    if (origin && !allowedOrigins.has(origin)) {
+      return res.status(403).json({ error: 'Origin rejected' });
+    }
+  }
   next();
 });
 app.use(express.json({limit:'6mb',strict:true}));
@@ -62,17 +65,84 @@ async function userSession(req){
   const [rows]=await db.execute("SELECT s.account_name,s.character_id,c.char_name FROM blitz_local_sessions s JOIN characters c ON c.charId=s.character_id AND c.account_name=s.account_name WHERE s.token_hash=? AND s.expires_at>NOW(6)",[sha(token)]);
   return rows[0]||null;
 }
-function limited(req,res,next) {
-  const key=req.path;
-  const now=Date.now();
-  const state=errors[key]||{start:now,count:0};
-  if(now-state.start>60000) {state.start=now;state.count=0;}
-  state.count++;
-  errors[key]=state;
-  if(state.count>45) return fail(res,429,'Too many requests');
+function getClientIp(req) {
+  return req.headers['cf-connecting-ip'] ||
+    req.headers['x-client-ip'] ||
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+    req.socket?.remoteAddress ||
+    'unknown';
+}
+
+function normalizeApiPath(urlPath) {
+  return urlPath
+    .replace(/\/orders\/[0-9a-fA-F-]{36}\/slip$/, '/orders/slip')
+    .replace(/\/orders\/[0-9a-fA-F-]{36}\/cancel$/, '/orders/cancel')
+    .replace(/\/qr\/\d+\.png$/, '/qr');
+}
+
+const rateLimitBuckets = new Map();
+
+function checkRateLimit(key, windowMs, max) {
+  const now = Date.now();
+  let entry = rateLimitBuckets.get(key);
+  if (!entry || now - entry.start > windowMs) {
+    entry = { start: now, count: 0 };
+    rateLimitBuckets.set(key, entry);
+  }
+  entry.count++;
+  return entry.count <= max;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitBuckets.entries()) {
+    if (now - entry.start > 15 * 60 * 1000) {
+      rateLimitBuckets.delete(key);
+    }
+  }
+}, 5 * 60 * 1000).unref();
+
+function rateLimitMiddleware(req, res, next) {
+  const ip = getClientIp(req);
+  const fullPath = (req.baseUrl || '') + req.path;
+  const normalized = normalizeApiPath(fullPath);
+
+  let category = 'default';
+  let windowMs = 60 * 1000;
+  let max = 60;
+
+  if (req.method === 'POST' && normalized.endsWith('/orders/slip')) {
+    category = 'slip';
+    windowMs = 10 * 60 * 1000; // 10 minutes
+    max = 4;
+  } else if (req.method === 'POST' && (normalized.endsWith('/orders') || normalized.endsWith('/orders/cancel'))) {
+    category = 'order';
+    windowMs = 10 * 60 * 1000; // 10 minutes
+    max = 6;
+  } else if (req.method === 'POST' && (normalized.endsWith('/login') || normalized.endsWith('/redeem'))) {
+    category = 'auth';
+    windowMs = 60 * 1000; // 1 minute
+    max = 10;
+  } else if (req.method === 'GET' && (
+    normalized.endsWith('/active-order') ||
+    normalized.endsWith('/orders') ||
+    normalized.endsWith('/me') ||
+    normalized.endsWith('/health') ||
+    normalized.endsWith('/packages') ||
+    normalized.endsWith('/qr')
+  )) {
+    category = 'poll';
+    windowMs = 60 * 1000; // 1 minute
+    max = 120;
+  }
+
+  const key = `${category}:${ip}`;
+  if (!checkRateLimit(key, windowMs, max)) {
+    return res.status(429).json({ error: 'คำขอถี่เกินไป กรุณารอสักครู่ (Too many requests)' });
+  }
   next();
 }
-app.use('/api/local',limited);
+app.use('/api/local', rateLimitMiddleware);
 async function payeeConfig(){
   if (process.env.PROMPTPAY_ID && process.env.PROMPTPAY_NAME) {
     return { id: process.env.PROMPTPAY_ID, recipient: process.env.PROMPTPAY_NAME };
@@ -152,7 +222,10 @@ app.post('/api/local/logout',async(req,res)=>{
 app.get('/api/local/me',async(req,res)=>{
   const identity=await userSession(req);
   if(!identity) return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
-  res.json({account:identity.account_name,characterId:identity.character_id,character:identity.char_name});
+  const maskedAccount = identity.account_name.length > 3
+    ? identity.account_name.slice(0, 2) + '***' + identity.account_name.slice(-1)
+    : '***';
+  res.json({account:maskedAccount,characterId:identity.character_id,character:identity.char_name});
 });
 app.get('/api/local/qr/:amount.png',async(req,res)=>{
   const session=await userSession(req);
@@ -208,6 +281,7 @@ app.get('/api/local/active-order',async(req,res)=>{
 });
 app.post('/api/local/orders/:orderId/cancel',async(req,res)=>{
   const session=await userSession(req);if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
+  if(!checkRateLimit('order:acc:'+session.account_name, 600000, 6)) return fail(res, 429, 'คำขอถี่เกินไป กรุณารอสักครู่ (Too many requests)');
   const id=String(req.params.orderId||'');
   if(!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(id))return fail(res,400,'เลขคำสั่งซื้อไม่ถูกต้อง');
   const c=await db.getConnection();
@@ -216,7 +290,7 @@ app.post('/api/local/orders/:orderId/cancel',async(req,res)=>{
     const [orders]=await c.execute("SELECT order_id,status FROM blitz_topup_order WHERE order_id=? AND account_name=? FOR UPDATE",[id,session.account_name]);
     if(!orders.length){await c.rollback();return fail(res,404,'ไม่พบคำสั่งซื้อ');}
     const currentStatus=orders[0].status;
-    if(!['CREATED','PENDING_PAYMENT','PENDING_REVIEW'].includes(currentStatus)){
+    if(!['CREATED','PENDING_PAYMENT'].includes(currentStatus)){
       await c.rollback();
       return fail(res,409,'ไม่สามารถยกเลิกคำสั่งซื้อนี้ได้');
     }
@@ -235,11 +309,20 @@ app.post('/api/local/orders/:orderId/cancel',async(req,res)=>{
 app.post('/api/local/orders',async(req,res)=>{
   if(!purchasesAllowed)return fail(res,423,'การทดสอบรับเงินยังไม่เปิด');
   const session=await userSession(req);if(!session)return fail(res,401,'กรุณาเชื่อมต่อบัญชีเกม');
+  if(!checkRateLimit('order:acc:'+session.account_name, 600000, 6)) return fail(res, 429, 'คำขอถี่เกินไป กรุณารอสักครู่ (Too many requests)');
   const price=Number(req.body?.amount);
   if(!allowedPacks.has(price))return fail(res,400,'แพ็กเกจไม่ถูกต้อง');
   const c=await db.getConnection();
   try {
     await c.beginTransaction();
+    const [recent]=await c.execute(
+      "SELECT created_at FROM blitz_topup_order WHERE account_name=? AND created_at > NOW(6) - INTERVAL 30 SECOND LIMIT 1",
+      [session.account_name]
+    );
+    if(recent.length) {
+      await c.rollback();
+      return fail(res, 429, 'กรุณารอ 30 วินาทีก่อนสร้างคำสั่งซื้อใหม่ (Order creation cooldown)');
+    }
     const [owner]=await c.execute("SELECT a.login FROM accounts a JOIN characters ch ON ch.account_name=a.login WHERE a.login=? AND ch.charId=? FOR UPDATE",[session.account_name,session.character_id]);
     if(!owner.length)throw Error('Account ownership mismatch');
     await c.execute("UPDATE blitz_topup_order SET status='EXPIRED',status_changed_at=NOW(6) WHERE account_name=? AND status IN ('CREATED','PENDING_PAYMENT') AND expires_at<=NOW(6)",[session.account_name]);
@@ -336,7 +419,8 @@ app.post('/api/local/orders/:orderId/slip',async(req,res)=>{
     await db.execute('UPDATE blitz_local_slips SET verification=?,provider_code=? WHERE order_id=?',[result.state,result.code,id]);
   }
   const caption=['L2Blitz LOCAL payment review','Order: '+id,'Character: '+session.char_name,'Amount: '+price+' THB','Slip2Go: '+result.state+' ('+result.code+')','Status: '+orderStatus,'Public VPS: CLOSED'].join('\n');
-  const telegram=await sendTelegramReview({data:buffer,mime:type.mime,ext:type.ext},caption,{orderId:id,isPendingReview:orderStatus==='PENDING_REVIEW'});
+  const isPendingReview = orderStatus === 'PENDING_REVIEW' && result.state !== 'FLAGGED';
+  const telegram=await sendTelegramReview({data:buffer,mime:type.mime,ext:type.ext},caption,{orderId:id,isPendingReview});
   const msg=orderStatus==='APPROVED'?'ตรวจสอบสลิปสำเร็จ ระบบอนุมัติและกำลังส่ง L2Blitz Coin เข้าตัวละครในเกมอัตโนมัติ':'รับรูปสลิปแล้ว รอตรวจสอบรายการโอนเงิน';
   res.status(orderStatus==='APPROVED'?200:202).json({ok:true,status:orderStatus,verification:result.state,telegram:telegram==='SENT'?'SENT':'NOT_SENT',message:msg});
 });

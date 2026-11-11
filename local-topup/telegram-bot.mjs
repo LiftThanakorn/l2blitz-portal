@@ -66,10 +66,13 @@ export async function sendTelegramReview(image, caption, options = {}) {
           form.set('chat_id', String(cfg.telegramChatId));
           form.set('caption', `📷 รูปสลิปสำหรับคำสั่งซื้อ: ${options.orderId || ''}`);
           form.set('photo', new Blob([image.data], { type: image.mime }), 'slip.' + image.ext);
+          if (reply?.result?.message_id) {
+            form.set('reply_parameters', JSON.stringify({ message_id: reply.result.message_id }));
+          }
           await fetch(`https://api.telegram.org/bot${cfg.telegramToken}/sendPhoto`, {
             method: 'POST',
             body: form,
-            signal: AbortSignal.timeout(120000)
+            signal: AbortSignal.timeout(25000)
           });
         } catch (photoErr) {
           console.error('Background sendPhoto error:', photoErr.message);
@@ -184,7 +187,7 @@ export async function handleCallbackQuery(query, { token, targetChatId, adminSet
   const callbackData = String(query.data || '');
 
   const isAuthorizedChat = chatId === targetChatId;
-  const isAuthorizedAdmin = adminSet.size === 0 || adminSet.has(fromId);
+  const isAuthorizedAdmin = adminSet.size > 0 && adminSet.has(fromId);
 
   if (!isAuthorizedChat || !isAuthorizedAdmin) {
     return answerCallbackQuery(token, query.id, '⛔ คุณไม่มีสิทธิ์อนุมัติ/ปฏิเสธรายการนี้', true);
@@ -205,7 +208,7 @@ export async function handleCallbackQuery(query, { token, targetChatId, adminSet
     await conn.beginTransaction();
 
     const [rows] = await conn.execute(
-      "SELECT o.order_id, o.account_name, o.character_id, o.price_thb, o.coins, o.bonus_coins, o.status, c.char_name FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id WHERE o.order_id=? FOR UPDATE",
+      "SELECT o.order_id, o.account_name, o.character_id, o.price_thb, o.coins, o.bonus_coins, o.status, c.char_name, s.verification FROM blitz_topup_order o LEFT JOIN characters c ON c.charId=o.character_id LEFT JOIN blitz_local_slips s ON s.order_id=o.order_id WHERE o.order_id=? FOR UPDATE",
       [orderId]
     );
 
@@ -222,6 +225,16 @@ export async function handleCallbackQuery(query, { token, targetChatId, adminSet
         token,
         query.id,
         `⚠️ คำสั่งซื้อนี้ไม่อยู่ในสถานะรอตรวจสอบ (สถานะปัจจุบัน: ${order.status})`,
+        true
+      );
+    }
+
+    if (order.verification === 'FLAGGED') {
+      await conn.rollback();
+      return answerCallbackQuery(
+        token,
+        query.id,
+        '⛔ สลิปนี้ถูกระงับ (FLAGGED) เนื่องจากยอดเงินไม่ตรงหรือสลิปซ้ำ ไม่สามารถอนุมัติได้',
         true
       );
     }
