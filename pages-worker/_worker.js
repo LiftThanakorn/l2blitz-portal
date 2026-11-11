@@ -8,17 +8,50 @@ const ROUTES = new Set([
   '/api/olympiad/heroes', '/api/castles', '/api/raidbosses', '/api/events/tvt',
 ]);
 
+const LOCAL_ROUTES = [
+  { pattern: /^\/api\/local\/health$/, methods: ['GET'] },
+  { pattern: /^\/api\/local\/me$/, methods: ['GET'] },
+  { pattern: /^\/api\/local\/packages$/, methods: ['GET'] },
+  { pattern: /^\/api\/local\/active-order$/, methods: ['GET'] },
+  { pattern: /^\/api\/local\/qr\/\d+\.png$/, methods: ['GET'] },
+  { pattern: /^\/api\/local\/orders$/, methods: ['GET', 'POST'] },
+  { pattern: /^\/api\/local\/redeem$/, methods: ['POST'] },
+  { pattern: /^\/api\/local\/login$/, methods: ['POST'] },
+  { pattern: /^\/api\/local\/logout$/, methods: ['POST'] },
+  { pattern: /^\/api\/local\/orders\/[0-9a-f-]{36}\/slip$/i, methods: ['POST'] },
+  { pattern: /^\/api\/local\/orders\/[0-9a-f-]{36}\/cancel$/i, methods: ['POST'] },
+];
+
 export default {
   async fetch(request, env) {
     const incoming = new URL(request.url);
     if (!incoming.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
 
-    // Pass all TopUp API requests through to VPS origin with full methods (GET, POST, etc.)
+    // Pass allowed TopUp API requests through to VPS origin
     if (incoming.pathname.startsWith('/api/local/')) {
+      const route = LOCAL_ROUTES.find(r => r.pattern.test(incoming.pathname));
+      if (!route) {
+        return new Response('Not found', { status: 404 });
+      }
+
+      if (!route.methods.includes(request.method)) {
+        return new Response('Method not allowed', {
+          status: 405,
+          headers: { Allow: route.methods.join(', ') },
+        });
+      }
+
       const url = API_ORIGIN + incoming.pathname + incoming.search;
       const headers = new Headers(request.headers);
       headers.set('X-Forwarded-Host', incoming.host);
       headers.set('X-Forwarded-Proto', incoming.protocol.replace(':', ''));
+
+      const clientIp = request.headers.get('CF-Connecting-IP');
+      if (clientIp) {
+        headers.set('X-Client-IP', clientIp);
+        headers.set('X-Real-IP', clientIp);
+      }
+
       try {
         const upstream = await fetch(url, {
           method: request.method,

@@ -27,6 +27,22 @@ async function localApi<T>(path: string, payload?: object): Promise<T> {
   return data as T;
 }
 
+function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Invalid image file'));
+    };
+    img.src = url;
+  });
+}
+
 function imageData(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -97,6 +113,49 @@ export function TopUpPage() {
   const prevHistoryRef = useRef<Order[]>([]);
   const browserBootRef = useRef<Promise<boolean> | null>(null);
   const sectionPromptPayRef = useRef<HTMLElement | null>(null);
+  const playerRef = useRef<Player | null>(null);
+  playerRef.current = player;
+  const isPollingRef = useRef(false);
+
+  const pollOrders = useCallback(async () => {
+    if (isPollingRef.current) return;
+    isPollingRef.current = true;
+    try {
+      const [orders, activeOrder] = await Promise.all([
+        localApi<{ orders: Order[] }>('orders'),
+        localApi<NewOrder | null>('active-order').catch(() => null),
+      ]);
+      const oldHistory = prevHistoryRef.current;
+      prevHistoryRef.current = orders.orders;
+      setHistory(orders.orders);
+      if (oldHistory.length > 0) {
+        const justCredited = orders.orders.find(newOrd =>
+          newOrd.status === 'CREDITED' &&
+          oldHistory.some(oldOrd => oldOrd.order_id === newOrd.order_id && (oldOrd.status === 'APPROVED' || oldOrd.status === 'PENDING_REVIEW'))
+        );
+        if (justCredited) {
+          setModal({
+            type: 'success',
+            title: t('🎉 Coin เข้าตัวละครแล้ว!', '🎉 Coin Delivered!'),
+            message: t(
+              `คำสั่งซื้อ #${justCredited.order_id.slice(0, 8)} ได้รับการอนุมัติและส่ง ${format(justCredited.coins)} L2Blitz Coin เข้าตัวละคร ${justCredited.char_name || playerRef.current?.character || ''} ในเกมเรียบร้อยแล้ว!`,
+              `Order #${justCredited.order_id.slice(0, 8)} approved! ${format(justCredited.coins)} L2Blitz Coin delivered to ${justCredited.char_name || playerRef.current?.character || ''} in-game!`
+            ),
+            actionLabel: t('ยอดเยี่ยม', 'Awesome')
+          });
+        }
+      }
+      if (activeOrder && activeOrder.orderId) {
+        setActive(activeOrder);
+      } else {
+        setActive(null);
+      }
+    } catch {
+      // background polling error ignored
+    } finally {
+      isPollingRef.current = false;
+    }
+  }, [t]);
 
   const refresh = useCallback(async () => {
     try {
@@ -106,40 +165,23 @@ export function TopUpPage() {
       try {
         const person = await localApi<Player>('me');
         setPlayer(person);
-        const [packs, orders, activeOrder] = await Promise.all([
-          localApi<{ packages: Tier[] }>('packages'),
-          localApi<{ orders: Order[] }>('orders'),
-          localApi<NewOrder | null>('active-order').catch(() => null),
-        ]);
+        playerRef.current = person;
+        const packs = await localApi<{ packages: Tier[] }>('packages');
         setTiers(packs.packages);
-        const oldHistory = prevHistoryRef.current;
-        prevHistoryRef.current = orders.orders;
-        setHistory(orders.orders);
-        if (oldHistory.length > 0) {
-          const justCredited = orders.orders.find(newOrd =>
-            newOrd.status === 'CREDITED' &&
-            oldHistory.some(oldOrd => oldOrd.order_id === newOrd.order_id && (oldOrd.status === 'APPROVED' || oldOrd.status === 'PENDING_REVIEW'))
-          );
-          if (justCredited) {
-            setModal({
-              type: 'success',
-              title: t('🎉 Coin เข้าตัวละครแล้ว!', '🎉 Coin Delivered!'),
-              message: t(
-                `คำสั่งซื้อ #${justCredited.order_id.slice(0, 8)} ได้รับการอนุมัติและส่ง ${format(justCredited.coins)} L2Blitz Coin เข้าตัวละคร ${justCredited.char_name || person.character} ในเกมเรียบร้อยแล้ว!`,
-                `Order #${justCredited.order_id.slice(0, 8)} approved! ${format(justCredited.coins)} L2Blitz Coin delivered to ${justCredited.char_name || person.character} in-game!`
-              ),
-              actionLabel: t('ยอดเยี่ยม', 'Awesome')
-            });
-          }
-        }
-        if (activeOrder && activeOrder.orderId) {
-          setActive(activeOrder);
-        } else {
-          setActive(null);
-        }
-      } catch { setPlayer(null); setHistory([]); setActive(null); }
-    } catch { setHealth(null); setPlayer(null); setActive(null); }
-  }, []);
+        await pollOrders();
+      } catch {
+        setPlayer(null);
+        playerRef.current = null;
+        setHistory([]);
+        setActive(null);
+      }
+    } catch {
+      setHealth(null);
+      setPlayer(null);
+      playerRef.current = null;
+      setActive(null);
+    }
+  }, [pollOrders]);
 
   useEffect(() => {
     // Keep a single exchange across React StrictMode's effect replay.
@@ -191,11 +233,43 @@ export function TopUpPage() {
 
   useEffect(() => {
     if (!player || (!active && !history.some(o => o.status === 'APPROVED' || o.status === 'PENDING_REVIEW'))) return;
-    const timer = window.setInterval(() => {
-      void refresh();
-    }, 2500);
-    return () => window.clearInterval(timer);
-  }, [player, active, history, refresh]);
+
+    let timer: number | null = null;
+
+    const startPolling = () => {
+      if (timer === null && document.visibilityState !== 'hidden') {
+        timer = window.setInterval(() => {
+          if (document.visibilityState !== 'hidden') {
+            void pollOrders();
+          }
+        }, 5000);
+      }
+    };
+
+    const stopPolling = () => {
+      if (timer !== null) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        stopPolling();
+      } else {
+        void pollOrders();
+        startPolling();
+      }
+    };
+
+    startPolling();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [player, active, history, pollOrders]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -283,6 +357,32 @@ export function TopUpPage() {
       });
       return;
     }
+
+    try {
+      const dims = await getImageDimensions(file);
+      if (dims.width < 250 || dims.height < 250) {
+        const msg = t('รูปภาพสลิปมีขนาดเล็กเกินไป กรุณาแนบรูปภาพสลิปที่ชัดเจน', 'Slip image is too small. Please upload a clear slip image.');
+        setError(msg);
+        setModal({
+          type: 'error',
+          title: t('รูปภาพไม่ถูกต้อง', 'Invalid Image'),
+          message: msg,
+          actionLabel: t('ตกลง', 'OK')
+        });
+        return;
+      }
+    } catch {
+      const msg = t('ไม่สามารถอ่านขนาดรูปภาพได้ กรุณาตรวจสอบไฟล์รูปภาพ', 'Unable to read image dimensions. Please check the image file.');
+      setError(msg);
+      setModal({
+        type: 'error',
+        title: t('รูปภาพไม่ถูกต้อง', 'Invalid Image'),
+        message: msg,
+        actionLabel: t('ตกลง', 'OK')
+      });
+      return;
+    }
+
     setBusy(true); setError(''); setSuccess('');
     try {
       const result = await localApi<{ status?: string; verification: string; telegram: string; message?: string }>('orders/' + active.orderId + '/slip',{ imageBase64: await imageData(file) });
@@ -322,6 +422,7 @@ export function TopUpPage() {
 
   async function cancelOrder() {
     if (!active) return;
+    if (active.status !== 'CREATED' && active.status !== 'PENDING_PAYMENT') return;
     setBusy(true); setError(''); setSuccess('');
     try {
       await localApi('orders/' + active.orderId + '/cancel', {});
@@ -419,15 +520,17 @@ export function TopUpPage() {
             <p className="small-note text-[#C4531E] font-semibold mb-1">03 / PROMPTPAY & RECEIPT</p>
             <h2 className="section-heading">{t('ชำระและแนบสลิป', 'Pay & Upload Slip')}</h2>
           </div>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={cancelOrder}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#B95348] text-[#B95348] hover:bg-[#FFF3EE] small-note font-semibold transition-colors disabled:opacity-50"
-          >
-            <XCircle size={16} />
-            {t('ยกเลิกคำสั่งซื้อ', 'Cancel Order')}
-          </button>
+          {(active.status === 'CREATED' || active.status === 'PENDING_PAYMENT') && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={cancelOrder}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#B95348] text-[#B95348] hover:bg-[#FFF3EE] small-note font-semibold transition-colors disabled:opacity-50"
+            >
+              <XCircle size={16} />
+              {t('ยกเลิกคำสั่งซื้อ', 'Cancel Order')}
+            </button>
+          )}
         </div>
         <div className="grid md:grid-cols-[260px_1fr] gap-7 mt-7 items-start">
           <div className="bg-[#F0EDE7] p-4"><img alt={t('QR PromptPay ตามยอดที่เลือก', 'PromptPay QR for selected amount')} width={228} height={228} className="bg-white block w-full" src={'/api/local/qr/'+active.amount+'.png'}/></div>
