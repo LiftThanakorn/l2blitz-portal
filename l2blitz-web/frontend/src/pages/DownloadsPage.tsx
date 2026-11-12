@@ -92,7 +92,7 @@ export function DownloadsPage() {
             <span className="w-2 h-2 bg-[#E97540]" aria-hidden="true" />
             {availableMirrors
               ? t(`พร้อมดาวน์โหลด ${availableMirrors} จาก ${mirrors.length} ลิงก์`, `${availableMirrors} of ${mirrors.length} mirrors available`)
-              : t('กำลังเตรียมลิงก์ Close Beta', 'Preparing Close Beta download links')}
+              : t('กำลังตรวจสอบลิงก์ก่อนเปิดจริง', 'Verifying download links before official launch')}
           </p>
         </div>
         <div className="col-span-12 lg:col-span-7">
@@ -124,6 +124,9 @@ export function DownloadsPage() {
               <p className="font-semibold text-[21px] m-0">{DOWNLOAD_RELEASE.version}</p>
             </div>
           </div>
+          <p role="note" className="small-note text-[#524E48] mb-6">
+            {t('ไฟล์ตัวเกมหลักที่เผยแพร่ขณะนี้ยังระบุรุ่น Close Beta กรุณาตรวจสอบ Launcher และแพตช์เปิดจริงก่อนเข้าเล่น ไม่ควรถือว่าไฟล์นี้ผ่านการรับรอง Grand Opening แล้ว', 'The current full-client archive is still labeled Close Beta. Verify Launcher updates and the launch patch before playing; this archive has not yet been certified as the Grand Opening release.')}
+          </p>
           <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
             <div>
               <p className="small-note text-[#E97540] font-semibold mb-1">GOOGLE DRIVE MIRRORS</p>
