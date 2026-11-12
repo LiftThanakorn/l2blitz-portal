@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchApi } from '../lib/api';
+import { PUBLIC_LAUNCH_CONFIRMED } from '../publicLaunch';
 
 interface Rate {
   key: string;
@@ -20,8 +21,8 @@ const SYSTEMS = [
     key: 'starter',
     titleTh: 'Starter Pack พร้อมรบ',
     titleEn: 'Starter Pack',
-    bodyTh: 'เลือกรับอาวุธ ชุดเกราะ และเครื่องประดับ +6 พร้อม Adena 50 ล้าน และยาฟื้นฟู HP / MP / CP อย่างละ 1,000 ชิ้น รับได้ครั้งเดียวต่อตัวละคร',
-    bodyEn: 'Choose +6 weapons, armor and jewelry with 50M Adena and 1,000 each of HP, MP and CP potions. One claim per character.',
+    bodyTh: 'เลือกรับอาวุธ ชุดเกราะ และเครื่องประดับ +6 พร้อม Adena 10 ล้าน และยาฟื้นฟู HP / MP / CP อย่างละ 1,000 ชิ้น รับได้ครั้งเดียวต่อตัวละคร',
+    bodyEn: 'Choose +6 weapons, armor and jewelry with 10M Adena and 1,000 each of HP, MP and CP potions. One claim per character.',
   },
   {
     key: 'farm',
@@ -102,6 +103,12 @@ export function ServerInfoPage() {
           <h1 className="display-title">{t('ข้อมูลเซิร์ฟเวอร์', 'Server Information')}</h1>
         </div>
       </div>
+
+      {!PUBLIC_LAUNCH_CONFIRMED && (
+        <p role="status" className="surface-stone p-5 mb-8 text-[#524E48]">
+          {t('กำลังเตรียมเปิดเซิร์ฟเวอร์อย่างเป็นทางการ 14 พฤศจิกายน 2569 เวลา 18:19 น. (เวลาไทย) ข้อมูลกิจกรรมและระบบเกมอาจมีการตรวจสอบครั้งสุดท้ายก่อนเปิด', 'Preparing for the official opening on 14 November 2026 at 18:19 (Thailand time). Gameplay and event details remain subject to final pre-launch verification.')}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-16">
         <figure className="lg:col-span-7 m-0 surface-stone overflow-hidden">

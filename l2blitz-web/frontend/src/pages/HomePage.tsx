@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchApi } from '../lib/api';
-import { PUBLIC_CHARACTER_DATA_ENABLED } from '../publicLaunch';
+import { PUBLIC_CHARACTER_DATA_ENABLED, PUBLIC_LAUNCH_CONFIRMED } from '../publicLaunch';
 
 interface ServerStatus { status: 'online' | 'offline' | 'unknown' }
 interface ServerStats { playersOnline: number | null; totalCharacters: number | null }
@@ -74,7 +74,9 @@ function LaunchCountdown() {
               <div className="surface-stone p-6 sm:p-8">
                 <p className="small-note font-semibold text-[#C4531E] mb-2">LAUNCH TIME REACHED</p>
                 <p className="lead-statement text-[#1A1917]">
-                  {t('ถึงกำหนดเวลาเปิดเซิร์ฟเวอร์แล้ว!', 'The scheduled launch time has arrived!')}
+                  {PUBLIC_LAUNCH_CONFIRMED
+                    ? t('ถึงเวลาเปิดตามกำหนดแล้ว ตรวจสอบสถานะเซิร์ฟเวอร์ก่อนเข้าเล่น', 'Scheduled launch time reached. Please check the server status before playing.')
+                    : t('ถึงกำหนดเปิดตามประกาศแล้ว โปรดรอทีมงานยืนยันเปิดเซิร์ฟเวอร์', 'Scheduled opening time reached. Please await official launch confirmation.')}
                 </p>
                 <Link to="/downloads" className="btn-primary mt-5">
                   {t('ดาวน์โหลดเพื่อเข้าเกม', 'Download to Play')}
@@ -128,8 +130,8 @@ export function HomePage() {
 
   const exp = rates.find((item) => item.key === 'exp_sp')?.value ?? '—';
   const raid = rates.find((item) => item.key === 'raid_drop')?.value ?? '—';
-  const statusLabel = !PUBLIC_CHARACTER_DATA_ENABLED
-    ? t('ทดสอบ Close Beta', 'Close Beta')
+  const statusLabel = !PUBLIC_LAUNCH_CONFIRMED
+    ? t('ปิดเพื่อเตรียมเปิดจริง', 'Closed for launch preparation')
     : status?.status === 'online'
     ? t('ออนไลน์', 'Online')
     : status?.status === 'offline'
@@ -211,7 +213,7 @@ export function HomePage() {
             <div>
               <p className="small-note font-semibold text-[#E97540] mb-5">START HERE</p>
               <h2 className="section-heading text-[#F7F5F0]">{t('เริ่มต้นด้วย Starter Pack', 'Start with the Starter Pack')}</h2>
-              <p className="lead-statement text-[#E8E3DB] mt-5">{t('เลือกอุปกรณ์ +6 และรับ 50 ล้าน Adena พร้อมยาฟื้นฟู จากนั้นเข้าสู่ FARMZONE ผ่าน Alt+B', 'Claim +6 starter equipment, 50M Adena and potions, then travel to a FARMZONE through Alt+B.')}</p>
+              <p className="lead-statement text-[#E8E3DB] mt-5">{t('เลือกอุปกรณ์ +6 และรับ 10 ล้าน Adena พร้อมยาฟื้นฟู จากนั้นเข้าสู่ FARMZONE ผ่าน Alt+B', 'Claim +6 starter equipment, 10M Adena and potions, then travel to a FARMZONE through Alt+B.')}</p>
             </div>
             <Link to="/info" className="btn-primary self-start mt-8">{t('ดูรายละเอียด', 'View Details')}</Link>
           </div>

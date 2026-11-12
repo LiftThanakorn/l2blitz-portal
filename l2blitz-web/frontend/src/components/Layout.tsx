@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { PUBLIC_TOPUP_ENABLED } from '../publicLaunch';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { locale, setLocale, t } = useLanguage();
@@ -87,7 +88,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { to: '/raidboss', labelTh: 'เรดบอส', labelEn: 'Raid Boss' },
     { to: '/farmzones', labelTh: 'พื้นที่ฟาร์ม', labelEn: 'Farm Zones' },
     { to: '/events', labelTh: 'กิจกรรม TvT', labelEn: 'Events' },
-    ...([{ to: '/topup', labelTh: 'เติม Blitz Coin', labelEn: 'Top Up' }]),
+    ...(PUBLIC_TOPUP_ENABLED ? [{ to: '/topup', labelTh: 'เติม Blitz Coin', labelEn: 'Top Up' }] : []),
   ];
 
   return (
