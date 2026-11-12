@@ -26,9 +26,9 @@ The public website used to advertise Starter Pack 50M Adena, while the inspected
 - [ ] Test clean client installation and patching end-to-end on a separate machine, including login, character selection, inventory and Alt+B.
 - [ ] Audit publicly reachable API paths, top-up server-side gates, payment order endpoints and admin panel authorization; do NOT enable payment from front-end configuration alone.
 - [ ] Back up logs and database; verify monitoring, restart rollback plan, incident contact, and restore procedure.
-- [ ] In production Cloudflare Pages build configuration, leave `VITE_PUBLIC_LAUNCH_CONFIRMED` unset/false until explicit go-live confirmation. Until then site must say "Closed for launch preparation", even if TCP probe says online.
-- [ ] Keep `VITE_PUBLIC_TOPUP_ENABLED` unset/false even if launch is confirmed; enable only after real payment and QR approval, plus backend approval.
-- [ ] Only after official opening is verified, explicitly set `VITE_PUBLIC_LAUNCH_CONFIRMED=true`, redeploy the Pages frontend, and independently enable public rankings via `VITE_PUBLIC_CHARACTER_DATA_ENABLED=true` if data is safe.
+- [ ] Until explicit go-live approval, keep BOTH frontend build flag `VITE_PUBLIC_LAUNCH_CONFIRMED` and Cloudflare Pages Worker binding `PUBLIC_LAUNCH_CONFIRMED` unset/false. Frontend displays "Closed for launch preparation" and Worker returns operator prelaunch status even when TCP ports respond.
+- [ ] Keep BOTH `VITE_PUBLIC_TOPUP_ENABLED` (frontend build) and `PUBLIC_TOPUP_ENABLED` (Worker binding) unset/false even if game launch is confirmed. Do not expose payment endpoints until bank/QR verification and backend approval are complete.
+- [ ] After confirming the live GameServer/LoginServer and first-player smoke test, set both launch flags to `true`, rebuild and redeploy Pages, check `/api/server/status` against VPS gameplay, and independently opt into public rankings via `VITE_PUBLIC_CHARACTER_DATA_ENABLED=true` and Worker `PUBLIC_CHARACTER_DATA_ENABLED=true` only if safe.
 - [ ] Re-test home, server info, downloads, events, boss page, Olympiad, mobile language switch, and `/topup` direct URL after production deployment.
 
 **Deployment rule:** the date/time countdown never starts a server or automatically confirms it online. Website env flags are presentation gates, not substitutes for disabling game or payment access at the server.
