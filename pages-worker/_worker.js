@@ -27,6 +27,32 @@ export default {
     const incoming = new URL(request.url);
     if (!incoming.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
 
+    // Operator-controlled pre-launch state: TCP reachability is not proof of an open game.
+    // The countdown must never automatically open status, rankings or payments.
+    const launchApproved = env.PUBLIC_LAUNCH_CONFIRMED === 'true';
+    if (!launchApproved && incoming.pathname === '/api/server/status') {
+      return Response.json({
+        ok: true,
+        source: 'operator_prelaunch',
+        updatedAt: new Date().toISOString(),
+        data: {
+          status: 'offline', loginServer: 'unknown', gameServer: 'unknown',
+          chronicle: 'High Five (CT 2.6)', region: 'Thailand (GMT+7)',
+          messageTh: 'ปิดเซิร์ฟเวอร์เพื่อเตรียมเปิดอย่างเป็นทางการ',
+          messageEn: 'Server closed for official launch preparation.',
+        },
+      }, { headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
+    }
+
+    // Block payments at the gateway, not only by hiding the website navigation.
+    if (incoming.pathname.startsWith('/api/local/') &&
+        (!launchApproved || env.PUBLIC_TOPUP_ENABLED !== 'true')) {
+      return Response.json({
+        ok: false, code: 'PUBLIC_TOPUP_DISABLED',
+        error: 'Public payments are disabled until separately approved.',
+      }, { status: 503, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
+    }
+
     // Pass allowed TopUp API requests through to VPS origin
     if (incoming.pathname.startsWith('/api/local/')) {
       const route = LOCAL_ROUTES.find(r => r.pattern.test(incoming.pathname));
