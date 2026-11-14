@@ -10,7 +10,8 @@ Production installation is staged separately from public website activation.
 - TopUp backend health passes; unauthenticated order requests and character-name login return 401.
 - Frontend 6 tests pass, time-gate worker 2 tests pass, TypeScript build passes.
 - Slip2Go and Telegram configured, but **no real-money transaction performed in this test**.
-- Cloudflare public Worker must gate status/payments until 18:19 ICT.
+- Cloudflare public Worker was deployed at 16:52 ICT with the fixed 18:19 server-side time gate; `PUBLIC_LAUNCH_CONFIRMED=true` is installed.
+- **Blocker:** Cloudflare `EDGE_SECRET` could not be provisioned from the VPS through the available protected tooling. The Worker therefore fails closed for top-up; `PUBLIC_TOPUP_ENABLED` remains unset. Frontend was rebuilt with `VITE_PUBLIC_TOPUP_ENABLED=false` and safely redeployed to `https://d7e714e8.l2blitz.pages.dev` so players cannot reach an unready payment UI.
 - Turnstile widget not shipped; backend requires authenticated game ticket or in-game OTP and order rate limits. Captcha should be added in a later hardening release.
 
 ## Timed account activation
