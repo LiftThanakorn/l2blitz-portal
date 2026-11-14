@@ -1,0 +1,11 @@
+[Unit]
+Description=L2BLITZ Grand Opening enable account creation at 18:19 (Asia/Bangkok)
+Wants=mysql.service l2blitz-game.service
+After=mysql.service l2blitz-game.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/l2blitz/bin/l2blitz-grand-opening-account.sh
+TimeoutStartSec=120
+StandardOutput=journal
+StandardError=journal

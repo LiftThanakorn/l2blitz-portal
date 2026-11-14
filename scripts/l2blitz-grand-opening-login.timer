@@ -1,0 +1,11 @@
+[Unit]
+Description=L2BLITZ Grand Opening 14 Nov 2026 at 18:19 ICT
+
+[Timer]
+OnCalendar=2026-11-14 18:19:00
+AccuracySec=1s
+Persistent=true
+Unit=l2blitz-grand-opening-login.service
+
+[Install]
+WantedBy=timers.target

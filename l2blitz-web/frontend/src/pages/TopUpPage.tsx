@@ -188,17 +188,15 @@ export function TopUpPage() {
     if (!browserBootRef.current) {
       const url = new URL(window.location.href);
       const ticket = url.searchParams.get('ticket');
-      const charParam = url.searchParams.get('char') || url.searchParams.get('character');
+      // Character names are public identifiers, not authentication credentials.
       if (ticket) {
         url.searchParams.delete('ticket');
         window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
         browserBootRef.current = localApi<{ ok: boolean }>('redeem', { ticket }).then(() => true);
-      } else if (charParam) {
+      } else {
         url.searchParams.delete('char');
         url.searchParams.delete('character');
         window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
-        browserBootRef.current = localApi<{ ok: boolean }>('redeem', { character: charParam }).then(() => true);
-      } else {
         browserBootRef.current = Promise.resolve(false);
       }
     }

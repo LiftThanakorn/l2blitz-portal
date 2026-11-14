@@ -1,6 +1,9 @@
 // Cloudflare Pages Function: same-origin gateway to L2Blitz VPS.
 // The upstream origin is fixed: callers cannot choose a target host.
 const API_ORIGIN = 'https://154-215-14-70.sslip.io';
+// Owner-approved public launch: 14 Nov 2026 at 18:19 Asia/Bangkok.
+// Both time AND independent operator flags must pass, even if deployed early.
+const PUBLIC_LAUNCH_AT = Date.parse('2026-11-14T11:19:00Z');
 const ROUTES = new Set([
   '/api/health', '/api/server/status', '/api/server/stats', '/api/server/rates',
   '/api/rankings/pvp', '/api/rankings/pk', '/api/rankings/clans',
@@ -27,9 +30,9 @@ export default {
     const incoming = new URL(request.url);
     if (!incoming.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
 
-    // Operator-controlled pre-launch state: TCP reachability is not proof of an open game.
-    // The countdown must never automatically open status, rankings or payments.
-    const launchApproved = env.PUBLIC_LAUNCH_CONFIRMED === 'true';
+    // Production may be pre-deployed, but never opened before the approved time.
+    // An environment flag can still hold launch closed after the time has passed.
+    const launchApproved = Date.now() >= PUBLIC_LAUNCH_AT && env.PUBLIC_LAUNCH_CONFIRMED === 'true';
     if (!launchApproved && incoming.pathname === '/api/server/status') {
       return Response.json({
         ok: true,
@@ -46,7 +49,7 @@ export default {
 
     // Block payments at the gateway, not only by hiding the website navigation.
     if (incoming.pathname.startsWith('/api/local/') &&
-        (!launchApproved || env.PUBLIC_TOPUP_ENABLED !== 'true')) {
+        (!launchApproved || env.PUBLIC_TOPUP_ENABLED !== 'true' || !env.EDGE_SECRET)) {
       return Response.json({
         ok: false, code: 'PUBLIC_TOPUP_DISABLED',
         error: 'Public payments are disabled until separately approved.',
@@ -66,9 +69,19 @@ export default {
           headers: { Allow: route.methods.join(', ') },
         });
       }
+      // Reject spoofing via a publicly visible character name. The separate
+      // 8-digit in-game pairing flow remains available at /api/local/login.
+      if (incoming.pathname === '/api/local/redeem' && request.method === 'POST') {
+        const body = await request.clone().json().catch(() => null);
+        if (typeof body?.ticket !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(body.ticket)) {
+          return Response.json({ error: 'Valid in-game ticket required' }, { status: 401 });
+        }
+      }
 
       const url = API_ORIGIN + incoming.pathname + incoming.search;
       const headers = new Headers(request.headers);
+      // Override any caller-supplied secret with the server-side Cloudflare binding.
+      headers.set('X-Edge-Secret', env.EDGE_SECRET);
       headers.set('X-Forwarded-Host', incoming.host);
       headers.set('X-Forwarded-Proto', incoming.protocol.replace(':', ''));
 
@@ -99,7 +112,7 @@ export default {
       return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
     }
 
-    const publicLaunch = env.PUBLIC_CHARACTER_DATA_ENABLED === 'true';
+    const publicLaunch = launchApproved && env.PUBLIC_CHARACTER_DATA_ENABLED === 'true';
     // Fail closed during Close Beta, including direct API requests.
     if (!publicLaunch && (/^\/api\/(rankings|olympiad)(\/|$)/.test(incoming.pathname) || incoming.pathname === '/api/castles')) {
       return Response.json({ ok: false, source: 'unavailable', data: null, code: 'PUBLIC_LAUNCH_PENDING', error: 'Character rankings are not public before the official launch.' }, {

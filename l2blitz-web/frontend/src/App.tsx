@@ -45,6 +45,15 @@ export function AppRoutes() {
 }
 
 export default function App() {
+  React.useEffect(() => {
+    // Reload prelaunch visitors just after go-live so the static build flags
+    // are re-evaluated without trusting the client clock for payment access.
+    if (import.meta.env.VITE_PUBLIC_LAUNCH_CONFIRMED !== 'true') return;
+    const ms = Date.parse('2026-11-14T11:19:00Z') - Date.now();
+    if (ms <= 0) return;
+    const timer = window.setTimeout(() => window.location.reload(), ms + 1500);
+    return () => window.clearTimeout(timer);
+  }, []);
   return (
     <LanguageProvider>
       <BrowserRouter>
