@@ -29,7 +29,7 @@ function getTimeUntilLaunch() {
   };
 }
 
-function LaunchCountdown() {
+export function LaunchCountdown({ online }: { online: boolean }) {
   const { t } = useLanguage();
   const [remaining, setRemaining] = useState(getTimeUntilLaunch);
 
@@ -60,7 +60,11 @@ function LaunchCountdown() {
           <div className="lg:col-span-5">
             <p className="small-note font-semibold text-[#E97540] mb-3">OFFICIAL LAUNCH · THAILAND UTC+7</p>
             <h2 id="server-launch-heading" className="section-heading text-[#F7F5F0]">
-              {t('นับถอยหลังเปิดเซิร์ฟเวอร์', 'Countdown to Server Launch')}
+              {remaining.reached
+                ? online
+                  ? t('เปิดให้บริการแล้ว', 'Grand Opening — Now Online')
+                  : t('สถานะการเปิดเซิร์ฟเวอร์', 'Grand Opening — Server Status')
+                : t('นับถอยหลังเปิดเซิร์ฟเวอร์', 'Countdown to Server Launch')}
             </h2>
             <p className="body-copy text-[#E8E3DB] mt-4">
               {t('วันเสาร์ที่ 14 พฤศจิกายน 2569 เวลา 18:19 น.', 'Saturday, 14 November 2026 at 18:19')}
@@ -72,11 +76,11 @@ function LaunchCountdown() {
           <div className="lg:col-span-7">
             {remaining.reached ? (
               <div className="surface-stone p-6 sm:p-8">
-                <p className="small-note font-semibold text-[#C4531E] mb-2">LAUNCH TIME REACHED</p>
+                <p className="small-note font-semibold text-[#C4531E] mb-2">{online ? 'GRAND OPENING · ONLINE' : 'GRAND OPENING · CHECKING STATUS'}</p>
                 <p className="lead-statement text-[#1A1917]">
-                  {PUBLIC_LAUNCH_CONFIRMED
-                    ? t('ถึงเวลาเปิดตามกำหนดแล้ว ตรวจสอบสถานะเซิร์ฟเวอร์ก่อนเข้าเล่น', 'Scheduled launch time reached. Please check the server status before playing.')
-                    : t('ถึงกำหนดเปิดตามประกาศแล้ว โปรดรอทีมงานยืนยันเปิดเซิร์ฟเวอร์', 'Scheduled opening time reached. Please await official launch confirmation.')}
+                  {online
+                    ? t('L2BLITZ เปิดให้บริการแล้ว! ดาวน์โหลดตัวเกมและเข้าร่วมสนาม PvP ได้เลย', 'L2BLITZ is now online! Download the game and join the PvP action.')
+                    : t('กำลังตรวจสอบสถานะเซิร์ฟเวอร์ กรุณาตรวจสอบสถานะ Online ก่อนเข้าเกม', 'Checking server availability. Please confirm Online status before connecting.')}
                 </p>
                 <Link to="/downloads" className="btn-primary mt-5">
                   {t('ดาวน์โหลดเพื่อเข้าเกม', 'Download to Play')}
@@ -163,13 +167,13 @@ export function HomePage() {
         </figure>
       </section>
 
-      <LaunchCountdown />
+      <LaunchCountdown online={PUBLIC_LAUNCH_CONFIRMED && status?.status === 'online'} />
 
       <section className="editorial-frame mt-20">
         <div className="editorial-axis-grid mb-7">
           <div className="col-span-12 lg:col-start-6 lg:col-span-7">
             <h2 className="section-heading">{t('ภาพรวมเซิร์ฟเวอร์', 'At a Glance')}</h2>
-            <p className="body-copy text-[#77736C] mt-2">{PUBLIC_CHARACTER_DATA_ENABLED ? t('จำนวนผู้เล่นและข้อมูลสำคัญของเซิร์ฟเวอร์', 'Player activity and essential server details.') : t('จำนวนผู้เล่นจะแสดงหลังเปิดจริง โดยยังคงแสดงส่วนอื่นของเว็บไซต์ตามปกติ', 'Player counts will appear at official launch; the rest of the website remains available.')}</p>
+            <p className="body-copy text-[#77736C] mt-2">{PUBLIC_CHARACTER_DATA_ENABLED ? t('จำนวนผู้เล่นและข้อมูลสำคัญของเซิร์ฟเวอร์', 'Player activity and essential server details.') : t('ข้อมูลจำนวนผู้เล่นยังไม่เปิดเผยบนเว็บไซต์ ส่วนข้อมูลเกมและกิจกรรมยังดูได้ตามปกติ', 'Player counts are not yet published; game and event information remains available.')}</p>
           </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
