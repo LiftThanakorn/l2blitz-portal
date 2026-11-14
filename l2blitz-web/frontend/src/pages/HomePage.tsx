@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchApi } from '../lib/api';
-import { PUBLIC_CHARACTER_DATA_ENABLED, PUBLIC_LAUNCH_CONFIRMED } from '../publicLaunch';
+import { PUBLIC_LAUNCH_CONFIRMED } from '../publicLaunch';
 
 interface ServerStatus { status: 'online' | 'offline' | 'unknown' }
 interface ServerStats { playersOnline: number | null; totalCharacters: number | null }
@@ -118,7 +118,7 @@ export function HomePage() {
     const refresh = () => {
       void Promise.all([
         fetchApi<ServerStatus>('/api/server/status'),
-        PUBLIC_CHARACTER_DATA_ENABLED ? fetchApi<ServerStats>('/api/server/stats') : Promise.resolve({ data: null }),
+        PUBLIC_LAUNCH_CONFIRMED ? fetchApi<ServerStats>('/api/server/stats') : Promise.resolve({ data: null }),
         fetchApi<RatesData>('/api/server/rates'),
       ]).then(([s, p, r]) => {
         if (!active) return;
@@ -173,7 +173,7 @@ export function HomePage() {
         <div className="editorial-axis-grid mb-7">
           <div className="col-span-12 lg:col-start-6 lg:col-span-7">
             <h2 className="section-heading">{t('ภาพรวมเซิร์ฟเวอร์', 'At a Glance')}</h2>
-            <p className="body-copy text-[#77736C] mt-2">{PUBLIC_CHARACTER_DATA_ENABLED ? t('จำนวนผู้เล่นและข้อมูลสำคัญของเซิร์ฟเวอร์', 'Player activity and essential server details.') : t('ข้อมูลจำนวนผู้เล่นยังไม่เปิดเผยบนเว็บไซต์ ส่วนข้อมูลเกมและกิจกรรมยังดูได้ตามปกติ', 'Player counts are not yet published; game and event information remains available.')}</p>
+            <p className="body-copy text-[#77736C] mt-2">{PUBLIC_LAUNCH_CONFIRMED ? t('จำนวนตัวละครออนไลน์และตัวละครทั้งหมดจากเซิร์ฟเวอร์ อัปเดตเป็นระยะ', 'Live server counts of online and total characters, refreshed periodically.') : t('จำนวนตัวละครจะแสดงหลังเปิดเซิร์ฟเวอร์', 'Character counts will become available when the server launches.')}</p>
           </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">

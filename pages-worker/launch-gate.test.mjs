@@ -37,3 +37,44 @@ test('edge requires secure ticket, ignores spoofed edge secret', async () => {
     env.PUBLIC_TOPUP_ENABLED = 'true';
   } finally { Date.now = realNow; globalThis.fetch = realFetch; }
 });
+
+test('post-launch aggregate counts are public while player rankings remain private', async () => {
+  Date.now = () => Date.parse('2026-11-14T11:30:00Z');
+  let observedUrl = '';
+  globalThis.fetch = async (url) => {
+    observedUrl = String(url);
+    return Response.json({
+      ok: true,
+      source: 'live_mysql',
+      data: { playersOnline: 2, totalCharacters: 3, totalClans: 0 },
+    });
+  };
+  try {
+    const statsResponse = await call('/api/server/stats');
+    assert.equal(statsResponse.status, 200);
+    const stats = await statsResponse.json();
+    assert.equal(stats.source, 'live_mysql');
+    assert.equal(stats.data.playersOnline, 2);
+    assert.equal(stats.data.totalCharacters, 3);
+    assert.match(observedUrl, /\/api\/server\/stats$/);
+    const rankingResponse = await call('/api/rankings/pvp');
+    assert.equal(rankingResponse.status, 403);
+  } finally {
+    Date.now = realNow;
+    globalThis.fetch = realFetch;
+  }
+});
+
+test('prelaunch masks counts without contacting upstream', async () => {
+  Date.now = () => Date.parse('2026-11-14T11:18:59Z');
+  globalThis.fetch = async () => { throw Error('Prelaunch should not contact upstream'); };
+  try {
+    const stats = await (await call('/api/server/stats')).json();
+    assert.equal(stats.source, 'unavailable');
+    assert.equal(stats.data.playersOnline, null);
+    assert.equal(stats.data.totalCharacters, null);
+  } finally {
+    Date.now = realNow;
+    globalThis.fetch = realFetch;
+  }
+});

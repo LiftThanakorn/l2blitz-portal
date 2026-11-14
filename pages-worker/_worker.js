@@ -119,7 +119,9 @@ export default {
         status: 403, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
       });
     }
-    if (!publicLaunch && incoming.pathname === '/api/server/stats') {
+    // Aggregate counts are safe to display after launch without enabling
+    // character-name rankings, Olympiad, or castle data.
+    if (!launchApproved && incoming.pathname === '/api/server/stats') {
       return Response.json({ ok: true, source: 'unavailable', updatedAt: new Date().toISOString(), data: {
         playersOnline: null, totalCharacters: null, totalClans: null, activeOlympiadNobles: null, status: 'pending_launch',
       } }, { headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
